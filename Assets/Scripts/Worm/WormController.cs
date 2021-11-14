@@ -27,14 +27,15 @@ namespace Worm
 
         private Direction getDirection(InputKeyPair inputKeyPair)
         {
+            InputKey pressedKey = inputKeyPair.getPressedInputKey();
+
             if (direction == Direction.None)
             {
-                return inputKeyPair.getPressedInputKey().initDirection;
+                return pressedKey.initDirection;
             }
             else
             {
-                Axis moveAxis = AxisFactory.Get();
-                return moveAxis.getDirectionAlongPlane(direction);
+                return Dir.getChangedDirection(direction, pressedKey);
             }
         }
 
