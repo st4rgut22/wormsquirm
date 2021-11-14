@@ -12,43 +12,69 @@ namespace Worm
         private Direction direction;
         private Direction prevDirection;
 
+        private bool isMoving;
+
         public delegate void Dig(Direction direction, bool isDirectionChanged);
         public event Dig DigEvent;
 
         // Start is called before the first frame update
         void Awake()
         {
+            isMoving = false;
             direction = Direction.None;
             prevDirection = direction;
+        }
+
+        private Direction getDirection(InputKeyPair inputKeyPair)
+        {
+            if (direction == Direction.None)
+            {
+                return inputKeyPair.getPressedInputKey().initDirection;
+            }
+            else
+            {
+                Axis moveAxis = AxisFactory.Get();
+                return moveAxis.getDirectionAlongPlane(direction);
+            }
+        }
+
+        private bool isDirectionChanged(Direction newDirection)
+        {
+            if (newDirection == Direction.None)
+            {
+                return false;
+            }
+            else
+            {
+                return direction != newDirection;
+            }
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.W) || Input.GetKey(KeyCode.W))
+            Direction newDirection = direction;
+
+            InputKeyPair inputKeyPair = InputManager.instance.getInputKeyPair();
+
+            if (inputKeyPair != null)
             {
-                direction = Direction.North;
-            }
-            if (Input.GetKeyDown(KeyCode.A) || Input.GetKey(KeyCode.A))
-            {
-                direction = Direction.West;
-            }
-            if (Input.GetKeyDown(KeyCode.S) || Input.GetKey(KeyCode.S))
-            {
-                direction = Direction.South;
-            }
-            if (Input.GetKeyDown(KeyCode.D) || Input.GetKey(KeyCode.D))
-            {
-                direction = Direction.East;
+                isMoving = true;
+                newDirection = getDirection(inputKeyPair);
             }
 
-            bool isDirectionChanged = direction != prevDirection; // onStart the direction will be changed, so a new tunnel will be created
-
-            if (DigEvent != null)
+            if (isMoving)
             {
-                DigEvent(direction, isDirectionChanged);
-                prevDirection = direction;
-            }                
+                if (DigEvent != null)
+                {
+                    bool isDirectionChanged = this.isDirectionChanged(newDirection);
+
+                    prevDirection = direction;
+                    direction = newDirection;
+
+                    DigEvent(direction, isDirectionChanged);                 
+                }
+            }
         }
     }
 

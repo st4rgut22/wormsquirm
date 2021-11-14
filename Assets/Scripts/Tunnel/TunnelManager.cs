@@ -57,7 +57,7 @@ namespace Tunnel
 
         private void createTunnel(Vector3 position, Direction direction)
         {
-            Quaternion rotation = RotationManager.getRotationFromDirection(direction);
+            Quaternion rotation = Rotation.getRotationFromDirection(direction);
             GameObject TunnelGO = Instantiate(Tunnel, position, rotation, TunnelNetwork);
             TunnelList.Add(TunnelGO);
         }
@@ -70,7 +70,7 @@ namespace Tunnel
                 Vector3 tunnelPosition = getTunnelStartPosition();
                 createTunnel(tunnelPosition, direction); // rotate tunnel in the direction
             }
-            else if (direction != Direction.None)
+            else
             {
                 if (GrowEvent != null) GrowEvent();
             }

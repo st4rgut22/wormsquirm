@@ -28,7 +28,7 @@ namespace Tunnel
             isStopped = false;
             headLocation = transform.position;
             print("headLocation of " + gameObject.name + " is " + headLocation);
-            orientation = RotationManager.getDirectionFromRotation(transform.rotation);
+            orientation = Rotation.getDirectionFromRotation(transform.rotation);
             print("orientation of " + gameObject.name + " is " + orientation);
         }
 
