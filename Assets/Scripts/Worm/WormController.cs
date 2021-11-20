@@ -14,7 +14,7 @@ namespace Worm
 
         private bool isMoving;
 
-        public delegate void Dig(Direction direction, bool isDirectionChanged);
+        public delegate void Dig(Direction direction, Direction prevDirection, bool isDirectionChanged);
         public event Dig DigEvent;
 
         // Start is called before the first frame update
@@ -73,7 +73,7 @@ namespace Worm
                     prevDirection = direction;
                     direction = newDirection;
 
-                    DigEvent(direction, isDirectionChanged);                 
+                    DigEvent(direction, prevDirection, isDirectionChanged);                 
                 }
             }
         }

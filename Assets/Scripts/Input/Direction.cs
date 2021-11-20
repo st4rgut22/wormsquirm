@@ -13,6 +13,27 @@ public enum Direction
 
 public static class Dir
 {
+    public static Direction getOppositeDirection(Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.Up:
+                return Direction.Down;
+            case Direction.Right:
+                return Direction.Left;
+            case Direction.Left:
+                return Direction.Right;
+            case Direction.Forward:
+                return Direction.Back;
+            case Direction.Back:
+                return Direction.Forward;
+            case Direction.Down:
+                return Direction.Up;
+            default:
+                throw new System.Exception("Not a valid direction " + direction);
+        }
+    }
+
     public static Direction getChangedDirection(Direction direction, InputKey key)
     {
         switch (direction)

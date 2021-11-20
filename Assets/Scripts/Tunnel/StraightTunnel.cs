@@ -1,20 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Tunnel
 {    
-    public class TunnelController : MonoBehaviour
+    public class StraightTunnel : Tunnel
     {
         [SerializeField]
         private float GROWTH_RATE;
 
-        private Vector3 headLocation;
-        private Vector3 tailLocation;
         private Vector3 orientation;
 
         private bool isStopped;
-
 
         // Start is called before the first frame update
         void OnEnable()
@@ -26,10 +21,16 @@ namespace Tunnel
         private void Awake()
         {
             isStopped = false;
-            headLocation = transform.position;
-            print("headLocation of " + gameObject.name + " is " + headLocation);
-            orientation = Rotation.getDirectionFromRotation(transform.rotation);
+            ingressPosition = transform.position;
+            print("headLocation of " + gameObject.name + " is " + ingressPosition);
+            orientation = TunnelRotation.getUnitVectorFromRotation(transform.rotation);
+            egressDirection = ingressDirection = TunnelRotation.getDirectionFromRotation(transform.rotation);
             print("orientation of " + gameObject.name + " is " + orientation);
+        }
+
+        public void setEgressPosition(Vector3 deltaPosition)
+        {
+            egressPosition = ingressPosition + deltaPosition;
         }
 
         /**
@@ -45,11 +46,6 @@ namespace Tunnel
             }            
         }
 
-        public Vector3 getTailLocation()
-        {
-            return tailLocation;
-        }
-
         /**
          * Position of the end of the tunnel
          */
@@ -57,13 +53,13 @@ namespace Tunnel
         {
             float length = getLength();
             Vector3 deltaPosition = length * orientation;
-            tailLocation = headLocation + deltaPosition;
-            print("tail location of " + gameObject.name + " is " + tailLocation);
+            setEgressPosition(deltaPosition);
+            print("tail location of " + gameObject.name + " is " + egressPosition);
         }
 
         private float getLength()
         {
-            return transform.localScale.y;
+            return transform.localScale.y * Tunnel.BLOCK_SIZE; // scale of 1 : 2 meters or 0.5 : 1 meter
         }
 
         private void onGrow()

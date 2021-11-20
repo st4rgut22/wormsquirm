@@ -11,10 +11,14 @@ namespace Tunnel
         private GameObject Tunnel;
 
         [SerializeField]
+        private GameObject Corner;
+
+        [SerializeField]
         private Transform TunnelNetwork;
 
-        private List<GameObject> TunnelList;
+        private static int cornerCount;
 
+        private List<GameObject> TunnelList;
 
         public delegate void Grow();
         public event Grow GrowEvent;
@@ -24,6 +28,7 @@ namespace Tunnel
 
         private void Awake()
         {
+            cornerCount = 0;
             TunnelList = new List<GameObject>();
         }
 
@@ -31,12 +36,6 @@ namespace Tunnel
         void OnEnable()
         {
             FindObjectOfType<WormController>().DigEvent += onDig;            
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-            
         }
 
         private GameObject getLastTunnel()
@@ -51,24 +50,36 @@ namespace Tunnel
             else
             {
                 GameObject LastTunnelGO = getLastTunnel();
-                return LastTunnelGO.GetComponent<TunnelController>().getTailLocation();
+                return LastTunnelGO.GetComponent<Tunnel>().egressPosition;
             }
         }
 
-        private void createTunnel(Vector3 position, Direction direction)
+        private void createTunnel(Direction tunnelDirection, Direction prevTunnelDirection)
         {
-            Quaternion rotation = Rotation.getRotationFromDirection(direction);
-            GameObject TunnelGO = Instantiate(Tunnel, position, rotation, TunnelNetwork);
+            Vector3 tunnelPosition = getTunnelStartPosition(); // get the egress position of the last straight tunnel (or use origin if creating the first tunnel)
+
+            if (prevTunnelDirection != Direction.None) // A pair of tunnels must exist to create a corner
+            {
+                Quaternion cornerRotation = CornerRotation.getRotationFromDirection(prevTunnelDirection, tunnelDirection);
+                GameObject CornerGO = Instantiate(Corner, tunnelPosition, cornerRotation, TunnelNetwork);
+                CornerGO.GetComponent<CornerTunnel>().setEgressPosition(prevTunnelDirection, tunnelDirection);
+                CornerGO.name = "Corner " + cornerCount;
+
+                TunnelList.Add(CornerGO);
+                tunnelPosition = getTunnelStartPosition(); // if a corner tunnel precedes a straight tunnel, the straight tunnel's ingress position is the egress hole
+            }
+
+            Quaternion tunnelRotation = TunnelRotation.getRotationFromDirection(tunnelDirection);
+            GameObject TunnelGO = Instantiate(Tunnel, tunnelPosition, tunnelRotation, TunnelNetwork);
             TunnelList.Add(TunnelGO);
         }
 
-        private void onDig(Direction direction, bool isDirectionChanged) // subscribes to the user input to worm's direction
+        private void onDig(Direction direction, Direction prevDirection, bool isDirectionChanged) // subscribes to the user input to worm's direction
         {
             if (isDirectionChanged)
             {
                 if (StopEvent != null) StopEvent();
-                Vector3 tunnelPosition = getTunnelStartPosition();
-                createTunnel(tunnelPosition, direction); // rotate tunnel in the direction
+                createTunnel(direction, prevDirection); // rotate tunnel in the direction
             }
             else
             {
