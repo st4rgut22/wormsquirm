@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 /*
@@ -7,7 +5,7 @@ using UnityEngine;
  */
 namespace Worm
 {
-    public class WormController : MonoBehaviour
+    public class Controller : MonoBehaviour
     {
         private Direction direction;
         private Direction prevDirection;
@@ -51,7 +49,6 @@ namespace Worm
             }
         }
 
-        // Update is called once per frame
         void Update()
         {
             Direction newDirection = direction;

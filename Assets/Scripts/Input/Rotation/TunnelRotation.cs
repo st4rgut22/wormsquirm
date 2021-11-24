@@ -12,11 +12,22 @@ public class TunnelRotation
     /**
      * Return a normalized vector given a direction
      */
-    public static Vector3 getUnitVectorFromDirection(Direction direction)
+    private static Vector3 getUnitVectorFromDirection(Direction direction)
     {
         Quaternion rotation = getRotationFromDirection(direction);
         Vector3 unitVector = getUnitVectorFromRotation(rotation);
         return unitVector;
+    }
+
+    /**
+     * Combine normalized vectors for each direction to get offset
+     */
+    public static Vector3 getOffsetFromDirections(Direction ingressDirection, Direction egressDirection)
+    {
+        Vector3 ingressUnitVector = getUnitVectorFromDirection(ingressDirection);
+        Vector3 egressUnitVector = getUnitVectorFromDirection(egressDirection);
+        Vector3 offset = (ingressUnitVector + egressUnitVector) / 2;
+        return offset;
     }
 
     /**

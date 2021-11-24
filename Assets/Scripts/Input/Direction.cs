@@ -11,6 +11,18 @@ public enum Direction
     None,
 }
 
+public class DirectionPair
+{
+    public Direction prevDir { get; private set; }
+    public Direction curDir { get; private set; }
+
+    public DirectionPair(Direction prevDir, Direction curDir)
+    {
+        this.prevDir = prevDir;
+        this.curDir = curDir;
+    }
+}
+
 public static class Dir
 {
     public static Direction getOppositeDirection(Direction direction)
