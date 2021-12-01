@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /*
- *  Controls worm movement
+ *  Player controller and input
  */
 namespace Worm
 {
@@ -9,16 +9,18 @@ namespace Worm
     {
         private Direction direction;
         private Direction prevDirection;
+        
+        public delegate void PlayerInput(Direction direction);
+        public event PlayerInput PlayerInputEvent;
 
-        private bool isMoving;
-
-        public delegate void Dig(Direction direction, Direction prevDirection, bool isDirectionChanged);
-        public event Dig DigEvent;
+        private void OnEnable()
+        {
+            PlayerInputEvent += FindObjectOfType<Movement>().onPlayerInput;
+        }
 
         // Start is called before the first frame update
         void Awake()
         {
-            isMoving = false;
             direction = Direction.None;
             prevDirection = direction;
         }
@@ -33,19 +35,7 @@ namespace Worm
             }
             else
             {
-                return Dir.getChangedDirection(direction, pressedKey);
-            }
-        }
-
-        private bool isDirectionChanged(Direction newDirection)
-        {
-            if (newDirection == Direction.None)
-            {
-                return false;
-            }
-            else
-            {
-                return direction != newDirection;
+                return Dir.Input.getChangedDirection(direction, pressedKey);
             }
         }
 
@@ -57,21 +47,29 @@ namespace Worm
 
             if (inputKeyPair != null)
             {
-                isMoving = true;
                 newDirection = getDirection(inputKeyPair);
-            }
 
-            if (isMoving)
-            {
-                if (DigEvent != null)
+                if (PlayerInputEvent != null)
                 {
-                    bool isDirectionChanged = this.isDirectionChanged(newDirection);
-
-                    prevDirection = direction;
-                    direction = newDirection;
-
-                    DigEvent(direction, prevDirection, isDirectionChanged);                 
+                    PlayerInputEvent(newDirection);
                 }
+            }
+        }
+
+        /**
+         * When worm has moved enough to trigger change in tunnel direction, save the new direction as reference for next player input
+         */
+        public void onDecision(bool isStraightTunnel, Direction newDirection, Tunnel.Tunnel tunnel)
+        {
+            prevDirection = direction;
+            direction = newDirection;
+        }
+
+        private void OnDisable()
+        {
+            if (FindObjectOfType<Movement>())
+            {
+                PlayerInputEvent -= FindObjectOfType<Movement>().onPlayerInput;
             }
         }
     }

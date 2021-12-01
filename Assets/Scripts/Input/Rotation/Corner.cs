@@ -1,10 +1,15 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace Tunnel
+namespace Rotation
 {
-    public class CornerRotation: TunnelRotation
+    public class Corner: IRotation
     {
+
+        public Quaternion rotate(DirectionPair dirPair)
+        {
+            return cornerRotationDict[dirPair.prevDir][dirPair.curDir];
+        }
 
         // Dictionary<ingress hole direction, Dictionary<egress hold direction, rotation>>()
         private static Dictionary<Direction, Dictionary<Direction, Quaternion>> cornerRotationDict =

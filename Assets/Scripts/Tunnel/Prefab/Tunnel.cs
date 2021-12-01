@@ -1,42 +1,78 @@
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Tunnel
 {
     public abstract class Tunnel : MonoBehaviour
     {
-        protected double GROWTH_RATE; // must be a divisor of 1 so tunnel length will be a multiple of BLOCK_SIZE
-        private int GROWTH_EXP = 1;
+        public const float GROWTH_RATE = .05f; // must be a divisor of 1 so tunnel length will be a multiple of BLOCK_SIZE
 
-        public const int BLOCK_SIZE = 2;
-        public const float OFFSET_SIZE = 0.5f;
+        public const int BLOCK_SIZE = 1;    
+        public const int SCALE_TO_LENGTH = 2; // scale of 1 : 2 world units
+        public const float SCALED_GROWTH_RATE = GROWTH_RATE * SCALE_TO_LENGTH;
+
+        public const float CENTER_OFFSET = BLOCK_SIZE / 2.0f;
 
         public bool isStopped;
 
-        public static string TAG = "tunnel";
+        public DirectionPair directionPair { get; private set; } // passed in on initialization to set the tunnel rotation
 
         public Vector3 ingressPosition { get; protected set; }
-        public Vector3 egressPosition { get; protected set; }
+        public Vector3[] egressPosition { get; protected set; }
 
         public Direction ingressDirection { get; protected set; }
-        public Direction egressDirection { get; protected set; }
+        public Direction[] egressDirection { get; protected set; }
 
-        public abstract void setEgressPosition();
+        public Vector3 center { get; private set; }
+        public List<Vector3Int> cellPositionList; // a list of coordinates the tunnel traverses
 
-        public delegate void Collide(Tunnel tunnelGO, Collision collision);
-        public event Collide CollideEvent;
+        public Rotation.IRotation rotation;
 
         protected void Awake()
         {
-            GROWTH_RATE = 1 / (Math.Pow(10, GROWTH_EXP));
+            cellPositionList = new List<Vector3Int>();
         }
 
-        protected void OnEnable()
+        protected void Start()
         {
-            CollideEvent += FindObjectOfType<Slicer>().onSlice; // slicer is listening for collide events
-            CollideEvent += FindObjectOfType<Manager>().onSlice;
+            if (directionPair == null)
+            {
+                throw new Exception("direction pair should have been initialized on Instantiation");
+            }
+            if (directionPair.prevDir == Direction.None)
+            {
+                ingressDirection = directionPair.curDir;
+            }
+            else
+            {
+                ingressDirection = directionPair.prevDir;
+            }
+            print("ingress direction of " + gameObject.name + " is " + ingressDirection);
+
+            print("direction cur of " + gameObject.name + " is " + directionPair.curDir + " prev is " + directionPair.prevDir);
+
+            setCenter(BLOCK_SIZE); // tunnels are initially of length BLOCK_SIZE, so distance to opposite end of tunnel is equal to BLOCK_SIZE
         }
 
+        public void rotate(DirectionPair dirPair)
+        {
+            transform.rotation = rotation.rotate(dirPair);
+        }
+
+        public void addCellToList(Vector3Int cellPosition)
+        {
+            cellPositionList.Add(cellPosition);
+        }
+
+        public Vector3Int getLastCellPosition()
+        {
+            return cellPositionList[cellPositionList.Count - 1];
+        }
+
+        /**
+         * Used by the slicer to chop up a tunnel segment into 2 pieces
+         */
         public Tunnel copy(Transform tunnelParent)
         {
             GameObject tunnelCopy = Instantiate(gameObject, tunnelParent);
@@ -47,41 +83,31 @@ namespace Tunnel
             return copiedTunnel;
         }
 
-        public virtual void setDirection(Direction ingressDirection, Direction egressDirection)
+        public void setDirectionPair(DirectionPair directionPair)
         {
-            this.ingressDirection = ingressDirection;
-            this.egressDirection = egressDirection;
+            this.directionPair = directionPair;
+        }
+
+        public Vector3 getEgressPosition(Direction direction)
+        {
+            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            Vector3 egressPosition =  center + unitVector * CENTER_OFFSET;
+            return egressPosition;
         }
 
         /**
-         * Returns true if length of tunnel is a multiple of 1 and hence the BLOCK_SIZE
+         * Get the center of the last block in this tunnel
+         * 
+         * @ingressDirection is the direction the tunnel is entered
+         * @distToEnd is distance to the opposite end of the tunnel
          */
-        protected bool isBlockSizeMultiple()
+        protected void setCenter(float distToEnd)
         {
-            double roundedScale = Math.Round(transform.localScale.y / GROWTH_RATE) * GROWTH_RATE;
-            print("local scale y is " + transform.localScale.y + " rounded scale is " + roundedScale);
-            return (roundedScale % 1) == 0;
-        }
-
-        /**
-         * When a tunnel has collided with another notify slice
-         */
-        void OnCollisionEnter(Collision collision)
-        {
-            if (collision.gameObject.tag == TAG) // if collided with another tunnel
-            {
-                if (CollideEvent != null)
-                {
-                    print("collision occurred between " + gameObject.name + " and " + collision.gameObject.name);
-                    CollideEvent(this, collision);
-                }
-            }
-        }
-
-        private void OnDisable()
-        {
-            CollideEvent -= FindObjectOfType<Slicer>().onSlice;
-            CollideEvent -= FindObjectOfType<Manager>().onSlice;
+            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(ingressDirection);
+            Vector3 blockEndPosition = transform.position + distToEnd * unitVector;
+            Vector3 centerOffsetVector = unitVector * CENTER_OFFSET;
+            center = blockEndPosition - centerOffsetVector;
+            print("center of " + gameObject.name + " is " + center + " in direction " + ingressDirection + " position is " + transform.position + " distToEnd is " + distToEnd + " unitVector is " + unitVector);
         }
     }
 }

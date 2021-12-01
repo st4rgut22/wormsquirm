@@ -3,12 +3,22 @@ using UnityEngine;
 
 namespace Tunnel
 {
-    public class Manager : System
+
+    public class Manager : MonoBehaviour
     {
         private static int cornerCount;
 
+        [SerializeField]
+        private bool bypassWormInput;
+
         private List<GameObject> TunnelList; // list consisting of straight tunnels and corner tunnels
         private List<GameObject> StraightTunnelList;
+
+        public delegate void Decision(bool isStraightTunnel, Direction direction, Tunnel tunnel);
+        public event Decision DecisionEvent;
+
+        public delegate void AddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair);
+        public event AddTunnel AddTunnelEvent;
 
         public delegate void Grow();
         public event Grow GrowEvent;
@@ -16,39 +26,81 @@ namespace Tunnel
         public delegate void Stop();
         public event Stop StopEvent;
 
+        public delegate void SliceTunnel(Tunnel tunnel, Tunnel nextTunnel, DirectionPair dirPair);
+        public event SliceTunnel SliceTunnelEvent;
+
         private void Awake()
         {
             cornerCount = 0;
             TunnelList = new List<GameObject>();
             StraightTunnelList = new List<GameObject>();
+            bypassWormInput = true;
         }
 
-        private void OnEnable()
+        protected void OnEnable()
         {
-            FindObjectOfType<DigManager>().CreateTunnelEvent += onCreateTunnel;
+            SliceTunnelEvent += FindObjectOfType<Slicer>().onSlice; // slicer is listening for collide events
+            AddTunnelEvent += FindObjectOfType<Map.Manager>().onAddTunnel;
+            AddTunnelEvent += FindObjectOfType<Worm.Movement>().onAddTunnel;
+            DecisionEvent += FindObjectOfType<Turn>().onDecision;
+            DecisionEvent += FindObjectOfType<Worm.Movement>().onDecision;
+            DecisionEvent += FindObjectOfType<Worm.Controller>().onDecision;
         }
 
         private void FixedUpdate()
         {
+            // the worm & user input should be dictating growth not tunnel manager
+
             if (GrowEvent != null)
             {
                 GrowEvent();
             }
         }
 
-        private GameObject getLastTunnel(List<GameObject> tunnelList)
+        /**
+         * When the destination cell is already occupied, it needs to be replaced or spliced
+         */
+        private Tunnel replaceTunnel(Tunnel nextTunnel, Tunnel tunnel, DirectionPair directionPair, CellMove cellMove)
         {
-            return tunnelList[tunnelList.Count - 1];
-        }
+            Tunnel replacementTunnel = Factory.modTunnelFactory.getTunnel(directionPair, tunnel, gameObject, cellMove);
 
-        private Vector3 getTunnelStartPosition()
-        {
-            if (TunnelList.Count == 0) // if no tunnels exist, create the first tunnel at the origin
-                return Vector3.zero;
+            if (nextTunnel.tag == Env.STRAIGHT_TUNNEL)
+            {
+                SliceTunnelEvent(tunnel, replacementTunnel, directionPair); // the replacementTunnel will be spliced into the straight tunnel
+            }
             else
             {
-                GameObject LastTunnelGO = getLastTunnel(TunnelList);
-                return LastTunnelGO.GetComponent<Tunnel>().egressPosition;
+                Destroy(nextTunnel.gameObject); // destroy the tunnel that's being replaced
+            }
+            return replacementTunnel;
+        }
+
+        private Tunnel getLastTunnel(List<GameObject> tunnelList)
+        {
+            if (tunnelList.Count > 0)
+            {
+                return tunnelList[tunnelList.Count - 1].GetComponent<Tunnel>();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /**
+         * Make a decision given a position
+         */
+        public void onPosition(Vector3 position, Direction direction)
+        {
+            Tunnel LastTunnel = getLastTunnel(TunnelList);
+
+            bool isDecision = ActionPoint.instance.isDecisionBoundaryCrossed(LastTunnel, position, direction);
+
+            if (isDecision)
+            {
+                bool isStraightTunnel = LastTunnel == null || LastTunnel.tag == Env.STRAIGHT_TUNNEL; // if this is the first tunnel it should be straight type
+                DecisionEvent(isStraightTunnel, direction, LastTunnel);
+
             }
         }
 
@@ -61,44 +113,65 @@ namespace Tunnel
             }
         }
 
-        private void onCreateTunnel(DirectionPair directionPair)
+        /**
+         * Tunnel direction change triggers creation or modification of the next tunnel. 
+         * 
+         * @directionPair indicates direction of travel and determines type of tunnel to create
+         */
+        public void onChangeDirection(DirectionPair directionPair)
         {
-            Direction prevTunnelDirection = directionPair.prevDir;
-            Direction tunnelDirection = directionPair.curDir;
+            Direction prevDirection = directionPair.prevDir;
+            Direction curDirection = directionPair.curDir;
 
             if (StopEvent != null)
             {
                 StopEvent(); // Stop the last growing tunnel
             }
 
-            Vector3 tunnelPosition = getTunnelStartPosition(); // get the egress position of the last straight tunnel (or use origin if creating the first tunnel)
+            // get cell from map, check if tunnel w/ egress at curDirection already exists
+            Tunnel tunnel = getLastTunnel(TunnelList);
+            print("prev dir is " + prevDirection + " cur dir is " + curDirection);
 
-            if (prevTunnelDirection != Direction.None) // A pair of tunnels must exist to create a corner
+            CellMove cellMove = new CellMove(tunnel, prevDirection); // previous direction is direction of movement in the current tunnel
+
+            Tunnel nextTunnel;
+
+            if (Map.Manager.containsCell(cellMove.nextCell))
             {
-                Quaternion cornerRotation = CornerRotation.getRotationFromDirection(prevTunnelDirection, tunnelDirection);
-                GameObject CornerGO = Instantiate(Corner, tunnelPosition, cornerRotation, TunnelNetwork);
-                CornerGO.GetComponent<Corner>().setDirection(prevTunnelDirection, tunnelDirection);
-                CornerGO.name = "Corner " + cornerCount;
-
-                TunnelList.Add(CornerGO);
-                tunnelPosition = getTunnelStartPosition(); // if a corner tunnel precedes a straight tunnel, the straight tunnel's ingress position is the egress hole
+                nextTunnel = Map.Manager.TunnelMapDict[cellMove.nextCell];
+                nextTunnel = replaceTunnel(nextTunnel, tunnel, directionPair, cellMove);
+            }
+            else
+            {
+                nextTunnel = Factory.newTunnelFactory.getTunnel(directionPair, gameObject, cellMove);
             }
 
-            Quaternion tunnelRotation = TunnelRotation.getRotationFromDirection(tunnelDirection);
-            GameObject TunnelGO = Instantiate(StraightTunnel, tunnelPosition, tunnelRotation, TunnelNetwork);
+            AddTunnelEvent(nextTunnel, cellMove.nextCell, directionPair);
 
-            TunnelList.Add(TunnelGO);
-            TunnelGO.name = "Tunnel " + cornerCount;
-            StraightTunnelList.Add(TunnelGO);
-            cornerCount += 1;
+            TunnelList.Add(nextTunnel.gameObject);
+            nextTunnel.cellPositionList.Add(cellMove.nextCell); // initialize the coordinate list of the new tunnel
         }
 
         private void OnDisable()
         {
-            if (FindObjectOfType<DigManager>())
+            if (FindObjectOfType<Turn>())
             {
-                FindObjectOfType<DigManager>().CreateTunnelEvent -= onCreateTunnel;
-            }            
+                DecisionEvent -= FindObjectOfType<Turn>().onDecision;
+            }
+            if (FindObjectOfType<Slicer>())
+            {
+                SliceTunnelEvent -= FindObjectOfType<Slicer>().onSlice;
+            }
+            if (FindObjectOfType<Map.Manager>())
+            {
+                AddTunnelEvent -= FindObjectOfType<Map.Manager>().onAddTunnel;
+            }
+            if (FindObjectOfType<Worm.Movement>())
+            {
+                AddTunnelEvent -= FindObjectOfType<Worm.Movement>().onAddTunnel;
+                DecisionEvent -= FindObjectOfType<Worm.Movement>().onDecision;
+                DecisionEvent -= FindObjectOfType<Worm.Controller>().onDecision;
+            }
         }
     }
 }
