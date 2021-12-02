@@ -44,7 +44,6 @@ namespace Tunnel
             AddTunnelEvent += FindObjectOfType<Worm.Movement>().onAddTunnel;
             DecisionEvent += FindObjectOfType<Turn>().onDecision;
             DecisionEvent += FindObjectOfType<Worm.Movement>().onDecision;
-            DecisionEvent += FindObjectOfType<Worm.Controller>().onDecision;
         }
 
         private void FixedUpdate()
@@ -170,7 +169,6 @@ namespace Tunnel
             {
                 AddTunnelEvent -= FindObjectOfType<Worm.Movement>().onAddTunnel;
                 DecisionEvent -= FindObjectOfType<Worm.Movement>().onDecision;
-                DecisionEvent -= FindObjectOfType<Worm.Controller>().onDecision;
             }
         }
     }

@@ -12,8 +12,7 @@ namespace Tunnel
 
         private List<Vector3> waypointList; // list of points to move to when a corner is created
 
-        Direction curDirection; // direction of the current turn
-        Direction prevDirection; // direction of the previous turn used for rotating tunnels
+        DirectionPair directionPair;
 
         public delegate void ChangeDirection(DirectionPair directionPair);
         public event ChangeDirection ChangeDirectionEvent;
@@ -26,7 +25,7 @@ namespace Tunnel
             this.isDecision = false;
             this.isWaitBlockEvent = false;
             this.isBlockSizeMultiple = true; // used to initialize straight tunnel
-            prevDirection = curDirection = Direction.None;
+            directionPair = new DirectionPair(Direction.None, Direction.None);
             this.waypointList = new List<Vector3>();
         }
 
@@ -60,10 +59,8 @@ namespace Tunnel
         {
             if (isTurning())
             {
-                DirectionPair directionPair = new DirectionPair(prevDirection, curDirection);
-                prevDirection = curDirection;
-                curDirection = Direction.None;
-                this.isDecision = false;
+                isDecision = false;
+                print("debug rotate tunnel with prev dir " + directionPair.prevDir + " cur dir " + directionPair.curDir);
                 ChangeDirectionEvent(directionPair); // rotate tunnel in the direction
 
                 if (tunnel != null) // check the tunnel exists
@@ -81,8 +78,9 @@ namespace Tunnel
          */
         public void onCompleteTurn(Direction direction)
         {
-            DirectionPair straightDirection = new DirectionPair(direction, direction);
-            ChangeDirectionEvent(straightDirection);
+            DirectionPair straightDirectionPair = new DirectionPair(direction, direction);
+            print("debug rotate tunnel in " + direction);
+            ChangeDirectionEvent(straightDirectionPair);
         }
 
         /**
@@ -96,8 +94,9 @@ namespace Tunnel
         {
             this.isDecision = true;
             this.isWaitBlockEvent = isWaitBlockEvent;
-            this.curDirection = direction;
-            print("decide to go in curDirection " + curDirection);
+            directionPair.prevDir = directionPair.curDir;
+            directionPair.curDir = direction;
+            print("decide to go in curDirection " + direction);
             turn(tunnel);
         }
 
@@ -138,8 +137,14 @@ namespace Tunnel
 
         private void OnDisable()
         {
-            ChangeDirectionEvent -= FindObjectOfType<Manager>().onChangeDirection;
-            FollowWaypointEvent -= FindObjectOfType<Worm.Movement>().onFollowWaypoint;
+            if (FindObjectOfType<Manager>())
+            {
+                ChangeDirectionEvent -= FindObjectOfType<Manager>().onChangeDirection;
+            }
+            if (FindObjectOfType<Worm.Movement>())
+            {
+                FollowWaypointEvent -= FindObjectOfType<Worm.Movement>().onFollowWaypoint;
+            }            
         }
     }
 

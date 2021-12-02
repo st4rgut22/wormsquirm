@@ -15,8 +15,8 @@ public enum Direction
 
 public class DirectionPair
 {
-    public Direction prevDir { get; private set; }
-    public Direction curDir { get; private set; }
+    public Direction prevDir;
+    public Direction curDir;
 
     public DirectionPair(Direction prevDir, Direction curDir)
     {

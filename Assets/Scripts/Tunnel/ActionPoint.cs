@@ -131,7 +131,10 @@ namespace Tunnel
 
         private void OnDisable()
         {
-            MoveEvent -= FindObjectOfType<Worm.Movement>().onMove;
+            if (FindObjectOfType<Worm.Movement>())
+            {
+                MoveEvent -= FindObjectOfType<Worm.Movement>().onMove;
+            }
         }
 
     }

@@ -9,6 +9,7 @@ namespace Worm
     public class Movement : MonoBehaviour
     {
         private Direction direction; // direction of worm travel
+        private Direction egressWaypointDirection; // direction exiting a corner, saved on receipt of followWaypoints event
 
         private Vector3 unitVectorDirection;
         private int waypointIndex;
@@ -36,6 +37,8 @@ namespace Worm
         {
             PositionEvent += FindObjectOfType<Tunnel.Manager>().onPosition;
             CompleteTurnEvent += FindObjectOfType<Tunnel.Turn>().onCompleteTurn;
+            CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
+            CompleteTurnEvent += FindObjectOfType<Rotation>().onCompleteTurn;
         }
 
         private void Update()
@@ -67,7 +70,8 @@ namespace Worm
             waypointList = nextWaypointList;
             if (waypointList.Count == 0)
             {
-                CompleteTurnEvent(direction);
+                CompleteTurnEvent(egressWaypointDirection);
+                print("debug completeTurnEvent in direction " + egressWaypointDirection);
             }
             waypointIndex = 0;
             nextWaypointList.Clear();
@@ -126,7 +130,7 @@ namespace Worm
          */
         public void onFollowWaypoint(List<Vector3> waypointList, DirectionPair directionPair)
         {
-            direction = directionPair.curDir; // save the last egress direction 
+            egressWaypointDirection = directionPair.curDir; // save the last egress directionPair
 
             if (this.waypointList.Count > 0)
             {
@@ -166,8 +170,19 @@ namespace Worm
 
         private void OnDisable()
         {
-            PositionEvent -= FindObjectOfType<Tunnel.Manager>().onPosition;
-            CompleteTurnEvent -= FindObjectOfType<Tunnel.Turn>().onCompleteTurn;
+            if (FindObjectOfType<Tunnel.Manager>())
+            {
+                PositionEvent -= FindObjectOfType<Tunnel.Manager>().onPosition;
+            }
+            if (FindObjectOfType<Tunnel.Turn>())
+            {
+                CompleteTurnEvent -= FindObjectOfType<Tunnel.Turn>().onCompleteTurn;                
+            }
+            if (FindObjectOfType<Controller>())
+            {
+                CompleteTurnEvent -= FindObjectOfType<Controller>().onCompleteTurn;
+                CompleteTurnEvent -= FindObjectOfType<Rotation>().onCompleteTurn;
+            }
         }
     }
 }

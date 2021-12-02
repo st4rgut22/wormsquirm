@@ -14,8 +14,10 @@ namespace Rotation
         public Quaternion rotate(DirectionPair dirPair)
         {
             Quaternion rotation = getRotationFromDirection(dirPair.curDir);
+            Debug.Log("rotation from cur dir " + dirPair.curDir + " is " + rotation);
             return rotation;
         }
+
         /**
          * 
          * Return the direction of a GO using rotation

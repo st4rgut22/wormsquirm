@@ -8,7 +8,6 @@ namespace Worm
     public class Controller : MonoBehaviour
     {
         private Direction direction;
-        private Direction prevDirection;
         
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
@@ -22,7 +21,11 @@ namespace Worm
         void Awake()
         {
             direction = Direction.None;
-            prevDirection = direction;
+        }
+
+        public void onCompleteTurn(Direction direction)
+        {
+            this.direction = direction;
         }
 
         private Direction getDirection(InputKeyPair inputKeyPair)
@@ -31,7 +34,8 @@ namespace Worm
 
             if (direction == Direction.None)
             {
-                return pressedKey.initDirection;
+                direction = pressedKey.initDirection;
+                return direction;
             }
             else
             {
@@ -41,28 +45,18 @@ namespace Worm
 
         void Update()
         {
-            Direction newDirection = direction;
 
             InputKeyPair inputKeyPair = InputManager.instance.getInputKeyPair();
 
             if (inputKeyPair != null)
             {
-                newDirection = getDirection(inputKeyPair);
+                Direction localDirection = getDirection(inputKeyPair); // direction with respect to tunnel
 
                 if (PlayerInputEvent != null)
                 {
-                    PlayerInputEvent(newDirection);
+                    PlayerInputEvent(localDirection);
                 }
             }
-        }
-
-        /**
-         * When worm has moved enough to trigger change in tunnel direction, save the new direction as reference for next player input
-         */
-        public void onDecision(bool isStraightTunnel, Direction newDirection, Tunnel.Tunnel tunnel)
-        {
-            prevDirection = direction;
-            direction = newDirection;
         }
 
         private void OnDisable()
