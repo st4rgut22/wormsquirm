@@ -1,25 +1,64 @@
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace Map
 {
     public class Manager : MonoBehaviour
     {
+        public delegate void Slice(Tunnel.Straight curTunnel, Tunnel.Tunnel nextTunnel);
+        private event Slice SliceEvent;
+
         public static Dictionary<Vector3Int, Tunnel.Tunnel> TunnelMapDict;
 
         private void Awake()
         {
-             TunnelMapDict = new Dictionary<Vector3Int, Tunnel.Tunnel>();
+            TunnelMapDict = new Dictionary<Vector3Int, Tunnel.Tunnel>();
         }
 
+        private void OnEnable()
+        {
+            SliceEvent += FindObjectOfType<Intersect.Manager>().onSlice;
+        }
 
         /**
          * Adds tunnel type to the map at the provided coordinate
          */
-        public void onBlockInterval(bool isBlockInterval, Vector3 blockPosition, Tunnel.Tunnel tunnel)
+        public void onBlockInterval(bool isBlockInterval, Vector3 blockPosition, Tunnel.Straight tunnel)
         {
-            Vector3Int blockPositionInt = blockPosition.castToVector3Int();
-            addCellToDict(blockPositionInt, tunnel);
+            if (isBlockInterval)
+            {
+                Vector3Int blockPositionInt = blockPosition.castToVector3Int(tunnel.growthDirection);
+                print("block position is " + blockPosition + " blockPosInt is " + blockPositionInt + " for tunnel " + tunnel.name);
+                if (containsCell(blockPositionInt))
+                {
+                    Tunnel.Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
+                    print("debug onSlice " + blockPositionInt);
+                    SliceEvent(tunnel, intersectTunnel); // send event when tunnels intersect
+                }
+                else
+                {
+                    addCellToDict(blockPositionInt, tunnel);
+                }
+            }
+        }
+
+        /**
+         * Gets the rounded block size
+         */
+        static double getRoundedDistance(double distance)
+        {
+            double roundedScale = Math.Round(distance * 1000f) / 1000f;
+            return roundedScale;
+        }
+
+        /**
+         * Returns true if distance along axis is a multiple of 1
+         */
+        public static bool isDistanceMultiple(double distance)
+        {
+            double roundedDistance = getRoundedDistance(distance);
+            return (roundedDistance % 1) == 0;
         }
 
         public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
@@ -37,6 +76,7 @@ namespace Map
          */
         public static void addCellToDict(Vector3Int cellLocation, Tunnel.Tunnel tunnel)
         {
+            print("debug add cell " + cellLocation + " belonging to tunnel " + tunnel.name);
             TunnelMapDict[cellLocation] = tunnel;
         }
 
@@ -45,19 +85,22 @@ namespace Map
          */
         public static Tunnel.Tunnel getTunnelFromDict(Vector3Int cellLocation)
         {
-            return TunnelMapDict[cellLocation];
+            if (containsCell(cellLocation))
+            {
+                return TunnelMapDict[cellLocation];
+            }
+            else
+            {
+                return null;
+            }
         }
 
-        // Start is called before the first frame update
-        void Start()
+        private void OnDisable()
         {
-
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
+            if (FindObjectOfType<Intersect.Manager>())
+            {
+                SliceEvent -= FindObjectOfType<Intersect.Manager>().onSlice;
+            }
         }
     }
 

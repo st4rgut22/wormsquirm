@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Tunnel
 {
-    public class Env : MonoBehaviour
+    public class Type : MonoBehaviour
     {
         [SerializeField]
         public GameObject Straight;
@@ -27,9 +27,21 @@ namespace Tunnel
         [SerializeField]
         public Transform TunnelNetwork;
 
-        public const string STRAIGHT_TUNNEL = "Straight";
+        public static Type instance;
 
-        public static Env instance;
+        public const string STRAIGHT = "straight";
+        public const string CORNER = "corner";
+
+        public enum Name {
+            STRAIGHT,
+            CORNER,
+            THREEWAY_OPP,
+            THREEWAY_ADJ,
+            FOURWAY_ADJ,
+            FOURWAY_OPP,
+            FIVEWAY,
+            SIXWAY
+        }
 
         private void Awake()
         {

@@ -6,13 +6,16 @@ namespace Tunnel
 
     public class Manager : MonoBehaviour
     {
-        private static int cornerCount;
-
-        [SerializeField]
-        private bool bypassWormInput;
+        public static int straightCount;
+        public static int cornerCount;
 
         private List<GameObject> TunnelList; // list consisting of straight tunnels and corner tunnels
-        private List<GameObject> StraightTunnelList;
+
+        //public delegate void Slice(Tunnel curTunnel, Tunnel nextTunnel, Direction ingressDirection);
+        //private event Slice SliceEvent;
+
+        public delegate void InitWormPosition(Vector3 position);
+        public event InitWormPosition InitWormPositionEvent;
 
         public delegate void Decision(bool isStraightTunnel, Direction direction, Tunnel tunnel);
         public event Decision DecisionEvent;
@@ -26,24 +29,20 @@ namespace Tunnel
         public delegate void Stop();
         public event Stop StopEvent;
 
-        public delegate void SliceTunnel(Tunnel tunnel, Tunnel nextTunnel, DirectionPair dirPair);
-        public event SliceTunnel SliceTunnelEvent;
-
         private void Awake()
         {
-            cornerCount = 0;
             TunnelList = new List<GameObject>();
-            StraightTunnelList = new List<GameObject>();
-            bypassWormInput = true;
+            straightCount = cornerCount = 0;
         }
 
         protected void OnEnable()
         {
-            SliceTunnelEvent += FindObjectOfType<Slicer>().onSlice; // slicer is listening for collide events
             AddTunnelEvent += FindObjectOfType<Map.Manager>().onAddTunnel;
             AddTunnelEvent += FindObjectOfType<Worm.Movement>().onAddTunnel;
+            InitWormPositionEvent += FindObjectOfType<Worm.Movement>().onInitWormPosition;
             DecisionEvent += FindObjectOfType<Turn>().onDecision;
             DecisionEvent += FindObjectOfType<Worm.Movement>().onDecision;
+            //SliceEvent += FindObjectOfType<Intersect.Manager>().onSlice;
         }
 
         private void FixedUpdate()
@@ -54,24 +53,6 @@ namespace Tunnel
             {
                 GrowEvent();
             }
-        }
-
-        /**
-         * When the destination cell is already occupied, it needs to be replaced or spliced
-         */
-        private Tunnel replaceTunnel(Tunnel nextTunnel, Tunnel tunnel, DirectionPair directionPair, CellMove cellMove)
-        {
-            Tunnel replacementTunnel = Factory.modTunnelFactory.getTunnel(directionPair, tunnel, gameObject, cellMove);
-
-            if (nextTunnel.tag == Env.STRAIGHT_TUNNEL)
-            {
-                SliceTunnelEvent(tunnel, replacementTunnel, directionPair); // the replacementTunnel will be spliced into the straight tunnel
-            }
-            else
-            {
-                Destroy(nextTunnel.gameObject); // destroy the tunnel that's being replaced
-            }
-            return replacementTunnel;
         }
 
         private Tunnel getLastTunnel(List<GameObject> tunnelList)
@@ -97,18 +78,8 @@ namespace Tunnel
 
             if (isDecision)
             {
-                bool isStraightTunnel = LastTunnel == null || LastTunnel.tag == Env.STRAIGHT_TUNNEL; // if this is the first tunnel it should be straight type
+                bool isStraightTunnel = LastTunnel == null || LastTunnel.type == Type.Name.STRAIGHT; // if this is the first tunnel it should be straight type
                 DecisionEvent(isStraightTunnel, direction, LastTunnel);
-
-            }
-        }
-
-        public void onSlice(Tunnel tunnelGO, Collision collision)
-        {
-            if (StopEvent != null && collision.gameObject.name == "Tunnel 0" && tunnelGO.name == "Tunnel 3")
-            {
-                print("stop tunnel 0");
-                StopEvent(); // Stop the last growing tunnel if a collision occurred
             }
         }
 
@@ -131,24 +102,35 @@ namespace Tunnel
             Tunnel tunnel = getLastTunnel(TunnelList);
             print("prev dir is " + prevDirection + " cur dir is " + curDirection);
 
-            CellMove cellMove = new CellMove(tunnel, prevDirection); // previous direction is direction of movement in the current tunnel
-
-            Tunnel nextTunnel;
-
-            if (Map.Manager.containsCell(cellMove.nextCell))
+            CellMove cellMove;
+            if (tunnel != null)
             {
-                nextTunnel = Map.Manager.TunnelMapDict[cellMove.nextCell];
-                nextTunnel = replaceTunnel(nextTunnel, tunnel, directionPair, cellMove);
+                cellMove = new CellMove(tunnel, prevDirection); // previous direction is direction of movement in the current tunnel
             }
             else
             {
-                nextTunnel = Factory.newTunnelFactory.getTunnel(directionPair, gameObject, cellMove);
+                cellMove = new CellMove(curDirection); // on game start, there is no previous direction so use current direction
+                InitWormPositionEvent(cellMove.startPosition);
+                // send addTunnelEvent for cellMove.nextCell, but we need a reference to nextTunnel to do this
             }
 
-            AddTunnelEvent(nextTunnel, cellMove.nextCell, directionPair);
-
-            TunnelList.Add(nextTunnel.gameObject);
-            nextTunnel.cellPositionList.Add(cellMove.nextCell); // initialize the coordinate list of the new tunnel
+            Tunnel existingTunnel = Map.Manager.getTunnelFromDict(cellMove.cell);
+            if (existingTunnel == null)
+            {
+                Tunnel nextTunnel = Factory.newTunnelFactory.createTunnel(directionPair, gameObject, cellMove);
+                print("adding cell " + cellMove.cell);
+                AddTunnelEvent(nextTunnel, cellMove.cell, directionPair);
+                if (cellMove.isInit)
+                {
+                    AddTunnelEvent(nextTunnel, cellMove.nextCell, directionPair);
+                }
+                TunnelList.Add(nextTunnel.gameObject);
+                nextTunnel.cellPositionList.Add(cellMove.cell); // initialize the coordinate list of the new tunnel
+            }
+            //else // tunnel exists where we want to create one. issue slice event
+            //{
+            //    SliceEvent(tunnel, existingTunnel, );
+            //}
         }
 
         private void OnDisable()
@@ -156,10 +138,6 @@ namespace Tunnel
             if (FindObjectOfType<Turn>())
             {
                 DecisionEvent -= FindObjectOfType<Turn>().onDecision;
-            }
-            if (FindObjectOfType<Slicer>())
-            {
-                SliceTunnelEvent -= FindObjectOfType<Slicer>().onSlice;
             }
             if (FindObjectOfType<Map.Manager>())
             {
@@ -169,7 +147,12 @@ namespace Tunnel
             {
                 AddTunnelEvent -= FindObjectOfType<Worm.Movement>().onAddTunnel;
                 DecisionEvent -= FindObjectOfType<Worm.Movement>().onDecision;
+                InitWormPositionEvent -= FindObjectOfType<Worm.Movement>().onInitWormPosition;
             }
+            //if (FindObjectOfType<Intersect.Manager>())
+            //{
+            //    SliceEvent -= FindObjectOfType<Intersect.Manager>().onSlice;
+            //}
         }
     }
 }

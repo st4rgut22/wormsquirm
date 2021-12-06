@@ -9,6 +9,7 @@ namespace Worm
     public class Movement : MonoBehaviour
     {
         private Direction direction; // direction of worm travel
+        private Direction tunnelDirection; // direction of tunnel growth
         private Direction egressWaypointDirection; // direction exiting a corner, saved on receipt of followWaypoints event
 
         private Vector3 unitVectorDirection;
@@ -16,6 +17,9 @@ namespace Worm
 
         private List<Vector3> waypointList;
         private List<Vector3> nextWaypointList; // queued up waypoint list if turning while navigating a corner
+
+        public delegate void BlockInterval(bool isBlockInterval, Vector3 blockPosition);
+        public event BlockInterval BlockIntervalEvent;
 
         public delegate void Position(Vector3 position, Direction direction);
         public event Position PositionEvent;
@@ -31,14 +35,24 @@ namespace Worm
             waypointList = new List<Vector3>();
             nextWaypointList = new List<Vector3>();
             unitVectorDirection = Vector3.zero; // initially the worm is not moving
+            tunnelDirection = Direction.None;
         }
 
-        private void OnEnable()
+        private void OnEnable() 
         {
             PositionEvent += FindObjectOfType<Tunnel.Manager>().onPosition;
             CompleteTurnEvent += FindObjectOfType<Tunnel.Turn>().onCompleteTurn;
             CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
             CompleteTurnEvent += FindObjectOfType<Rotation>().onCompleteTurn;
+        }
+
+        private void FixedUpdate()
+        {
+            if (tunnelDirection != Direction.None)
+            {
+                float distance = Dir.Vector.getAxisPositionFromDirection(tunnelDirection, transform.position);
+                bool isBlockInterval = Map.Manager.isDistanceMultiple(distance);
+            }
         }
 
         private void Update()
@@ -71,7 +85,6 @@ namespace Worm
             if (waypointList.Count == 0)
             {
                 CompleteTurnEvent(egressWaypointDirection);
-                print("debug completeTurnEvent in direction " + egressWaypointDirection);
             }
             waypointIndex = 0;
             nextWaypointList.Clear();
@@ -149,8 +162,19 @@ namespace Worm
          */
         public void onBlockInterval(bool isBlockInterval, Vector3 blockPosition, Tunnel.Straight tunnel)
         {
-            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(tunnel.ingressDirection);
+            tunnelDirection = tunnel.growthDirection;
+            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(tunnelDirection);
             transform.position += unitVector * (float) Tunnel.Tunnel.SCALED_GROWTH_RATE; // set position a little behind the tunnel head
+        }
+
+        /**
+         * Initialize the worm's position based on initial tunnel's position
+         * 
+         * @initPosition position of tunnel
+         */
+        public void onInitWormPosition(Vector3 initPosition)
+        {
+            transform.position = initPosition;
         }
 
         /**
@@ -181,6 +205,9 @@ namespace Worm
             if (FindObjectOfType<Controller>())
             {
                 CompleteTurnEvent -= FindObjectOfType<Controller>().onCompleteTurn;
+            }
+            if (FindObjectOfType<Rotation>())
+            {
                 CompleteTurnEvent -= FindObjectOfType<Rotation>().onCompleteTurn;
             }
         }

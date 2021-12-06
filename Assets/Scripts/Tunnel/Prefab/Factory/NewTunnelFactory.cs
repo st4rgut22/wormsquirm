@@ -11,7 +11,7 @@ namespace Tunnel
          * @curTunnel is the current tunnel turn is made from
          * @gameObject is a reference to TunnelManager required for using the extension method Instantiate()
          */
-        public Tunnel getTunnel(DirectionPair directionPair, GameObject gameObject, CellMove cellMove)
+        public Tunnel createTunnel(DirectionPair directionPair, GameObject gameObject, CellMove cellMove)
         {
 
             GameObject newTunnelGO = null;
@@ -21,11 +21,15 @@ namespace Tunnel
 
             if (isTunnelInitialized && !isTunnelStraight)
             {
-                newTunnelGO = gameObject.Instantiate(Env.instance.Corner, cellMove.startPosition, Env.instance.TunnelNetwork, directionPair, cellMove.nextCell);
+                Manager.cornerCount += 1;
+                string cornerId = Type.CORNER + " " + Manager.cornerCount;
+                newTunnelGO = gameObject.Instantiate(Type.instance.Corner, cellMove.startPosition, Type.instance.TunnelNetwork, directionPair, cellMove.cell, cornerId);
             }
             else // create a straight tunnel
             {
-                newTunnelGO = gameObject.Instantiate(Env.instance.Straight, cellMove.startPosition, Env.instance.TunnelNetwork, directionPair, cellMove.nextCell);
+                Manager.straightCount += 1;
+                string straightId = Type.STRAIGHT + " " + Manager.straightCount;
+                newTunnelGO = gameObject.Instantiate(Type.instance.Straight, cellMove.startPosition, Type.instance.TunnelNetwork, directionPair, cellMove.cell, straightId);
             }
 
             if (newTunnelGO == null)

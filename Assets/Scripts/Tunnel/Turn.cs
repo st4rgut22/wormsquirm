@@ -60,12 +60,11 @@ namespace Tunnel
             if (isTurning())
             {
                 isDecision = false;
-                print("debug rotate tunnel with prev dir " + directionPair.prevDir + " cur dir " + directionPair.curDir);
                 ChangeDirectionEvent(directionPair); // rotate tunnel in the direction
 
                 if (tunnel != null) // check the tunnel exists
                 {
-                    Vector3 egressPosition = tunnel.getEgressPosition(directionPair.prevDir);
+                    Vector3 egressPosition = Tunnel.getEgressPosition(directionPair.prevDir, tunnel.center);
                     initializeTurnWaypointList(directionPair, egressPosition);
                 }
             }
@@ -79,7 +78,6 @@ namespace Tunnel
         public void onCompleteTurn(Direction direction)
         {
             DirectionPair straightDirectionPair = new DirectionPair(direction, direction);
-            print("debug rotate tunnel in " + direction);
             ChangeDirectionEvent(straightDirectionPair);
         }
 

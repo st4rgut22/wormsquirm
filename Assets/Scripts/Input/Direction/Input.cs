@@ -13,7 +13,7 @@ namespace Dir
                 case Direction.Right:
                     return mapWASDToDirection(key, Direction.Up, Direction.Back, Direction.Down, Direction.Forward);
                 case Direction.Back:
-                    return mapWASDToDirection(key, Direction.Up, Direction.Left, Direction.Down, Direction.Right);
+                    return mapWASDToDirection(key, Direction.Down, Direction.Left, Direction.Up, Direction.Right);
                 case Direction.Left:
                     return mapWASDToDirection(key, Direction.Down, Direction.Forward, Direction.Up, Direction.Back);
                 case Direction.Forward:

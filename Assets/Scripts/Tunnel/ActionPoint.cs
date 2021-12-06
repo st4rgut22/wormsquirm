@@ -61,13 +61,13 @@ namespace Tunnel
          */
         private bool isDirectionAlongDecisionAxis(Tunnel tunnel, Direction direction)
         {
-            if (tunnel.gameObject.tag != Env.STRAIGHT_TUNNEL)
+            if (tunnel.type != Type.Name.STRAIGHT)
             {
                 return true;
             }
             else
             {
-                if (direction != tunnel.ingressDirection) // for a straight tunnel ingress dir = egress dir
+                if (direction != ((Straight)tunnel).growthDirection) // check for movement perpendicular to  growth axis in a straight tunnel.
                 {
                     return true;
                 }

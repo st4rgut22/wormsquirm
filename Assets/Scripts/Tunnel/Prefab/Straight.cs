@@ -1,10 +1,12 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 namespace Tunnel
 {    
     public class Straight : Tunnel
     {
+        public Direction growthDirection;
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3 blockPosition, Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
@@ -13,7 +15,10 @@ namespace Tunnel
         void OnEnable()
         {
             FindObjectOfType<Manager>().GrowEvent += onGrow;
+
             FindObjectOfType<Manager>().StopEvent += onStop;
+            FindObjectOfType<Intersect.Manager>().StopEvent += onStop;
+
             BlockIntervalEvent += FindObjectOfType<Map.Manager>().onBlockInterval; // subscribe dig manager to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Turn>().onBlockInterval; // subscribe turn to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Worm.Movement>().onBlockInterval;  // subscribe worm so it can go to the center of the created block
@@ -23,11 +28,17 @@ namespace Tunnel
         {
             base.Awake();
 
+            type = Type.Name.STRAIGHT;
             rotation = new Rotation.Straight();
 
             isStopped = false;
             ingressPosition = transform.position;
             print("headLocation of " + gameObject.name + " is " + ingressPosition);
+        }
+
+        private void Start()
+        {
+            growthDirection = holeDirectionList[0];
         }
 
         private void FixedUpdate()
@@ -36,21 +47,20 @@ namespace Tunnel
             {
                 float length = getLength(); // transforms scale to length
 
-                double roundedPosition = getRoundedPosition(length);
-                bool isBlockMultiple = isRoundedPositionMultiple(roundedPosition);
+                bool isBlockMultiple = Map.Manager.isDistanceMultiple(length);
 
-                Vector3 unitVectorInDir = Dir.Vector.getUnitVectorFromDirection(ingressDirection);
+                Vector3 unitVectorInDir = Dir.Vector.getUnitVectorFromDirection(growthDirection);
 
                 Vector3 position = transform.position;
-                Vector3 deltaPosition = length * unitVectorInDir;
 
+                Vector3 deltaPosition = length * unitVectorInDir;
                 Vector3 cellPosition = position + deltaPosition;
 
 
                 if (isBlockMultiple)
                 {
-                    addCellToList(cellPosition.castToVector3Int()); // add new position to list of cell positions covered by straight tunnel
-                    setCenter(length); // adjust the center to the new block
+                    addCellToList(cellPosition.castToVector3Int(growthDirection)); // add new position to list of cell positions covered by straight tunnel
+                    setCenter(length, growthDirection); // adjust the center to the new block
                     BlockIntervalEvent(isBlockMultiple, cellPosition, this);
                 }
                 else
@@ -58,6 +68,13 @@ namespace Tunnel
                     BlockIntervalEvent(isBlockMultiple, cellPosition, this);
                 }
             }
+        }
+
+        public override void setHoleDirections(DirectionPair directionPair)
+        {
+            growthDirection = directionPair.curDir;
+            Direction oppositeGrowthDirection = Dir.Base.getOppositeDirection(growthDirection);
+            holeDirectionList = new List<Direction>() { growthDirection, oppositeGrowthDirection };
         }
 
         /**
@@ -79,23 +96,6 @@ namespace Tunnel
         private float getLength()
         {
             return (transform.localScale.y * BLOCK_SIZE * SCALE_TO_LENGTH); // scale of 1 : 2 meters or 0.5 : 1 meter
-        }
-
-        /**
-         * Gets the rounded block size
-         */
-        protected double getRoundedPosition(float length)
-        {
-            double roundedScale = Math.Round(length * 1000f) / 1000f;
-            return roundedScale;
-        }
-
-        /**
-         * Returns true if distance along axi is a multiple of 1
-         */
-        protected bool isRoundedPositionMultiple(double roundedPosition)
-        {
-            return (roundedPosition % 1) == 0;
         }
 
         private void onGrow()
@@ -123,6 +123,10 @@ namespace Tunnel
             if (FindObjectOfType<Worm.Movement>())
             {
                 BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;
+            }
+            if (FindObjectOfType<Intersect.Manager>())
+            {
+                FindObjectOfType<Intersect.Manager>().StopEvent -= onStop;
             }
         }
     }

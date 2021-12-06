@@ -10,7 +10,7 @@ namespace Tunnel
         /**
          * Given the previous direction, current direction and current tunnel create the next tunnel segment
          */
-        public Tunnel getTunnel(DirectionPair directionPair, Tunnel curTunnel, GameObject gameObject, CellMove cellMove)
+        public Tunnel getTunnel(Tunnel curTunnel, Tunnel nextTunnel)
         {
 
             // get egress position from current tunnel and prevDirection to use as tunnel start position for new segment
