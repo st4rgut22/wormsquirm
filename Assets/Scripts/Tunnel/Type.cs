@@ -7,22 +7,28 @@ namespace Tunnel
     public class Type : MonoBehaviour
     {
         [SerializeField]
-        public GameObject Straight;
+        public Transform Straight;
 
         [SerializeField]
-        public GameObject Corner;
+        public Transform Corner;
 
         [SerializeField]
-        public GameObject ThreewayTunnel;
+        public Transform ThreewayTunnelOpp;
 
         [SerializeField]
-        public GameObject FourwayTunnel;
+        public Transform ThreewayTunnelAdj;
 
         [SerializeField]
-        public GameObject FivewayTunnel;
+        public Transform FourwayTunnelOpp;
 
         [SerializeField]
-        public GameObject SixwayTunnel;
+        public Transform FourwayTunnelAdj;
+
+        [SerializeField]
+        public Transform FivewayTunnel;
+
+        [SerializeField]
+        public Transform SixwayTunnel;
 
         [SerializeField]
         public Transform TunnelNetwork;
@@ -31,6 +37,7 @@ namespace Tunnel
 
         public const string STRAIGHT = "straight";
         public const string CORNER = "corner";
+        public const string JUNCTION = "junction";
 
         public enum Name {
             STRAIGHT,

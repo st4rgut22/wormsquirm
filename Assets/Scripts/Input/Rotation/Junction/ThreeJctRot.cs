@@ -1,16 +1,11 @@
-using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Rotation
 {
-    public class Corner: IRotation
+    public class ThreeJctRot : Rotation
     {
-
-        public Quaternion rotate(DirectionPair dirPair)
-        {
-            return cornerRotationDict[dirPair.prevDir][dirPair.curDir];
-        }
-
         // Dictionary<ingress hole direction, Dictionary<egress hold direction, rotation>>()
         private static Dictionary<Direction, Dictionary<Direction, Quaternion>> cornerRotationDict =
             new Dictionary<Direction, Dictionary<Direction, Quaternion>>
@@ -70,15 +65,6 @@ namespace Rotation
                     }
                 }
             };
-
-        /**
-         * Use the previous and current tunnel directiosn to get rotation and offset of the corner piece
-         */
-        public static Quaternion getRotationFromDirection(Direction prevTunnelDirection, Direction currentTunnelDirection)
-        {
-            Quaternion cornerRotation = cornerRotationDict[prevTunnelDirection][currentTunnelDirection];
-            Debug.Log("cur " + currentTunnelDirection + " prev " + prevTunnelDirection + " euler angles is " + cornerRotation.eulerAngles);
-            return cornerRotation;
-        }
     }
+
 }

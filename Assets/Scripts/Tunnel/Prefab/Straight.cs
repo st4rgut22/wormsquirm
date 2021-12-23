@@ -29,11 +29,8 @@ namespace Tunnel
             base.Awake();
 
             type = Type.Name.STRAIGHT;
-            rotation = new Rotation.Straight();
-
             isStopped = false;
             ingressPosition = transform.position;
-            print("headLocation of " + gameObject.name + " is " + ingressPosition);
         }
 
         private void Start()
@@ -56,7 +53,6 @@ namespace Tunnel
                 Vector3 deltaPosition = length * unitVectorInDir;
                 Vector3 cellPosition = position + deltaPosition;
 
-
                 if (isBlockMultiple)
                 {
                     addCellToList(cellPosition.castToVector3Int(growthDirection)); // add new position to list of cell positions covered by straight tunnel
@@ -70,9 +66,9 @@ namespace Tunnel
             }
         }
 
-        public override void setHoleDirections(DirectionPair directionPair)
+        public override void setHoleDirections(DirectionPair dirPair)
         {
-            growthDirection = directionPair.curDir;
+            growthDirection = dirPair.curDir;
             Direction oppositeGrowthDirection = Dir.Base.getOppositeDirection(growthDirection);
             holeDirectionList = new List<Direction>() { growthDirection, oppositeGrowthDirection };
         }

@@ -26,6 +26,22 @@ namespace Dir
             }
         }
 
+        /**
+         * Determine if directions are adjacent, if opposites are present then return false
+         */
+        public static bool areDirectionsAdjacent(List<Direction> directionList)
+        {
+            foreach (Direction dir in directionList)
+            {
+                Direction oppDir = getOppositeDirection(dir);
+                if (directionList.Contains(oppDir))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         public static Direction getOppositeDirection(Direction direction)
         {
             switch (direction)

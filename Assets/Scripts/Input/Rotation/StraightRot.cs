@@ -1,8 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Rotation
 {
-    public class Straight : IRotation
+    public class StraightRot : Rotation
     {
         private static Quaternion UP_ROTATION = Quaternion.Euler(0, 0, 0);
         private static Quaternion FORWARD_ROTATION = Quaternion.Euler(90, 0, 0);
@@ -11,11 +12,20 @@ namespace Rotation
         private static Quaternion RIGHT_ROTATION = Quaternion.Euler(90, 90, 0);
         private static Quaternion LEFT_ROTATION = Quaternion.Euler(90, -90, 0);
 
-        public Quaternion rotate(DirectionPair dirPair)
+        public override Quaternion getRotation(Direction ingressDir, List<Direction> egressDirList)
         {
-            Quaternion rotation = getRotationFromDirection(dirPair.curDir);
-            Debug.Log("rotation from cur dir " + dirPair.curDir + " is " + rotation);
+            Quaternion rotation = getRotationFromDirection(ingressDir);
+            Debug.Log("rotation from cur dir " + ingressDir + " is " + rotation);
             return rotation;
+        }
+
+        /**
+         * Check if the direction is valid
+         */
+        public override bool isRotationInRotationDict(Direction prevTunnelDirection, List<Direction> otherDirList)
+        {
+            getRotationFromDirection(prevTunnelDirection);
+            return true;
         }
 
         /**

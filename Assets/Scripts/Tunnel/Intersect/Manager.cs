@@ -10,6 +10,9 @@ namespace Intersect
         public delegate void SliceTunnel(Tunnel.Straight collidedTunnel, Direction ingressDirection, Vector3 contactPosition);
         private event SliceTunnel SliceTunnelEvent; // fired when current tunnel intersects another tunnel
 
+        public delegate void CreateJunction(Tunnel.Tunnel collisionTunnel, DirectionPair dirPair, Tunnel.CellMove cellMove);
+        private event CreateJunction CreateJunctionEvent;
+
         public delegate void Stop();
         public event Stop StopEvent;
 
@@ -17,6 +20,7 @@ namespace Intersect
         void OnEnable()
         {
             SliceTunnelEvent += FindObjectOfType<Slicer>().sliceTunnel;
+            CreateJunctionEvent += FindObjectOfType<Tunnel.ModTunnelFactory>().onCreateJunction;
         }
 
         /**
@@ -24,12 +28,16 @@ namespace Intersect
          * On intersect with a tunnel segment, create a junction and slice segment (if necessary)
          * Notify worm about new tunnel so it can keep track of blockInterval instead of tunnel
          */
-        public void onSlice(Tunnel.Straight curTunnel, Tunnel.Tunnel nextTunnel)
+        public void onSlice(DirectionPair directionPair, Tunnel.Tunnel curTunnel, Tunnel.Tunnel nextTunnel)
         {
-            Tunnel.Factory.modTunnelFactory.getTunnel(curTunnel, nextTunnel); // create the appropriate junction
-
-            Direction exitDirection = curTunnel.growthDirection;
+            Direction exitDirection = directionPair.curDir;
+            
             Vector3 contactPosition = Tunnel.Tunnel.getEgressPosition(exitDirection, curTunnel.center);
+            Tunnel.CellMove cellMove = Tunnel.CellMove.getCellMove(curTunnel, directionPair);
+            if (!cellMove.startPosition.Equals(contactPosition))
+            {
+                throw new System.Exception("vectors are not equivalent");
+            }
 
             StopEvent(); // stop the currently growing tunnel
 
@@ -39,10 +47,7 @@ namespace Intersect
                 {
                     SliceTunnelEvent((Tunnel.Straight) nextTunnel, exitDirection, contactPosition);
                 }
-                else
-                {
-
-                }
+                CreateJunctionEvent(nextTunnel, directionPair, cellMove);
             }
         }
 
@@ -51,6 +56,10 @@ namespace Intersect
             if (FindObjectOfType<Slicer>())
             {
                 SliceTunnelEvent -= FindObjectOfType<Slicer>().sliceTunnel;
+            }
+            if (FindObjectOfType<Tunnel.ModTunnelFactory>())
+            {
+                CreateJunctionEvent -= FindObjectOfType<Tunnel.ModTunnelFactory>().onCreateJunction;
             }
         }
     }

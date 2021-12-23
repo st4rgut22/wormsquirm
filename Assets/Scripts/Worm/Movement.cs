@@ -125,18 +125,6 @@ namespace Worm
         }
 
         /**
-         * When a new tunnel is added that is not straight, the worm should redirect to follow path of the tunnel
-         * 
-         * @tunnel the added tunnel
-         * @cell the cell position of the added tunnel
-         * @directionPair the ingress and egress hole of the tunnel the worm enters and exits from
-         */
-        public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
-        {
-            print("on add tunnel");
-        }
-
-        /**
          * Follow waypoints when navigating corners. If already following waypoints, queue up the next waypoints list
          * 
          * @waypointList a list of coordinates the worm follows to navigate a corner

@@ -12,6 +12,24 @@ namespace Tunnel
         public Vector3Int nextCell { get; private set; }
 
         /**
+         * Get next cell positioning information
+         *
+         * @tunnel the old tunnel being left
+         * @directionPair directions to enter/exit the next tunnel segment
+         */
+        public static CellMove getCellMove(Tunnel tunnel, DirectionPair directionPair)
+        {
+            if (tunnel != null)
+            {
+                return new CellMove(tunnel, directionPair.prevDir); // get cell position using ingress direction going into the next cell
+            }
+            else
+            {
+                return new CellMove(directionPair.curDir); // on game start, there is no previous direction so use current direction                
+            }
+        }
+
+        /**
          * Append tunnel to end of previous tunnel
          * 
          * @tunnel the previous tunnel

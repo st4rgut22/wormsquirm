@@ -6,7 +6,7 @@ namespace Map
 {
     public class Manager : MonoBehaviour
     {
-        public delegate void Slice(Tunnel.Straight curTunnel, Tunnel.Tunnel nextTunnel);
+        public delegate void Slice(DirectionPair exitDirectionPair, Tunnel.Straight curTunnel, Tunnel.Tunnel nextTunnel);
         private event Slice SliceEvent;
 
         public static Dictionary<Vector3Int, Tunnel.Tunnel> TunnelMapDict;
@@ -34,7 +34,8 @@ namespace Map
                 {
                     Tunnel.Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
                     print("debug onSlice " + blockPositionInt);
-                    SliceEvent(tunnel, intersectTunnel); // send event when tunnels intersect
+                    DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection);
+                    SliceEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect
                 }
                 else
                 {

@@ -18,26 +18,22 @@ namespace Tunnel
 
         public Vector3 ingressPosition { get; protected set; }
 
-        public List<Direction> holeDirectionList { get; protected set; }
+        public List<Direction> holeDirectionList;
 
         public Vector3 center { get; private set; }
         public List<Vector3Int> cellPositionList; // a list of coordinates the tunnel traverses
 
-        public Rotation.IRotation rotation;
-
         public Type.Name type;
+
+        public abstract void setHoleDirections(DirectionPair dirPair);
+
+
+        public int holeCount;
 
         protected void Awake()
         {
             holeDirectionList = new List<Direction>();
             cellPositionList = new List<Vector3Int>();
-        }
-
-        public abstract void setHoleDirections(DirectionPair directionPair);
-
-        public void rotate(DirectionPair dirPair)
-        {
-            transform.rotation = rotation.rotate(dirPair);
         }
 
         public void addCellToList(Vector3Int cellPosition)

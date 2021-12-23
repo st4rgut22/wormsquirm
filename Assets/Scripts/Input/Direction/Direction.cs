@@ -1,29 +1,4 @@
-using System.Collections.Generic;
-
 using UnityEngine;
-
-public enum Direction
-{
-    Up,
-    Right,
-    Left,
-    Forward,
-    Back,
-    Down,
-    None,
-}
-
-public class DirectionPair
-{
-    public Direction prevDir;
-    public Direction curDir;
-
-    public DirectionPair(Direction prevDir, Direction curDir)
-    {
-        this.prevDir = prevDir;
-        this.curDir = curDir;
-    }
-}
 
 namespace Dir
 {

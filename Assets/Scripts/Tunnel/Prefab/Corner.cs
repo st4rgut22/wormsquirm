@@ -10,12 +10,11 @@ namespace Tunnel
             base.Awake();
             isStopped = true;
             type = Type.Name.CORNER;
-            rotation = new Rotation.Corner();
         }
 
-        public override void setHoleDirections(DirectionPair directionPair)
+        public override void setHoleDirections(DirectionPair dirPair)
         {
-            holeDirectionList = new List<Direction>() { directionPair.prevDir, directionPair.curDir };
+            holeDirectionList = new List<Direction>() { dirPair.prevDir, dirPair.curDir };
         }
     }
 }
