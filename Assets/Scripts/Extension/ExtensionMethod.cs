@@ -16,8 +16,7 @@ public static class ExtensionMethod
 
         Tunnel.Tunnel tunnel = tunnelGO.GetComponent<Tunnel.Tunnel>();
 
-        tunnel.holeDirectionList = originalHoleDirectionList;
-
+        tunnel.holeDirectionList = new List<Direction>(originalHoleDirectionList);
         tunnel.setHoleDirections(directionPair);
 
         rotation.rotate(ingressDir, originalHoleDirectionList, tunnel.transform); // the type of rotation is set in Awake eg CornerRotation, StraightRotation

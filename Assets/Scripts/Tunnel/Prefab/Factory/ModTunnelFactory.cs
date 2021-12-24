@@ -63,7 +63,11 @@ namespace Tunnel
             List<Direction>holeDirections = collidedTunnel.holeDirectionList;
 
             string junctionId = Type.JUNCTION + " " + junctionCount;
-            Transform junctionType = getJunction(holeDirections);
+
+            List<Direction> allHoleDirections = new List<Direction>(holeDirections);
+            Direction newHoleDir = Dir.Base.getOppositeDirection(directionPair.prevDir);
+            allHoleDirections.Add(newHoleDir);
+            Transform junctionType = getJunction(allHoleDirections);
 
             GameObject junctionGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, junctionType, directionPair, holeDirections, cellMove.cell, junctionId);
             Junction junctionTunnel = junctionGO.GetComponent<Junction>();

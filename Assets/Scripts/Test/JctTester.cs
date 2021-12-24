@@ -18,6 +18,7 @@ namespace Tunnel
         private Dictionary<string, Vector3> rotationDict;
         private Dictionary<string, string> jctNameDict;
         private Dictionary<string, List<Vector3>> raycastOffsetDict;
+        private Dictionary<string, string> oppDirDict;
 
         private Vector3 downPos = Vector3.zero;
         private Vector3 upPos = new Vector3(0, 1f, 0);
@@ -49,6 +50,16 @@ namespace Tunnel
                 {"right", new List<Vector3>(){ Vector3.back, Vector3.forward, Vector3.up, Vector3.down, Vector3.back + Vector3.up, Vector3.back + Vector3.down, Vector3.forward + Vector3.up, Vector3.forward + Vector3.down } },
                 {"forward", new List<Vector3>(){ Vector3.down, Vector3.up, Vector3.left, Vector3.right, Vector3.down+Vector3.left, Vector3.down+Vector3.right, Vector3.up+Vector3.left, Vector3.up+Vector3.right } },
                 {"back", new List<Vector3>(){ Vector3.down, Vector3.up, Vector3.left, Vector3.right, Vector3.down + Vector3.left, Vector3.down + Vector3.right, Vector3.up + Vector3.left, Vector3.up + Vector3.right } },
+            };
+
+            oppDirDict = new Dictionary<string, string>
+            {
+                { "up", "down" },
+                { "down", "up" },
+                { "left", "right" },
+                { "right", "left" },
+                { "forward", "back" },
+                { "back", "forward" }
             };
 
             raycastOriginDict = new Dictionary<Vector3, Vector3>
@@ -193,6 +204,7 @@ namespace Tunnel
                     }
                     else
                     {
+                        string holeLoc = oppDirDict[otherIngressDir]; // opp of ingress dir is hole loc
                         otherIngressDirList.Add(otherIngressDir);
                     }
                     hitDirList.Add(raycastDir);
@@ -217,7 +229,7 @@ namespace Tunnel
             {
                 rotationDict.Add(key, transform.eulerAngles);
                 jctNameDict.Add(key, transform.gameObject.name);
-            }            
+            }
         }
     }
 }
