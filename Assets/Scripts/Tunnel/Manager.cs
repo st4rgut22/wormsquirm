@@ -14,6 +14,9 @@ namespace Tunnel
         public delegate void CreateTunnel(CellMove cellMove, DirectionPair directionPair);
         public event CreateTunnel CreateTunnelEvent;
 
+        public delegate void InitWormPosition(Vector3 position);
+        public event InitWormPosition InitWormPositionEvent;
+
         public delegate void Decision(bool isStraightTunnel, Direction direction, Tunnel tunnel);
         public event Decision DecisionEvent;
 
@@ -23,6 +26,10 @@ namespace Tunnel
         public delegate void Stop();
         public event Stop StopEvent;
 
+        public static Vector3Int initialCell = Vector3Int.zero; // initial cell
+
+        private bool isInit = true;
+
         private void Awake()
         {
             TunnelList = new List<GameObject>();
@@ -31,10 +38,11 @@ namespace Tunnel
         protected void OnEnable()
         {
             DecisionEvent += FindObjectOfType<Turn>().onDecision;
+            DecisionEvent += FindObjectOfType<Map.Manager>().onDecision;
             DecisionEvent += FindObjectOfType<Worm.Movement>().onDecision;
             CreateTunnelEvent += FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
             SliceEvent += FindObjectOfType<Intersect.Manager>().onSlice;
-            //SliceEvent += FindObjectOfType<Intersect.Manager>().onSlice;
+            InitWormPositionEvent += FindObjectOfType<Worm.Movement>().onInitWormPosition;
         }
 
         private void FixedUpdate()
@@ -96,6 +104,11 @@ namespace Tunnel
             // get cell from map, check if tunnel w/ egress at curDirection already exists
             Tunnel tunnel = getLastTunnel(TunnelList);
             CellMove cellMove = CellMove.getCellMove(tunnel, directionPair);
+            if (isInit)
+            {
+                InitWormPositionEvent(cellMove.startPosition);
+                isInit = false;
+            }
 
             Tunnel existingTunnel = Map.Manager.getTunnelFromDict(cellMove.cell);
 
@@ -123,7 +136,7 @@ namespace Tunnel
                     return prefabOrientation;
                 }
             }
-            throw new System.Exception("no prefab exists with ingressdir " + ingressDir + " hole list " + holeDirList);
+            throw new System.Exception("no prefab exists with ingressdir " + ingressDir + " hole list " + holeDirList.ToString());
         }
 
         private void OnDisable()
@@ -136,14 +149,18 @@ namespace Tunnel
             {
                 DecisionEvent -= FindObjectOfType<Worm.Movement>().onDecision;
             }
+            if (FindObjectOfType<Map.Manager>())
+            {
+                DecisionEvent -= FindObjectOfType<Map.Manager>().onDecision;
+            }
             if (FindObjectOfType<Factory>())
             {
                 CreateTunnelEvent -= FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
             }
-            //if (FindObjectOfType<Intersect.Manager>())
-            //{
-            //    SliceEvent -= FindObjectOfType<Intersect.Manager>().onSlice;
-            //}
+            if (FindObjectOfType<Worm.Movement>())
+            {
+                InitWormPositionEvent -= FindObjectOfType<Worm.Movement>().onInitWormPosition;
+            }
         }
     }
 }

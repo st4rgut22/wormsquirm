@@ -7,8 +7,9 @@ namespace Tunnel
     public class Straight : Tunnel
     {
         public Direction growthDirection;
+        private bool isDecision;
 
-        public delegate void BlockInterval(bool isBlockInterval, Vector3 blockPosition, Straight tunnel);
+        public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
 
         // Start is called before the first frame update
@@ -18,10 +19,16 @@ namespace Tunnel
 
             FindObjectOfType<Manager>().StopEvent += onStop;
             FindObjectOfType<Intersect.Manager>().StopEvent += onStop;
+            FindObjectOfType<Manager>().DecisionEvent += onDecision;
 
             BlockIntervalEvent += FindObjectOfType<Map.Manager>().onBlockInterval; // subscribe dig manager to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Turn>().onBlockInterval; // subscribe turn to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Worm.Movement>().onBlockInterval;  // subscribe worm so it can go to the center of the created block
+
+            if (FindObjectOfType<Test.TunnelMaker>())
+            {
+                BlockIntervalEvent += FindObjectOfType<Test.TunnelMaker>().onBlockInterval;
+            }
         }
 
         new private void Awake()
@@ -30,6 +37,7 @@ namespace Tunnel
 
             type = Type.Name.STRAIGHT;
             isStopped = false;
+            isDecision = false;
             ingressPosition = transform.position;
         }
 
@@ -55,13 +63,19 @@ namespace Tunnel
 
                 if (isBlockMultiple)
                 {
-                    addCellToList(cellPosition.castToVector3Int(growthDirection)); // add new position to list of cell positions covered by straight tunnel
+                    Vector3Int cell = getLastCellPosition().getNextVector3Int(growthDirection);
+
+                    if (!isDecision)
+                    {
+                        addCellToList(cell); // add new position to list of cell positions covered by straight tunnel
+                    }                    
+
                     setCenter(length, growthDirection); // adjust the center to the new block
-                    BlockIntervalEvent(isBlockMultiple, cellPosition, this);
+                    BlockIntervalEvent(isBlockMultiple, cell, this);
                 }
                 else
                 {
-                    BlockIntervalEvent(isBlockMultiple, cellPosition, this);
+                    BlockIntervalEvent(isBlockMultiple, Vector3Int.zero, this);
                 }
             }
         }
@@ -71,6 +85,14 @@ namespace Tunnel
             growthDirection = dirPair.curDir;
             Direction oppositeGrowthDirection = Dir.Base.getOppositeDirection(growthDirection);
             holeDirectionList = new List<Direction>() { growthDirection, oppositeGrowthDirection };
+        }
+
+        /**
+         * When a turn is being made in the next cell set a flag, so we don't add a straight segment at the next cell interval (we will add a corner instaed)
+         */
+        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
+        {
+            isDecision = true;
         }
 
         /**
@@ -84,6 +106,9 @@ namespace Tunnel
                 isStopped = true;
 
                 FindObjectOfType<Manager>().GrowEvent -= onGrow; // unsubscribe from Tunnel.Manager's Grow event
+                FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
+                FindObjectOfType<Manager>().DecisionEvent -= onDecision;
+
                 BlockIntervalEvent -= FindObjectOfType<Map.Manager>().onBlockInterval; // unsubscribe map manager to the BlockSize event
                 BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;
             }            
@@ -123,6 +148,10 @@ namespace Tunnel
             if (FindObjectOfType<Intersect.Manager>())
             {
                 FindObjectOfType<Intersect.Manager>().StopEvent -= onStop;
+            }
+            if (FindObjectOfType<Test.TunnelMaker>())
+            {
+                BlockIntervalEvent -= FindObjectOfType<Test.TunnelMaker>().onBlockInterval;
             }
         }
     }

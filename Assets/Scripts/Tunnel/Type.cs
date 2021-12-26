@@ -35,9 +35,9 @@ namespace Tunnel
 
         public static Type instance;
 
-        public const string STRAIGHT = "straight";
-        public const string CORNER = "corner";
-        public const string JUNCTION = "junction";
+        public const string STRAIGHT = "Straight";
+        public const string CORNER = "Corner";
+        public const string JUNCTION = "Junction";
 
         public enum Name {
             STRAIGHT,

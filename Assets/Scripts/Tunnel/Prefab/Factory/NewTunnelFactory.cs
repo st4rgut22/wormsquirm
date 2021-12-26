@@ -41,13 +41,13 @@ namespace Tunnel
             {
                 cornerCount += 1;
                 string cornerId = Type.CORNER + " " + cornerCount;
-                newTunnelGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, Type.instance.Corner, directionPair, egressDirectionList, cellMove.cell, cornerId);
+                newTunnelGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, Type.instance.Corner, directionPair, egressDirectionList, cornerId);
             }
             else // create a straight tunnel
             {
                 straightCount += 1;
                 string straightId = Type.STRAIGHT + " " + straightCount;
-                newTunnelGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, Type.instance.Straight, directionPair, egressDirectionList, cellMove.cell, straightId);
+                newTunnelGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, Type.instance.Straight, directionPair, egressDirectionList, straightId);
             }
 
             Tunnel newTunnel = newTunnelGO.GetComponent<Tunnel>();

@@ -104,7 +104,7 @@ namespace Tunnel
          * @isBlockSizeMultiple did the straight tunnel reach a multiple of block size?
          * @tunnel The tunnel the decision to change direction is made from
          */
-        public void onBlockInterval(bool isBlockSizeMultiple, Vector3 blockPosition, Tunnel tunnel)
+        public void onBlockInterval(bool isBlockSizeMultiple, Vector3Int blockPosition, Tunnel tunnel)
         {
             this.isBlockSizeMultiple = isBlockSizeMultiple;
 

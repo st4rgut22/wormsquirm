@@ -30,6 +30,11 @@ namespace Tunnel
 
         public int holeCount;
 
+        private void OnEnable()
+        {
+            FindObjectOfType<NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
+        }
+
         protected void Awake()
         {
             holeDirectionList = new List<Direction>();
@@ -44,6 +49,14 @@ namespace Tunnel
         public Vector3Int getLastCellPosition()
         {
             return cellPositionList[cellPositionList.Count - 1];
+        }
+
+        /**
+         * When the tunnel is initialized, add it to the cellPosList because the first couple blocks won't trigger blockIntervalEvent 
+         */
+        public virtual void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
+        {
+            addCellToList(cell);
         }
 
         /**
@@ -64,10 +77,10 @@ namespace Tunnel
          * 
          * @direction worm direction
          */
-        public static Vector3 initializeCenter(Direction direction)
+        public static Vector3 initializeCenter(Direction direction, Vector3 center)
         {
             Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(direction);
-            Vector3 initialCenter = unitVector * CENTER_OFFSET;
+            Vector3 initialCenter = center + unitVector * CENTER_OFFSET;
             return initialCenter;
         }
 
@@ -96,7 +109,6 @@ namespace Tunnel
             Vector3 blockEndPosition = transform.position + distToEnd * unitVector;
             Vector3 centerOffsetVector = unitVector * CENTER_OFFSET;
             center = blockEndPosition - centerOffsetVector;
-            print("center of " + gameObject.name + " is " + center + " in direction " + direction + " position is " + transform.position + " distToEnd is " + distToEnd + " unitVector is " + unitVector);
         }
     }
 }

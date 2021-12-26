@@ -16,12 +16,12 @@ public class DirectionPair
 
 public enum Direction
 {
-    Up,
-    Right,
-    Left,
-    Forward,
     Back,
     Down,
+    Forward,
+    Left,
+    Right,
+    Up,
     None,
 }
 
@@ -31,6 +31,5 @@ public class DirectionKey : MonoBehaviour
     public static void combineDirection(List<Direction> dirList)
     {
         dirList.Sort();
-
     }
 }

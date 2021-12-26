@@ -43,6 +43,28 @@ namespace Dir
             throw new System.Exception("Not a valid direction " + direction);
         }
 
+        public static Vector3Int substituteVector3FromDirection(Direction direction, Vector3Int original, Vector3Int substitute)
+        {
+            Vector3Int substitudedVector3 = new Vector3Int(original.x, original.y, original.z);
+            if (direction == Direction.Up || direction == Direction.Down)
+            {
+                substitudedVector3.y = substitute.y;
+            }
+            else if (direction == Direction.Forward || direction == Direction.Back)
+            {
+                substitudedVector3.z = substitute.z;
+            }
+            else if (direction == Direction.Right || direction == Direction.Left)
+            {
+                substitudedVector3.x = substitute.x;
+            }
+            else
+            {
+                throw new System.Exception("Not a valid direction " + direction);
+            }
+            return substitudedVector3;
+        }
+
         public static Vector3 getUnitVectorFromDirection(Direction direction)
         {
             switch (direction)

@@ -10,9 +10,15 @@ namespace Map
         private event Slice SliceEvent;
 
         public static Dictionary<Vector3Int, Tunnel.Tunnel> TunnelMapDict;
+        public static List<Vector3Int> cellList;
+
+        private bool isDecision;
+        private bool isInit = true; // the first tunnel is created
 
         private void Awake()
         {
+            isDecision = false;
+            cellList = new List<Vector3Int>() { Tunnel.Manager.initialCell };
             TunnelMapDict = new Dictionary<Vector3Int, Tunnel.Tunnel>();
         }
 
@@ -21,26 +27,38 @@ namespace Map
             SliceEvent += FindObjectOfType<Intersect.Manager>().onSlice;
         }
 
+        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
+        {
+            if (isStraightTunnel)
+            {
+                isDecision = true;
+            }
+            if (tunnel != null)
+            {
+                isInit = false;
+            }
+        }
+
         /**
          * Adds tunnel type to the map at the provided coordinate
          */
-        public void onBlockInterval(bool isBlockInterval, Vector3 blockPosition, Tunnel.Straight tunnel)
+        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel)
         {
             if (isBlockInterval)
             {
-                Vector3Int blockPositionInt = blockPosition.castToVector3Int(tunnel.growthDirection);
-                print("block position is " + blockPosition + " blockPosInt is " + blockPositionInt + " for tunnel " + tunnel.name);
                 if (containsCell(blockPositionInt))
                 {
                     Tunnel.Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
-                    print("debug onSlice " + blockPositionInt);
                     DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection);
                     SliceEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect
                 }
-                else
+                // or is initial straight tunnel, where decision event is created even though we are not technically turning
+                else if (!isDecision || isInit) // in straight tunnel a turn decision has been made so don't add the next tunnel segment
                 {
-                    addCellToDict(blockPositionInt, tunnel);
+                    addCell(blockPositionInt, tunnel);
                 }
+
+                isDecision = false; // reset flag in order to add new cells until a decision is made
             }
         }
 
@@ -64,7 +82,7 @@ namespace Map
 
         public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
         {
-            addCellToDict(cell, tunnel);
+            addCell(cell, tunnel);
         }
 
         public static bool containsCell(Vector3Int cell)
@@ -75,10 +93,11 @@ namespace Map
         /**
          * Save tunnel type at a particular location in map
          */
-        public static void addCellToDict(Vector3Int cellLocation, Tunnel.Tunnel tunnel)
+        public static void addCell(Vector3Int cellLocation, Tunnel.Tunnel tunnel)
         {
             print("debug add cell " + cellLocation + " belonging to tunnel " + tunnel.name);
             TunnelMapDict[cellLocation] = tunnel;
+            cellList.Add(cellLocation);
         }
 
         /**

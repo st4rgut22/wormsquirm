@@ -69,11 +69,10 @@ namespace Tunnel
             allHoleDirections.Add(newHoleDir);
             Transform junctionType = getJunction(allHoleDirections);
 
-            GameObject junctionGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, junctionType, directionPair, holeDirections, cellMove.cell, junctionId);
+            GameObject junctionGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, junctionType, directionPair, holeDirections, junctionId);
             Junction junctionTunnel = junctionGO.GetComponent<Junction>();
             junctionCount += 1;
             return junctionTunnel;
         }
     }
-
 }

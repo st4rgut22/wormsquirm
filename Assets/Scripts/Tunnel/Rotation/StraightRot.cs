@@ -15,7 +15,6 @@ namespace Rotation
         public override Quaternion getRotation(Direction ingressDir, List<Direction> egressDirList)
         {
             Quaternion rotation = getRotationFromDirection(ingressDir);
-            Debug.Log("rotation from cur dir " + ingressDir + " is " + rotation);
             return rotation;
         }
 

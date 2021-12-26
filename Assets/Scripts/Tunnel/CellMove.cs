@@ -25,7 +25,7 @@ namespace Tunnel
             }
             else
             {
-                return new CellMove(directionPair.curDir); // on game start, there is no previous direction so use current direction                
+                return new CellMove(directionPair.curDir, Manager.initialCell); // on game start, there is no previous direction so use current direction                
             }
         }
 
@@ -37,20 +37,24 @@ namespace Tunnel
          */
         public CellMove(Tunnel tunnel, Direction curDirection)
         {
-            isInit = false;
             cellPosition = tunnel.getLastCellPosition(); // start at the end of prev tunnel
+
             startPosition = Tunnel.getEgressPosition(curDirection, tunnel.center); // get the correct egress position using the curDirection
-            cell = Dir.Vector.getNextCellFromDirection(cellPosition, curDirection);
+            cell = cellPosition.getNextVector3Int(curDirection);
+
+            Debug.Log("last cell position " + cellPosition + " start position " + startPosition + " cell " + cell);
+            nextCell = Dir.Vector.getNextCellFromDirection(cell, curDirection);
         }
 
         /**
          * Initialize tunnel at beginning of game
          */
-        public CellMove(Direction initialDirection)
+        public CellMove(Direction initialDirection, Vector3 center)
         {
-            isInit = true;
-            Vector3 initialCenter = Tunnel.initializeCenter(initialDirection);
+            
+            Vector3 initialCenter = Tunnel.initializeCenter(initialDirection, center);
             startPosition = Tunnel.getEgressPosition(initialDirection, initialCenter);
+
             cell = initialCenter.castToVector3Int(initialDirection);
             nextCell = Dir.Vector.getNextCellFromDirection(cell, initialDirection);
         }

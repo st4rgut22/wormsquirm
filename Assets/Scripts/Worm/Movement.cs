@@ -18,9 +18,6 @@ namespace Worm
         private List<Vector3> waypointList;
         private List<Vector3> nextWaypointList; // queued up waypoint list if turning while navigating a corner
 
-        public delegate void BlockInterval(bool isBlockInterval, Vector3 blockPosition);
-        public event BlockInterval BlockIntervalEvent;
-
         public delegate void Position(Vector3 position, Direction direction);
         public event Position PositionEvent;
 
@@ -36,6 +33,7 @@ namespace Worm
             nextWaypointList = new List<Vector3>();
             unitVectorDirection = Vector3.zero; // initially the worm is not moving
             tunnelDirection = Direction.None;
+            transform.position = Tunnel.Manager.initialCell;
         }
 
         private void OnEnable() 
@@ -55,6 +53,11 @@ namespace Worm
             }
         }
 
+        public void onInitWormPosition(Vector3 initPos)
+        {
+            transform.position = initPos;
+        }
+
         private void Update()
         {
             if (waypointList.Count > 0) // iterate over waypoint list
@@ -65,7 +68,7 @@ namespace Worm
 
                 if (transform.position.Equals(waypoint))
                 {
-                    print("reached waypoint " + waypoint);
+                    //print("reached waypoint " + waypoint);
                     waypointIndex += 1;
 
                     if (waypointIndex >= waypointList.Count) // when last waypoint has been reached, clear waypoints from list
@@ -148,21 +151,11 @@ namespace Worm
          * 
          * @tunnel the tunnel that has been extended
          */
-        public void onBlockInterval(bool isBlockInterval, Vector3 blockPosition, Tunnel.Straight tunnel)
+        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPosition, Tunnel.Straight tunnel)
         {
             tunnelDirection = tunnel.growthDirection;
             Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(tunnelDirection);
-            transform.position += unitVector * (float) Tunnel.Tunnel.SCALED_GROWTH_RATE; // set position a little behind the tunnel head
-        }
-
-        /**
-         * Initialize the worm's position based on initial tunnel's position
-         * 
-         * @initPosition position of tunnel
-         */
-        public void onInitWormPosition(Vector3 initPosition)
-        {
-            transform.position = initPosition;
+            transform.position += unitVector * (float) Tunnel.Tunnel.SCALED_GROWTH_RATE; // position moves at the same rate as the straight tunnel
         }
 
         /**
@@ -174,8 +167,6 @@ namespace Worm
             {
                 unitVectorDirection = Dir.Vector.getUnitVectorFromDirection(direction);
                 Vector3 inputPosition = transform.position + unitVectorDirection * SPEED;
-                print("propose moving worm to " + inputPosition);
-
                 PositionEvent(inputPosition, direction);
             }
         }

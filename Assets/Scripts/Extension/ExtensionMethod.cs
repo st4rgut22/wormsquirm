@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public static class ExtensionMethod
 {
 
-    public static GameObject instantiate(this GameObject thisObj, Vector3 position, Transform parent, Transform prefabParent, DirectionPair directionPair, List<Direction> originalHoleDirectionList,  Vector3Int nextCell, string id)
+    public static GameObject instantiate(this GameObject thisObj, Vector3 position, Transform parent, Transform prefabParent, DirectionPair directionPair, List<Direction> originalHoleDirectionList, string id)
     {
         Direction ingressDir = directionPair.prevDir == Direction.None ? directionPair.curDir : directionPair.prevDir;
 
@@ -28,7 +28,6 @@ public static class ExtensionMethod
 
         tunnel.setCenter(Tunnel.Tunnel.BLOCK_SIZE, ingressDir); // set center as offset in ingress direction
 
-        tunnel.addCellToList(nextCell);
         return tunnelGO;
     } 
 }
