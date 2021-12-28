@@ -9,7 +9,6 @@ namespace Worm
     public class Movement : MonoBehaviour
     {
         private Direction direction; // direction of worm travel
-        private Direction tunnelDirection; // direction of tunnel growth
         private Direction egressWaypointDirection; // direction exiting a corner, saved on receipt of followWaypoints event
 
         private Vector3 unitVectorDirection;
@@ -24,7 +23,11 @@ namespace Worm
         public delegate void CompleteTurn(Direction direction); // when turn is completed notify Turn so we can proceed straight
         public event CompleteTurn CompleteTurnEvent;
 
-        private const float SPEED = .05f; // Match the tunnel growth rate
+        public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel);
+        public event BlockInterval BlockIntervalEvent;
+
+        private const float SPEED = Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
+        private bool isInExistingTunnel = false;
 
         private void Awake()
         {
@@ -32,8 +35,8 @@ namespace Worm
             waypointList = new List<Vector3>();
             nextWaypointList = new List<Vector3>();
             unitVectorDirection = Vector3.zero; // initially the worm is not moving
-            tunnelDirection = Direction.None;
             transform.position = Tunnel.Manager.initialCell;
+            direction = Direction.None;
         }
 
         private void OnEnable() 
@@ -44,21 +47,12 @@ namespace Worm
             CompleteTurnEvent += FindObjectOfType<Rotation>().onCompleteTurn;
         }
 
-        private void FixedUpdate()
-        {
-            if (tunnelDirection != Direction.None)
-            {
-                float distance = Dir.Vector.getAxisPositionFromDirection(tunnelDirection, transform.position);
-                bool isBlockInterval = Map.Manager.isDistanceMultiple(distance);
-            }
-        }
-
         public void onInitWormPosition(Vector3 initPos)
         {
             transform.position = initPos;
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
             if (waypointList.Count > 0) // iterate over waypoint list
             {
@@ -68,7 +62,6 @@ namespace Worm
 
                 if (transform.position.Equals(waypoint))
                 {
-                    //print("reached waypoint " + waypoint);
                     waypointIndex += 1;
 
                     if (waypointIndex >= waypointList.Count) // when last waypoint has been reached, clear waypoints from list
@@ -76,6 +69,11 @@ namespace Worm
                         completeTurn();
                     }
                 }
+            }
+            else if (direction != Direction.None)
+            {
+                Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(direction);
+                transform.position += unitVector * (float)Tunnel.Tunnel.SCALED_GROWTH_RATE; // position moves at the same rate as the straight tunnel
             }
         }
 
@@ -111,7 +109,7 @@ namespace Worm
         {
             this.direction = direction;
             Vector3 moveUnitVector = Dir.Vector.getUnitVectorFromDirection(direction);
-            transform.position += moveUnitVector * Tunnel.Tunnel.SCALED_GROWTH_RATE;
+            transform.position += moveUnitVector * SPEED;
         }
 
         /**
@@ -124,6 +122,10 @@ namespace Worm
             if (tunnel != null)
             {
                 transform.position = tunnel.center;
+            }
+            else
+            {
+                throw new System.Exception("no tunnel for worm to center in");
             }
         }
 
@@ -147,15 +149,28 @@ namespace Worm
         }
 
         /**
+         * When junction has been created it triggers the worm to send out block interval events instead of the tunnel
+         *
+         *@cellMove info about the junction such as center position, ingress position
+         */
+        public void onCreateJunction(Tunnel.Tunnel collisionTunnel, DirectionPair dirPair, Tunnel.CellMove cellMove)
+        {
+            isInExistingTunnel = true;
+            if (waypointList.Count == 0) // means we are not executing a turn into the junction
+            {
+                waypointList.Add(cellMove.startPosition); // go the ingress position of the junction
+                egressWaypointDirection = direction; // direction remains same as the straight tunnel worm is currently in
+            }
+        }
+
+        /**
          * When a straight tunnel is extended, the worm should follow in the same direction
          * 
          * @tunnel the tunnel that has been extended
          */
         public void onBlockInterval(bool isBlockInterval, Vector3Int blockPosition, Tunnel.Straight tunnel)
         {
-            tunnelDirection = tunnel.growthDirection;
-            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(tunnelDirection);
-            transform.position += unitVector * (float) Tunnel.Tunnel.SCALED_GROWTH_RATE; // position moves at the same rate as the straight tunnel
+            direction = tunnel.growthDirection;
         }
 
         /**

@@ -5,6 +5,10 @@ namespace Tunnel
 {    
     public class Junction : Tunnel
     {
+        public override Vector3 getContactPosition(DirectionPair dirPair)
+        {
+            return getEgressPosition(dirPair.curDir, center);
+        }
 
         /**
          * Add the hole created from the ingress direction to the holes of the previous junction

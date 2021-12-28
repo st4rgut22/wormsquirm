@@ -7,6 +7,7 @@ namespace Test
      */
     public class Checkpoint
     {
+        public Vector3Int cell;
         public Vector3Int decisionCell;
         public DirectionPair dirPair;
 
@@ -16,6 +17,7 @@ namespace Test
             Direction oppDir = Dir.Base.getOppositeDirection(ingressDir);
             decisionCell = cell.getNextVector3Int(oppDir);
             this.dirPair = dirPair;
+            this.cell = cell;
         }
     }
 

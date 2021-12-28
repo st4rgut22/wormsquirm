@@ -2,14 +2,12 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 
-namespace Map
+namespace Tunnel
 {
-    public class Manager : MonoBehaviour
+    public class Map : CollisionManager
     {
-        public delegate void Slice(DirectionPair exitDirectionPair, Tunnel.Straight curTunnel, Tunnel.Tunnel nextTunnel);
-        private event Slice SliceEvent;
 
-        public static Dictionary<Vector3Int, Tunnel.Tunnel> TunnelMapDict;
+        public static Dictionary<Vector3Int, Tunnel> TunnelMapDict;
         public static List<Vector3Int> cellList;
 
         private bool isDecision;
@@ -18,16 +16,11 @@ namespace Map
         private void Awake()
         {
             isDecision = false;
-            cellList = new List<Vector3Int>() { Tunnel.Manager.initialCell };
-            TunnelMapDict = new Dictionary<Vector3Int, Tunnel.Tunnel>();
+            cellList = new List<Vector3Int>() { Manager.initialCell };
+            TunnelMapDict = new Dictionary<Vector3Int, Tunnel>();
         }
 
-        private void OnEnable()
-        {
-            SliceEvent += FindObjectOfType<Intersect.Manager>().onSlice;
-        }
-
-        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
+        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
         {
             if (isStraightTunnel)
             {
@@ -42,15 +35,15 @@ namespace Map
         /**
          * Adds tunnel type to the map at the provided coordinate
          */
-        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel)
+        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel)
         {
             if (isBlockInterval)
             {
                 if (containsCell(blockPositionInt))
                 {
-                    Tunnel.Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
-                    DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection);
-                    SliceEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect
+                    Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
+                    DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection); // go straight
+                    collide(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect
                 }
                 // or is initial straight tunnel, where decision event is created even though we are not technically turning
                 else if (!isDecision || isInit) // in straight tunnel a turn decision has been made so don't add the next tunnel segment
@@ -80,7 +73,7 @@ namespace Map
             return (roundedDistance % 1) == 0;
         }
 
-        public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
+        public void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
         {
             addCell(cell, tunnel);
         }
@@ -93,7 +86,7 @@ namespace Map
         /**
          * Save tunnel type at a particular location in map
          */
-        public static void addCell(Vector3Int cellLocation, Tunnel.Tunnel tunnel)
+        public static void addCell(Vector3Int cellLocation, Tunnel tunnel)
         {
             print("debug add cell " + cellLocation + " belonging to tunnel " + tunnel.name);
             TunnelMapDict[cellLocation] = tunnel;
@@ -103,7 +96,7 @@ namespace Map
         /**
          * Get the tunnel type at a particular location in map
          */
-        public static Tunnel.Tunnel getTunnelFromDict(Vector3Int cellLocation)
+        public static Tunnel getTunnelFromDict(Vector3Int cellLocation)
         {
             if (containsCell(cellLocation))
             {
@@ -112,14 +105,6 @@ namespace Map
             else
             {
                 return null;
-            }
-        }
-
-        private void OnDisable()
-        {
-            if (FindObjectOfType<Intersect.Manager>())
-            {
-                SliceEvent -= FindObjectOfType<Intersect.Manager>().onSlice;
             }
         }
     }

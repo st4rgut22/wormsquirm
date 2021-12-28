@@ -15,13 +15,11 @@ namespace Tunnel
         // Start is called before the first frame update
         void OnEnable()
         {
-            FindObjectOfType<Manager>().GrowEvent += onGrow;
-
-            FindObjectOfType<Manager>().StopEvent += onStop;
-            FindObjectOfType<Intersect.Manager>().StopEvent += onStop;
             FindObjectOfType<Manager>().DecisionEvent += onDecision;
+            FindObjectOfType<Manager>().StopEvent += onStop;
 
-            BlockIntervalEvent += FindObjectOfType<Map.Manager>().onBlockInterval; // subscribe dig manager to the BlockSize event
+            FindObjectOfType<Map>().StopEvent += onStop;
+            BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Turn>().onBlockInterval; // subscribe turn to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Worm.Movement>().onBlockInterval;  // subscribe worm so it can go to the center of the created block
 
@@ -50,9 +48,11 @@ namespace Tunnel
         {
             if (!isStopped)
             {
+                grow();
+
                 float length = getLength(); // transforms scale to length
 
-                bool isBlockMultiple = Map.Manager.isDistanceMultiple(length);
+                bool isBlockMultiple = Map.isDistanceMultiple(length);
 
                 Vector3 unitVectorInDir = Dir.Vector.getUnitVectorFromDirection(growthDirection);
 
@@ -104,12 +104,10 @@ namespace Tunnel
             {
                 float scale = transform.localScale.y;
                 isStopped = true;
-
-                FindObjectOfType<Manager>().GrowEvent -= onGrow; // unsubscribe from Tunnel.Manager's Grow event
                 FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
                 FindObjectOfType<Manager>().DecisionEvent -= onDecision;
 
-                BlockIntervalEvent -= FindObjectOfType<Map.Manager>().onBlockInterval; // unsubscribe map manager to the BlockSize event
+                BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
                 BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;
             }            
         }
@@ -119,15 +117,16 @@ namespace Tunnel
             return (transform.localScale.y * BLOCK_SIZE * SCALE_TO_LENGTH); // scale of 1 : 2 meters or 0.5 : 1 meter
         }
 
-        private void onGrow()
+        /**
+         *  Scale in direction of growth
+         */
+        private void grow()
         {
-            if (!isStopped)
-            {
-                Vector3 curScale = transform.localScale;
-                float length = curScale.y + GROWTH_RATE;
-                float roundedLength = (float)Math.Round(length, 2);
-                transform.localScale = new Vector3(curScale.x, roundedLength, curScale.z);
-            }
+            Vector3 curScale = transform.localScale;
+            float length = curScale.y + GROWTH_RATE;
+            float roundedLength = (float)Math.Round(length, 2);
+            print("length of tunnel is " + roundedLength);
+            transform.localScale = new Vector3(curScale.x, roundedLength, curScale.z);
         }
 
         void OnDisable()
@@ -135,24 +134,28 @@ namespace Tunnel
             if (FindObjectOfType<Manager>()) // check if TunnelManager hasn't been deleted before this GO
             {
                 FindObjectOfType<Manager>().StopEvent -= onStop;
-                FindObjectOfType<Manager>().GrowEvent -= onGrow;
             }
-            if (FindObjectOfType<Map.Manager>())
+            if (FindObjectOfType<Map>())
             {
-                BlockIntervalEvent -= FindObjectOfType<Map.Manager>().onBlockInterval;
+                FindObjectOfType<Map>().StopEvent -= onStop;
+                BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval;
             }
             if (FindObjectOfType<Worm.Movement>())
             {
                 BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;
             }
-            if (FindObjectOfType<Intersect.Manager>())
-            {
-                FindObjectOfType<Intersect.Manager>().StopEvent -= onStop;
-            }
             if (FindObjectOfType<Test.TunnelMaker>())
             {
                 BlockIntervalEvent -= FindObjectOfType<Test.TunnelMaker>().onBlockInterval;
             }
+        }
+
+        /**
+         * When collide with another tunnel get the point of contact
+         */
+        public override Vector3 getContactPosition(DirectionPair dirPair)
+        {
+            return getEgressPosition(dirPair.prevDir, center);
         }
     }
 

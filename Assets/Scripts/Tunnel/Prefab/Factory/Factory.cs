@@ -14,8 +14,13 @@ namespace Tunnel
 
         protected void OnEnable()
         {
-            AddTunnelEvent += FindObjectOfType<Map.Manager>().onAddTunnel;
+            AddTunnelEvent += FindObjectOfType<Map>().onAddTunnel;
             AddTunnelEvent += FindObjectOfType<Manager>().onAddTunnel;
+
+            if (FindObjectOfType<Test.TunnelMaker>())
+            {
+                AddTunnelEvent += FindObjectOfType<Test.TunnelMaker>().onAddTunnel;
+            }
         }
 
         /**
@@ -26,21 +31,21 @@ namespace Tunnel
         protected void addTunnel(Tunnel tunnel)
         {
             AddTunnelEvent(tunnel, cellMove.cell, directionPair);
-            if (tunnel.tag == Type.STRAIGHT)
-            {
-                AddTunnelEvent(tunnel, cellMove.nextCell, directionPair); // add the next tunnel too because blockIntervalEvent doesn't trigger when initializing straight tunnel
-            }
         }
 
         protected void OnDisable()
         {
-            if (FindObjectOfType<Map.Manager>())
+            if (FindObjectOfType<Map>())
             {
-                AddTunnelEvent -= FindObjectOfType<Map.Manager>().onAddTunnel;
+                AddTunnelEvent -= FindObjectOfType<Map>().onAddTunnel;
             }
             if (FindObjectOfType<Manager>())
             {
                 AddTunnelEvent -= FindObjectOfType<Manager>().onAddTunnel;
+            }
+            if (FindObjectOfType<Test.TunnelMaker>())
+            {
+                AddTunnelEvent -= FindObjectOfType<Test.TunnelMaker>().onAddTunnel;
             }
         }
     }

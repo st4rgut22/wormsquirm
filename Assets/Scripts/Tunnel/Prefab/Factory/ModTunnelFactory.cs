@@ -66,13 +66,21 @@ namespace Tunnel
 
             List<Direction> allHoleDirections = new List<Direction>(holeDirections);
             Direction newHoleDir = Dir.Base.getOppositeDirection(directionPair.prevDir);
-            allHoleDirections.Add(newHoleDir);
-            Transform junctionType = getJunction(allHoleDirections);
 
-            GameObject junctionGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, junctionType, directionPair, holeDirections, junctionId);
-            Junction junctionTunnel = junctionGO.GetComponent<Junction>();
-            junctionCount += 1;
-            return junctionTunnel;
+            if (!allHoleDirections.Contains(newHoleDir))
+            {
+                allHoleDirections.Add(newHoleDir);
+                Transform junctionType = getJunction(allHoleDirections);
+
+                GameObject junctionGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, junctionType, directionPair, holeDirections, junctionId);
+                Junction junctionTunnel = junctionGO.GetComponent<Junction>();
+                junctionCount += 1;
+                return junctionTunnel;
+            }
+            else
+            {
+                return collidedTunnel; // the collided tunnel already has the ingress hole
+            }
         }
     }
 }

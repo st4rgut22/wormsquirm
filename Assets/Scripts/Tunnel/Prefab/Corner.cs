@@ -18,6 +18,11 @@ namespace Tunnel
             FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
         }
 
+        public override Vector3 getContactPosition(DirectionPair dirPair)
+        {
+            return getEgressPosition(dirPair.curDir, center);
+        }
+
         public override void setHoleDirections(DirectionPair dirPair)
         {
             Direction oppDir = Dir.Base.getOppositeDirection(dirPair.prevDir); // new hole faces opposite the ingress direction

@@ -4,12 +4,9 @@ using UnityEngine;
 namespace Tunnel
 {
 
-    public class Manager : MonoBehaviour
+    public class Manager : CollisionManager
     {
         private List<GameObject> TunnelList; // list consisting of straight tunnels and corner tunnels
-
-        public delegate void Slice(DirectionPair directionPair, Tunnel curTunnel, Tunnel nextTunnel);
-        private event Slice SliceEvent;
 
         public delegate void CreateTunnel(CellMove cellMove, DirectionPair directionPair);
         public event CreateTunnel CreateTunnelEvent;
@@ -23,8 +20,8 @@ namespace Tunnel
         public delegate void Grow();
         public event Grow GrowEvent;
 
-        public delegate void Stop();
-        public event Stop StopEvent;
+        public new delegate void Stop();
+        public new event Stop StopEvent;
 
         public static Vector3Int initialCell = Vector3Int.zero; // initial cell
 
@@ -35,24 +32,14 @@ namespace Tunnel
             TunnelList = new List<GameObject>();
         }
 
-        protected void OnEnable()
+        protected new void OnEnable()
         {
+            base.OnEnable();
             DecisionEvent += FindObjectOfType<Turn>().onDecision;
-            DecisionEvent += FindObjectOfType<Map.Manager>().onDecision;
+            DecisionEvent += FindObjectOfType<Map>().onDecision;
             DecisionEvent += FindObjectOfType<Worm.Movement>().onDecision;
             CreateTunnelEvent += FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
-            SliceEvent += FindObjectOfType<Intersect.Manager>().onSlice;
             InitWormPositionEvent += FindObjectOfType<Worm.Movement>().onInitWormPosition;
-        }
-
-        private void FixedUpdate()
-        {
-            // the worm & user input should be dictating growth not tunnel manager
-
-            if (GrowEvent != null)
-            {
-                GrowEvent();
-            }
         }
 
         private Tunnel getLastTunnel(List<GameObject> tunnelList)
@@ -110,7 +97,7 @@ namespace Tunnel
                 isInit = false;
             }
 
-            Tunnel existingTunnel = Map.Manager.getTunnelFromDict(cellMove.cell);
+            Tunnel existingTunnel = Map.getTunnelFromDict(cellMove.cell);
 
             if (existingTunnel == null)
             {
@@ -118,7 +105,7 @@ namespace Tunnel
             }
             else // tunnel exists where we want to create a corner. issue slice event
             {
-                SliceEvent(directionPair, tunnel, existingTunnel);
+                collide(directionPair, tunnel, existingTunnel);
             }
         }
 
@@ -149,9 +136,9 @@ namespace Tunnel
             {
                 DecisionEvent -= FindObjectOfType<Worm.Movement>().onDecision;
             }
-            if (FindObjectOfType<Map.Manager>())
+            if (FindObjectOfType<Map>())
             {
-                DecisionEvent -= FindObjectOfType<Map.Manager>().onDecision;
+                DecisionEvent -= FindObjectOfType<Map>().onDecision;
             }
             if (FindObjectOfType<Factory>())
             {

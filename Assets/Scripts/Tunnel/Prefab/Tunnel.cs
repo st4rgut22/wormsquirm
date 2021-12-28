@@ -6,7 +6,7 @@ namespace Tunnel
 {
     public abstract class Tunnel : MonoBehaviour
     {
-        public const float GROWTH_RATE = .05f; // must be a divisor of 1 so tunnel length will be a multiple of BLOCK_SIZE
+        public const float GROWTH_RATE = .02f; // must be a divisor of 1 so tunnel length will be a multiple of BLOCK_SIZE
 
         public static int BLOCK_SIZE = 1;    
         public const int SCALE_TO_LENGTH = 2; // scale of 1 : 2 world units
@@ -26,7 +26,7 @@ namespace Tunnel
         public Type.Name type;
 
         public abstract void setHoleDirections(DirectionPair dirPair);
-
+        public abstract Vector3 getContactPosition(DirectionPair dirPair); // get point of contact with the NEXT tunnel
 
         public int holeCount;
 
@@ -109,6 +109,11 @@ namespace Tunnel
             Vector3 blockEndPosition = transform.position + distToEnd * unitVector;
             Vector3 centerOffsetVector = unitVector * CENTER_OFFSET;
             center = blockEndPosition - centerOffsetVector;
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.DrawCube(center, new Vector3(.1f, .1f, .1f));
         }
     }
 }
