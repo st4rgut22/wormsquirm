@@ -17,7 +17,7 @@ namespace Test
 
         private void OnEnable()
         {
-            ChangeDirectionEvent += FindObjectOfType<Tunnel.Manager>().onChangeDirection;
+            ChangeDirectionEvent += FindObjectOfType<Worm.Movement>().onChangeDirection;
         }
 
         /**
@@ -83,7 +83,7 @@ namespace Test
         {
             if (FindObjectOfType<Tunnel.Manager>())
             {
-                ChangeDirectionEvent -= FindObjectOfType<Tunnel.Manager>().onChangeDirection;
+                ChangeDirectionEvent -= FindObjectOfType<Worm.Movement>().onChangeDirection;
             }
         }
     }

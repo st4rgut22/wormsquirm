@@ -85,5 +85,25 @@ namespace Dir
                     throw new System.Exception("Not a valid direction " + direction);
             }
         }
+
+        public static float getAxisScaleFromDirection(Direction direction, Vector3 vector)
+        {
+            if (direction == Direction.Up || direction == Direction.Down)
+            {
+                return vector.y;
+            }
+            else if (direction == Direction.Right || direction == Direction.Left)
+            {
+                return vector.x;
+            }
+            else if (direction == Direction.Back || direction == Direction.Forward)
+            {
+                return vector.z;
+            }
+            else
+            {
+                throw new System.Exception("Not a valid direction " + direction);
+            }
+        }
     }
 }

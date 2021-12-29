@@ -44,6 +44,7 @@ namespace Tunnel
 
             Debug.Log("last cell position " + cellPosition + " start position " + startPosition + " cell " + cell);
             nextCell = Dir.Vector.getNextCellFromDirection(cell, curDirection);
+            isInit = false;
         }
 
         /**
@@ -53,10 +54,12 @@ namespace Tunnel
         {
             
             Vector3 initialCenter = Tunnel.initializeCenter(initialDirection, center);
-            startPosition = Tunnel.getEgressPosition(initialDirection, initialCenter);
+            Direction oppDir = Dir.Base.getOppositeDirection(initialDirection);
+            startPosition = Tunnel.getEgressPosition(oppDir, initialCenter);
 
-            cell = initialCenter.castToVector3Int(initialDirection);
+            cell = initialCenter.castToVector3Int();
             nextCell = Dir.Vector.getNextCellFromDirection(cell, initialDirection);
+            isInit = true;
         }
     }
 }

@@ -31,7 +31,7 @@ namespace Tunnel
 
         private void OnEnable()
         {
-            ChangeDirectionEvent += FindObjectOfType<Manager>().onChangeDirection;
+            ChangeDirectionEvent += FindObjectOfType<Worm.Movement>().onChangeDirection;
             FollowWaypointEvent += FindObjectOfType<Worm.Movement>().onFollowWaypoint;
         }
 
@@ -137,7 +137,7 @@ namespace Tunnel
         {
             if (FindObjectOfType<Manager>())
             {
-                ChangeDirectionEvent -= FindObjectOfType<Manager>().onChangeDirection;
+                ChangeDirectionEvent -= FindObjectOfType<Worm.Movement>().onChangeDirection;
             }
             if (FindObjectOfType<Worm.Movement>())
             {

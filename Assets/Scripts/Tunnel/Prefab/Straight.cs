@@ -8,14 +8,16 @@ namespace Tunnel
     {
         public Direction growthDirection;
         private bool isDecision;
+        private bool isBlockInitialized; // when a straight tunnel is first created block interval should be emitted because it starts off at length of 1
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
 
         // Start is called before the first frame update
-        void OnEnable()
+        new void OnEnable()
         {
-            FindObjectOfType<Manager>().DecisionEvent += onDecision;
+            base.OnEnable();
+            FindObjectOfType<Worm.Movement>().DecisionEvent += onDecision;
             FindObjectOfType<Manager>().StopEvent += onStop;
 
             FindObjectOfType<Map>().StopEvent += onStop;
@@ -36,6 +38,7 @@ namespace Tunnel
             type = Type.Name.STRAIGHT;
             isStopped = false;
             isDecision = false;
+            isBlockInitialized = false;
             ingressPosition = transform.position;
         }
 
@@ -52,7 +55,8 @@ namespace Tunnel
 
                 float length = getLength(); // transforms scale to length
 
-                bool isBlockMultiple = Map.isDistanceMultiple(length);
+                bool isBlockMultiple = !isBlockInitialized || Map.isDistanceMultiple(length);
+                isBlockInitialized = true;
 
                 Vector3 unitVectorInDir = Dir.Vector.getUnitVectorFromDirection(growthDirection);
 
@@ -65,7 +69,7 @@ namespace Tunnel
                 {
                     Vector3Int cell = getLastCellPosition().getNextVector3Int(growthDirection);
 
-                    if (!isDecision)
+                    if (!isDecision) // not making a turn
                     {
                         addCellToList(cell); // add new position to list of cell positions covered by straight tunnel
                     }                    
@@ -105,7 +109,7 @@ namespace Tunnel
                 float scale = transform.localScale.y;
                 isStopped = true;
                 FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
-                FindObjectOfType<Manager>().DecisionEvent -= onDecision;
+                FindObjectOfType<Worm.Movement>().DecisionEvent -= onDecision;
 
                 BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
                 BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;
@@ -125,7 +129,6 @@ namespace Tunnel
             Vector3 curScale = transform.localScale;
             float length = curScale.y + GROWTH_RATE;
             float roundedLength = (float)Math.Round(length, 2);
-            print("length of tunnel is " + roundedLength);
             transform.localScale = new Vector3(curScale.x, roundedLength, curScale.z);
         }
 

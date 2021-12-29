@@ -30,7 +30,7 @@ namespace Tunnel
 
         public int holeCount;
 
-        private void OnEnable()
+        protected void OnEnable()
         {
             FindObjectOfType<NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
         }
@@ -43,6 +43,7 @@ namespace Tunnel
 
         public void addCellToList(Vector3Int cellPosition)
         {
+            print("add cell pos " + cellPosition);
             cellPositionList.Add(cellPosition);
         }
 

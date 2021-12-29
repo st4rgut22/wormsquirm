@@ -3,22 +3,15 @@ using UnityEngine;
 public static class Vector
 {
     /**
-     * Convert position to integer to mark the cell position of next cell
+     * Convert position to integer
      * 
      * @direction direction of travel influences the cell position. 
      * If in negative direction then position use Math.Floor to get next cell
      * if in positive direction use Math.ceil to get next cell
      */
-    public static Vector3Int castToVector3Int(this Vector3 thisObj, Direction direction)
+    public static Vector3Int castToVector3Int(this Vector3 thisObj)
     {
-        if (Dir.Base.isDirectionNegative(direction))
-        {
-            return new Vector3Int(Mathf.FloorToInt(thisObj.x), Mathf.FloorToInt(thisObj.y), Mathf.FloorToInt(thisObj.z));
-        }
-        else
-        {
-            return new Vector3Int(Mathf.CeilToInt(thisObj.x), Mathf.CeilToInt(thisObj.y), Mathf.CeilToInt(thisObj.z));
-        }
+        return new Vector3Int((int)thisObj.x, (int)thisObj.y, (int)thisObj.z);
     }
 
     /**
@@ -26,34 +19,48 @@ public static class Vector
      */
     public static Vector3Int getNextVector3Int(this Vector3Int thisObj, Direction direction)
     {
+        Vector3 vector = getNextVector(thisObj, direction);
+        Vector3Int cellLoc = castToVector3Int(vector);
+        return cellLoc;
+    }
+
+    public static Vector3Int getNextVector3(this Vector3 thisObj, Direction direction)
+    {
+        Vector3 vector = getNextVector(thisObj, direction);
+        Vector3Int cellLoc = vector.castToVector3Int();
+        return cellLoc;
+    }
+
+    private static Vector3 getNextVector(Vector3 vector, Direction direction)
+    {
         if (Dir.Base.isDirectionNegative(direction))
         {
             if (direction == Direction.Left)
             {
-                return new Vector3Int(--thisObj.x, thisObj.y, thisObj.z);
+                return new Vector3(--vector.x, vector.y, vector.z);
             }
             else if (direction == Direction.Down)
             {
-                return new Vector3Int(thisObj.x, --thisObj.y, thisObj.z);
+                return new Vector3(vector.x, --vector.y, vector.z);
             }
             else
             {
-                return new Vector3Int(thisObj.x, thisObj.y, --thisObj.z);
+                return new Vector3(vector.x, vector.y, --vector.z);
             }
         }
         else
         {
             if (direction == Direction.Right)
             {
-                return new Vector3Int(++thisObj.x, thisObj.y, thisObj.z);
+                return new Vector3(++vector.x, vector.y, vector.z);
             }
             else if (direction == Direction.Up)
             {
-                return new Vector3Int(thisObj.x, ++thisObj.y, thisObj.z);
+                return new Vector3(vector.x, ++vector.y, vector.z);
             }
             else
             {
-                return new Vector3Int(thisObj.x, thisObj.y, ++thisObj.z);
+                return new Vector3(vector.x, vector.y, ++vector.z);
             }
         }
     }

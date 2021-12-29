@@ -6,7 +6,7 @@ namespace Worm
     /**
      * Worm movement
      */
-    public class Movement : MonoBehaviour
+    public class Movement: MonoBehaviour
     {
         private Direction direction; // direction of worm travel
         private Direction egressWaypointDirection; // direction exiting a corner, saved on receipt of followWaypoints event
@@ -17,21 +17,24 @@ namespace Worm
         private List<Vector3> waypointList;
         private List<Vector3> nextWaypointList; // queued up waypoint list if turning while navigating a corner
 
-        public delegate void Position(Vector3 position, Direction direction);
-        public event Position PositionEvent;
-
         public delegate void CompleteTurn(Direction direction); // when turn is completed notify Turn so we can proceed straight
         public event CompleteTurn CompleteTurnEvent;
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
 
+        public delegate void Decision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel);
+        public event Decision DecisionEvent;
+
         private const float SPEED = Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
-        private bool isInExistingTunnel = false;
+
+        Tunnel.Tunnel changeDirTunnel;
+        private bool isInit = true;
 
         private void Awake()
         {
             waypointIndex = 0;
+            changeDirTunnel = null;
             waypointList = new List<Vector3>();
             nextWaypointList = new List<Vector3>();
             unitVectorDirection = Vector3.zero; // initially the worm is not moving
@@ -41,10 +44,11 @@ namespace Worm
 
         private void OnEnable() 
         {
-            PositionEvent += FindObjectOfType<Tunnel.Manager>().onPosition;
             CompleteTurnEvent += FindObjectOfType<Tunnel.Turn>().onCompleteTurn;
             CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
             CompleteTurnEvent += FindObjectOfType<Rotation>().onCompleteTurn;
+            DecisionEvent += FindObjectOfType<Tunnel.Turn>().onDecision;
+            DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
         }
 
         public void onInitWormPosition(Vector3 initPos)
@@ -89,6 +93,7 @@ namespace Worm
             }
             waypointIndex = 0;
             nextWaypointList.Clear();
+            direction = egressWaypointDirection;
         }
 
 
@@ -107,26 +112,8 @@ namespace Worm
          */
         public void onMove(Direction direction)
         {
-            this.direction = direction;
             Vector3 moveUnitVector = Dir.Vector.getUnitVectorFromDirection(direction);
             transform.position += moveUnitVector * SPEED;
-        }
-
-        /**
-         * A TEST delegate method to center the worm after it has reached a decision point. In reality, this will be controlled
-         * by the animation of the worm's head
-         */
-        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
-        {
-            print("re-center worm");
-            if (tunnel != null)
-            {
-                transform.position = tunnel.center;
-            }
-            else
-            {
-                throw new System.Exception("no tunnel for worm to center in");
-            }
         }
 
         /**
@@ -149,17 +136,28 @@ namespace Worm
         }
 
         /**
+         * Tunnel direction change triggers creation or modification of the next tunnel. 
+         * 
+         * @directionPair indicates direction of travel and determines type of tunnel to create
+         */
+        public void onChangeDirection(DirectionPair directionPair)
+        {
+            Tunnel.CollisionManager.Instance.changeDirection(directionPair, changeDirTunnel);
+        }
+
+        /**
          * When junction has been created it triggers the worm to send out block interval events instead of the tunnel
          *
          *@cellMove info about the junction such as center position, ingress position
          */
         public void onCreateJunction(Tunnel.Tunnel collisionTunnel, DirectionPair dirPair, Tunnel.CellMove cellMove)
         {
-            isInExistingTunnel = true;
+            Tunnel.CollisionManager.Instance.isCreatingNewTunnel = true;
+
             if (waypointList.Count == 0) // means we are not executing a turn into the junction
             {
                 waypointList.Add(cellMove.startPosition); // go the ingress position of the junction
-                egressWaypointDirection = direction; // direction remains same as the straight tunnel worm is currently in
+                egressWaypointDirection = dirPair.curDir; // direction remains same as the straight tunnel worm is currently in
             }
         }
 
@@ -176,24 +174,39 @@ namespace Worm
         /**
          * Move the worm in a different direction and determine whether it has reached one of the six block decision points
          */
-        public void onPlayerInput(Direction direction)
+        public void onPlayerInput(Direction turnDirection)
         {
             if (isEligibleForInput())
             {
-                unitVectorDirection = Dir.Vector.getUnitVectorFromDirection(direction);
+                unitVectorDirection = Dir.Vector.getUnitVectorFromDirection(turnDirection);
                 Vector3 inputPosition = transform.position + unitVectorDirection * SPEED;
-                PositionEvent(inputPosition, direction);
+
+                Vector3Int cell = inputPosition.getNextVector3(direction);
+                print("input position is " + inputPosition + " next cell (HEAD) is " + cell);
+                changeDirTunnel = Tunnel.Map.getTunnelFromDict(cell);
+                bool isDecision = Tunnel.ActionPoint.instance.isDecisionBoundaryCrossed(changeDirTunnel, inputPosition, turnDirection);
+
+                if (isDecision)
+                {
+                    if (changeDirTunnel != null)
+                    {
+                        transform.position = changeDirTunnel.center; // center the worm after making a decision
+                    }
+                    bool isStraightTunnel = changeDirTunnel == null || changeDirTunnel.type == Tunnel.Type.Name.STRAIGHT; // if this is the first tunnel it should be straight type
+                    DecisionEvent(isStraightTunnel, turnDirection, changeDirTunnel);
+                }
             }
         }
 
         private void OnDisable()
         {
-            if (FindObjectOfType<Tunnel.Manager>())
+            if (FindObjectOfType<Tunnel.Map>())
             {
-                PositionEvent -= FindObjectOfType<Tunnel.Manager>().onPosition;
+                DecisionEvent -= FindObjectOfType<Tunnel.Map>().onDecision;
             }
             if (FindObjectOfType<Tunnel.Turn>())
             {
+                DecisionEvent -= FindObjectOfType<Tunnel.Turn>().onDecision;
                 CompleteTurnEvent -= FindObjectOfType<Tunnel.Turn>().onCompleteTurn;                
             }
             if (FindObjectOfType<Controller>())
