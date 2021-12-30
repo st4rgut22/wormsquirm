@@ -24,9 +24,11 @@ namespace Tunnel
         // Start is called before the first frame update
         protected void OnEnable()
         {
+            CreateTunnelEvent += FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
             SliceTunnelEvent += FindObjectOfType<Intersect.Slicer>().sliceTunnel;
             CreateJunctionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunction;
             CreateJunctionEvent += FindObjectOfType<Worm.Movement>().onCreateJunction;
+            InitWormPositionEvent += FindObjectOfType<Worm.Movement>().onInitWormPosition;
         }
 
         /**
@@ -35,7 +37,7 @@ namespace Tunnel
          * On intersect with a tunnel segment, create a junction and slice segment (if necessary)
          * Notify worm about new tunnel so it can keep track of blockInterval instead of tunnel
          */
-        public void collide(DirectionPair directionPair, Tunnel curTunnel, Tunnel nextTunnel)
+        public void onCollide(DirectionPair directionPair, Tunnel curTunnel, Tunnel nextTunnel)
         {
             Direction exitDirection = directionPair.curDir;
 
@@ -62,13 +64,13 @@ namespace Tunnel
          * 
          * @directionPair indicates direction of travel and determines type of tunnel to create
          */
-        public void changeDirection(DirectionPair directionPair, Tunnel tunnel)
+        public void onChangeDirection(DirectionPair directionPair)
         {
             if (StopEvent != null)
             {
                 StopEvent(); // Stop the last growing tunnel
             }
-
+            Tunnel tunnel = TunnelManager.Instance.getLastTunnel();
             // get cell from map, check if tunnel w/ egress at curDirection already exists
             CellMove cellMove = CellMove.getCellMove(tunnel, directionPair);
             if (cellMove.isInit)
@@ -83,7 +85,7 @@ namespace Tunnel
             }
             else // tunnel exists where we want to create a corner. issue slice event
             {
-                collide(directionPair, tunnel, existingTunnel);
+                onCollide(directionPair, tunnel, existingTunnel);
             }
         }
 

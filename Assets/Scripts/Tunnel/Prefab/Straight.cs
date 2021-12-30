@@ -18,11 +18,10 @@ namespace Tunnel
         {
             base.OnEnable();
             FindObjectOfType<Worm.Movement>().DecisionEvent += onDecision;
-            FindObjectOfType<Manager>().StopEvent += onStop;
+            FindObjectOfType<CollisionManager>().StopEvent += onStop;
 
-            FindObjectOfType<Map>().StopEvent += onStop;
+            BlockIntervalEvent += Turn.Instance.onBlockInterval; // subscribe turn to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
-            BlockIntervalEvent += FindObjectOfType<Turn>().onBlockInterval; // subscribe turn to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Worm.Movement>().onBlockInterval;  // subscribe worm so it can go to the center of the created block
 
             if (FindObjectOfType<Test.TunnelMaker>())
@@ -134,13 +133,12 @@ namespace Tunnel
 
         void OnDisable()
         {
-            if (FindObjectOfType<Manager>()) // check if TunnelManager hasn't been deleted before this GO
+            if (FindObjectOfType<CollisionManager>()) // check if TunnelManager hasn't been deleted before this GO
             {
-                FindObjectOfType<Manager>().StopEvent -= onStop;
+                FindObjectOfType<CollisionManager>().StopEvent -= onStop;
             }
             if (FindObjectOfType<Map>())
             {
-                FindObjectOfType<Map>().StopEvent -= onStop;
                 BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval;
             }
             if (FindObjectOfType<Worm.Movement>())

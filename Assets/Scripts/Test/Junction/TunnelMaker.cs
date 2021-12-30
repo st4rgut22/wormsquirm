@@ -17,7 +17,7 @@ namespace Test
 
         private void OnEnable()
         {
-            ChangeDirectionEvent += FindObjectOfType<Worm.Movement>().onChangeDirection;
+            ChangeDirectionEvent += FindObjectOfType<Tunnel.CollisionManager>().onChangeDirection;
         }
 
         /**
@@ -81,9 +81,9 @@ namespace Test
         // Start is called before the first frame update
         private void OnDisable()
         {
-            if (FindObjectOfType<Tunnel.Manager>())
+            if (FindObjectOfType<Worm.Movement>())
             {
-                ChangeDirectionEvent -= FindObjectOfType<Worm.Movement>().onChangeDirection;
+                ChangeDirectionEvent -= FindObjectOfType<Tunnel.CollisionManager>().onChangeDirection;
             }
         }
     }

@@ -4,7 +4,7 @@ namespace Tunnel
 {
     public class CellMove
     {
-        public Vector3Int cellPosition { get; private set; }
+        public Vector3Int lastCellPosition { get; private set; }
         public Vector3 startPosition { get; private set; }
         public Vector3Int cell { get; private set; }
 
@@ -25,7 +25,7 @@ namespace Tunnel
             }
             else
             {
-                return new CellMove(directionPair.curDir, Manager.initialCell); // on game start, there is no previous direction so use current direction                
+                return new CellMove(directionPair.curDir, TunnelManager.Instance.initialCell); // on game start, there is no previous direction so use current direction                
             }
         }
 
@@ -37,12 +37,12 @@ namespace Tunnel
          */
         public CellMove(Tunnel tunnel, Direction curDirection)
         {
-            cellPosition = tunnel.getLastCellPosition(); // start at the end of prev tunnel
+            lastCellPosition = tunnel.getLastCellPosition(); // start at the end of prev tunnel
 
             startPosition = Tunnel.getEgressPosition(curDirection, tunnel.center); // get the correct egress position using the curDirection
-            cell = cellPosition.getNextVector3Int(curDirection);
+            cell = lastCellPosition.getNextVector3Int(curDirection);
 
-            Debug.Log("last cell position " + cellPosition + " start position " + startPosition + " cell " + cell);
+            Debug.Log("last cell position " + lastCellPosition + " start position " + startPosition + " cell " + cell);
             nextCell = Dir.Vector.getNextCellFromDirection(cell, curDirection);
             isInit = false;
         }

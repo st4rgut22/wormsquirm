@@ -8,7 +8,7 @@ public static class ExtensionMethod
     {
         Direction ingressDir = directionPair.prevDir == Direction.None ? directionPair.curDir : directionPair.prevDir;
 
-        Rotation.Rotation rotation = Tunnel.Manager.GetPrefabFromHoleList(ingressDir, originalHoleDirectionList, prefabParent).GetComponent<Rotation.Rotation>();
+        Rotation.Rotation rotation = Tunnel.TunnelManager.Instance.GetPrefabFromHoleList(ingressDir, originalHoleDirectionList, prefabParent).GetComponent<Rotation.Rotation>();
         GameObject prefab = rotation.rotatedPrefab;
 
         GameObject tunnelGO = GameObject.Instantiate(prefab, position, Quaternion.identity, parent);

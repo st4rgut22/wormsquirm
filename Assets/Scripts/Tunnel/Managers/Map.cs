@@ -4,8 +4,10 @@ using UnityEngine;
 
 namespace Tunnel
 {
-    public class Map : CollisionManager
+    public class Map : MonoBehaviour
     {
+        public delegate void Collide(DirectionPair directionPair, Tunnel curTunnel, Tunnel nextTunnel);
+        private event Collide CollideEvent;
 
         public static Dictionary<Vector3Int, Tunnel> TunnelMapDict;
         public static List<Vector3Int> cellList;
@@ -16,8 +18,16 @@ namespace Tunnel
         private void Awake()
         {
             isDecision = false;
-            cellList = new List<Vector3Int>() { Manager.initialCell };
+            cellList = new List<Vector3Int>() { TunnelManager.Instance.initialCell };
             TunnelMapDict = new Dictionary<Vector3Int, Tunnel>();
+        }
+
+        private void OnEnable()
+        {
+            if (FindObjectOfType<CollisionManager>())
+            {
+                CollideEvent += FindObjectOfType<CollisionManager>().onCollide;
+            }            
         }
 
         public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
@@ -43,7 +53,7 @@ namespace Tunnel
                 {
                     Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
                     DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection); // go straight
-                    collide(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect
+                    CollideEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect
                 }
                 // or is initial straight tunnel, where decision event is created even though we are not technically turning
                 else if (!isDecision || isInit) // in straight tunnel a turn decision has been made so don't add the next tunnel segment
@@ -105,6 +115,14 @@ namespace Tunnel
             else
             {
                 return null;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (FindObjectOfType<CollisionManager>())
+            {
+                CollideEvent -= FindObjectOfType<CollisionManager>().onCollide;
             }
         }
     }

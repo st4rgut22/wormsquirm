@@ -29,7 +29,6 @@ namespace Worm
         private const float SPEED = Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
 
         Tunnel.Tunnel changeDirTunnel;
-        private bool isInit = true;
 
         private void Awake()
         {
@@ -38,16 +37,16 @@ namespace Worm
             waypointList = new List<Vector3>();
             nextWaypointList = new List<Vector3>();
             unitVectorDirection = Vector3.zero; // initially the worm is not moving
-            transform.position = Tunnel.Manager.initialCell;
+            transform.position = Tunnel.TunnelManager.Instance.initialCell;
             direction = Direction.None;
         }
 
         private void OnEnable() 
         {
-            CompleteTurnEvent += FindObjectOfType<Tunnel.Turn>().onCompleteTurn;
+            CompleteTurnEvent += Tunnel.Turn.Instance.onCompleteTurn;
+            DecisionEvent += Tunnel.Turn.Instance.onDecision;
             CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
             CompleteTurnEvent += FindObjectOfType<Rotation>().onCompleteTurn;
-            DecisionEvent += FindObjectOfType<Tunnel.Turn>().onDecision;
             DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
         }
 
@@ -133,16 +132,6 @@ namespace Worm
             {
                 this.waypointList = waypointList;
             }
-        }
-
-        /**
-         * Tunnel direction change triggers creation or modification of the next tunnel. 
-         * 
-         * @directionPair indicates direction of travel and determines type of tunnel to create
-         */
-        public void onChangeDirection(DirectionPair directionPair)
-        {
-            Tunnel.CollisionManager.Instance.changeDirection(directionPair, changeDirTunnel);
         }
 
         /**

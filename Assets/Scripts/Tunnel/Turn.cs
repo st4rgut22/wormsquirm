@@ -1,10 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Tunnel
 {
-    public class Turn : MonoBehaviour
+    public class Turn : GenericSingletonClass<Turn>
     {
         private bool isWaitBlockEvent; // if straight tunnel, then it is true because we have to wait until tunnel length is a multiple of BLOCK_INTERVAL
         private bool isDecision; // flag to check if a decision has been made
@@ -20,8 +19,9 @@ namespace Tunnel
         public delegate void FollowWaypoint(List<Vector3> waypointList, DirectionPair directionPair);
         public event FollowWaypoint FollowWaypointEvent;
 
-        private void Awake()
+        private new void Awake()
         {
+            base.Awake();
             this.isDecision = false;
             this.isWaitBlockEvent = false;
             this.isBlockSizeMultiple = true; // used to initialize straight tunnel
@@ -31,7 +31,7 @@ namespace Tunnel
 
         private void OnEnable()
         {
-            ChangeDirectionEvent += FindObjectOfType<Worm.Movement>().onChangeDirection;
+            ChangeDirectionEvent += CollisionManager.Instance.onChangeDirection;
             FollowWaypointEvent += FindObjectOfType<Worm.Movement>().onFollowWaypoint;
         }
 
@@ -57,16 +57,13 @@ namespace Tunnel
          */
         private void turn(Tunnel tunnel)
         {
-            if (isTurning())
-            {
-                isDecision = false;
-                ChangeDirectionEvent(directionPair); // rotate tunnel in the direction
+            isDecision = false;
+            ChangeDirectionEvent(directionPair); // rotate tunnel in the direction
 
-                if (tunnel != null) // check the tunnel exists
-                {
-                    Vector3 egressPosition = Tunnel.getEgressPosition(directionPair.prevDir, tunnel.center);
-                    initializeTurnWaypointList(directionPair, egressPosition);
-                }
+            if (tunnel != null) // check the tunnel exists
+            {
+                Vector3 egressPosition = Tunnel.getEgressPosition(directionPair.prevDir, tunnel.center);
+                initializeTurnWaypointList(directionPair, egressPosition);
             }
         }
 
@@ -108,7 +105,7 @@ namespace Tunnel
         {
             this.isBlockSizeMultiple = isBlockSizeMultiple;
 
-            if (isBlockSizeMultiple) // initiate turn for straight tunnels
+            if (isBlockSizeMultiple && isTurning()) // initiate turn for straight tunnels
             {
                 turn(tunnel);
             }
@@ -135,12 +132,9 @@ namespace Tunnel
 
         private void OnDisable()
         {
-            if (FindObjectOfType<Manager>())
-            {
-                ChangeDirectionEvent -= FindObjectOfType<Worm.Movement>().onChangeDirection;
-            }
             if (FindObjectOfType<Worm.Movement>())
             {
+                ChangeDirectionEvent -= FindObjectOfType<CollisionManager>().onChangeDirection;
                 FollowWaypointEvent -= FindObjectOfType<Worm.Movement>().onFollowWaypoint;
             }            
         }
