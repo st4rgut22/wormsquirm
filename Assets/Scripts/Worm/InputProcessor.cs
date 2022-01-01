@@ -5,7 +5,7 @@ namespace Worm
 {
     public class InputProcessor : MonoBehaviour
     {
-        private const float SPEED = Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
+        public static float INPUT_SPEED = Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
 
         private Vector3 unitVectorDirection;
         Tunnel.Tunnel changeDirTunnel;
@@ -74,7 +74,7 @@ namespace Worm
             if (!isDecisionProcessing)
             {
                 unitVectorDirection = Dir.Vector.getUnitVectorFromDirection(turnDirection);
-                Vector3 inputPosition = transform.position + unitVectorDirection * SPEED;
+                Vector3 inputPosition = transform.position + unitVectorDirection * INPUT_SPEED;
 
                 Vector3Int cell = getCurrentCell();
 

@@ -5,6 +5,11 @@ namespace Tunnel
 {    
     public class Junction : Tunnel
     {
+        protected override void OnEnable()
+        {
+            FindObjectOfType<ModTunnelFactory>().AddTunnelEvent += onAddTunnel;
+        }
+
         public override Vector3 getContactPosition(DirectionPair dirPair)
         {
             return getEgressPosition(dirPair.curDir, center);
@@ -22,6 +27,14 @@ namespace Tunnel
         new private void Awake()
         {
             base.Awake();
+        }
+
+        protected override void OnDisable()
+        {
+            if (FindObjectOfType<ModTunnelFactory>())
+            {
+                FindObjectOfType<ModTunnelFactory>().AddTunnelEvent -= onAddTunnel;
+            }
         }
     }
 

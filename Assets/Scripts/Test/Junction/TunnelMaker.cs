@@ -7,17 +7,38 @@ namespace Test
      * A testing class that confirms orientation of junctions + # of holes is correct 
      */
     public class TunnelMaker : MonoBehaviour
-    {
-        Direction initialDir = Direction.Up;
+    {      
         List<Checkpoint> checkpointList;
-        int checkPointIdx = 0;
+        int checkPointIdx;
+
+        private const float INSTANT_TURN = 1.0f;
+        private int tunnelSegmentCounter;
+        Checkpoint currentCheckpoint;
 
         public delegate void ChangeDirection(DirectionPair directionPair);
         public event ChangeDirection ChangeDirectionEvent;
 
+        public delegate void InitDecision(Direction direction);
+        public event InitDecision InitDecisionEvent;
+
+        public delegate void Decision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel);
+        public event Decision DecisionEvent;
+
+        public delegate void PlayerInput(Direction direction);
+        public event PlayerInput PlayerInputEvent;
+
+        private void Awake()
+        {
+            tunnelSegmentCounter = 0; // maintains count of added segments onBlockInterval event to decide when to turn
+            checkPointIdx = 0; // does not include the initial tunnel
+            Worm.InputProcessor.INPUT_SPEED = INSTANT_TURN; // turn instantly on one player input
+        }
+
         private void OnEnable()
         {
-            ChangeDirectionEvent += FindObjectOfType<Tunnel.CollisionManager>().onChangeDirection;
+            PlayerInputEvent += FindObjectOfType<Worm.InputProcessor>().onPlayerInput;
+            InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
+            InitDecisionEvent += FindObjectOfType<Tunnel.Turn>().onInitDecision;
         }
 
         /**
@@ -26,8 +47,9 @@ namespace Test
         private void Start()
         {
             checkpointList = ExampleNetwork.threeIntersectLoopStraight;
+            currentCheckpoint = checkpointList[0];
 
-            ChangeDirectionEvent(new DirectionPair(Direction.None, initialDir));
+            InitDecisionEvent(currentCheckpoint.direction);
         }
 
         /**
@@ -37,7 +59,7 @@ namespace Test
         {
             if (tunnel.tag == Tunnel.Type.CORNER)
             {
-                changeDirection(cell);
+                changeDirection();
             }
         }
 
@@ -45,35 +67,25 @@ namespace Test
         {
             if (isBlockInterval)
             {
-                changeDirection(blockPositionInt);
+                tunnelSegmentCounter += 1;
+                changeDirection();
             }
         }
 
         /**
          * Execute turn if block matches decision cell
          */
-        private void changeDirection(Vector3Int blockPositionInt)
+        private void changeDirection()
         {
-            if (checkPointIdx < checkpointList.Count)
+            if (currentCheckpoint.length == tunnelSegmentCounter)
             {
-                Checkpoint cp = checkpointList[checkPointIdx];
-                if (cp.decisionCell.Equals(blockPositionInt))
+                checkPointIdx++;
+                if (checkPointIdx < checkpointList.Count)
                 {
-                    checkPointIdx++;
-                    ChangeDirectionEvent(cp.dirPair);
+                    currentCheckpoint = checkpointList[checkPointIdx];
 
-                    Vector3Int turnCell = cp.decisionCell.getNextVector3Int(cp.dirPair.prevDir);
-
-                    // append straight tunnel segment to the corner unless a consecutive turn is made
-                    if (checkPointIdx < checkpointList.Count)
-                    {
-                        Checkpoint nextCP = checkpointList[checkPointIdx];
-                        if (!nextCP.decisionCell.Equals(turnCell))
-                        {
-                            DirectionPair straightDirPair = new DirectionPair(cp.dirPair.curDir, cp.dirPair.curDir);
-                            ChangeDirectionEvent(straightDirPair);
-                        }
-                    }
+                    tunnelSegmentCounter = 0; // reset the counter
+                    PlayerInputEvent(currentCheckpoint.direction); // go in new direction
                 }
             }
         }
@@ -81,9 +93,17 @@ namespace Test
         // Start is called before the first frame update
         private void OnDisable()
         {
-            if (FindObjectOfType<Worm.Movement>())
+            if (FindObjectOfType<Worm.InputProcessor>())
             {
-                ChangeDirectionEvent -= FindObjectOfType<Tunnel.CollisionManager>().onChangeDirection;
+                PlayerInputEvent -= FindObjectOfType<Worm.InputProcessor>().onPlayerInput;
+            }
+            if (FindObjectOfType<Tunnel.Map>())
+            {
+                InitDecisionEvent -= Tunnel.CollisionManager.Instance.onInitDecision;
+            }
+            if (FindObjectOfType<Tunnel.Turn>())
+            {
+                InitDecisionEvent += FindObjectOfType<Tunnel.Turn>().onInitDecision;
             }
         }
     }

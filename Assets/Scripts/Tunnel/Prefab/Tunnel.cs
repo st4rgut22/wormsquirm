@@ -33,7 +33,7 @@ namespace Tunnel
         [SerializeField]
         private Vector3Int lastCellPos;
 
-        protected void OnEnable()
+        protected virtual void OnEnable()
         {
             FindObjectOfType<NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
         }
@@ -118,6 +118,14 @@ namespace Tunnel
         private void OnDrawGizmos()
         {
             Gizmos.DrawCube(center, new Vector3(.1f, .1f, .1f));
+        }
+
+        protected virtual void OnDisable()
+        {
+            if (FindObjectOfType<NewTunnelFactory>())
+            {
+                FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
+            }
         }
     }
 }

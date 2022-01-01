@@ -12,7 +12,7 @@ namespace Worm
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
 
-        public delegate void InitDecision(Direction directionl);
+        public delegate void InitDecision(Direction direction);
         public event InitDecision InitDecisionEvent;
 
         private bool isGameStart;
