@@ -14,6 +14,10 @@ namespace Tunnel
 
         protected void OnEnable()
         {
+            if (FindObjectOfType<Map>())
+            {
+                AddTunnelEvent += FindObjectOfType<Map>().onAddTunnel;
+            }
             if (FindObjectOfType<TunnelManager>())
             {
                 AddTunnelEvent += FindObjectOfType<TunnelManager>().onAddTunnel;
@@ -39,6 +43,10 @@ namespace Tunnel
             if (FindObjectOfType<Map>())
             {
                 AddTunnelEvent -= FindObjectOfType<Map>().onAddTunnel;
+            }
+            if (FindObjectOfType<TunnelManager>())
+            {
+                AddTunnelEvent -= FindObjectOfType<TunnelManager>().onAddTunnel;
             }
             if (FindObjectOfType<Test.TunnelMaker>())
             {

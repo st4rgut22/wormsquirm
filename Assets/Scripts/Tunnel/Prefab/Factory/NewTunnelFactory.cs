@@ -19,7 +19,7 @@ namespace Tunnel
             this.cellMove = cellMove;
             this.directionPair = directionPair;
             Tunnel tunnel = getTunnel();
-            addTunnel(tunnel);
+            addTunnel(tunnel); // for corners, must wait until the straight tunnel has stopped growing
         }
 
         /**

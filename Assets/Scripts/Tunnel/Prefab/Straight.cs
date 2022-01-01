@@ -7,8 +7,6 @@ namespace Tunnel
     public class Straight : Tunnel
     {
         public Direction growthDirection;
-        private bool isDecision;
-        private bool isBlockInitialized; // when a straight tunnel is first created block interval should be emitted because it starts off at length of 1
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
@@ -17,11 +15,10 @@ namespace Tunnel
         new void OnEnable()
         {
             base.OnEnable();
-            FindObjectOfType<Worm.Movement>().DecisionEvent += onDecision;
             FindObjectOfType<CollisionManager>().StopEvent += onStop;
 
-            BlockIntervalEvent += Turn.Instance.onBlockInterval; // subscribe turn to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
+            BlockIntervalEvent += Turn.Instance.onBlockInterval; // subscribe turn to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Worm.Movement>().onBlockInterval;  // subscribe worm so it can go to the center of the created block
 
             if (FindObjectOfType<Test.TunnelMaker>())
@@ -36,8 +33,6 @@ namespace Tunnel
 
             type = Type.Name.STRAIGHT;
             isStopped = false;
-            isDecision = false;
-            isBlockInitialized = false;
             ingressPosition = transform.position;
         }
 
@@ -54,8 +49,7 @@ namespace Tunnel
 
                 float length = getLength(); // transforms scale to length
 
-                bool isBlockMultiple = !isBlockInitialized || Map.isDistanceMultiple(length);
-                isBlockInitialized = true;
+                bool isBlockMultiple = Map.isDistanceMultiple(length);
 
                 Vector3 unitVectorInDir = Dir.Vector.getUnitVectorFromDirection(growthDirection);
 
@@ -67,11 +61,7 @@ namespace Tunnel
                 if (isBlockMultiple)
                 {
                     Vector3Int cell = getLastCellPosition().getNextVector3Int(growthDirection);
-
-                    if (!isDecision) // not making a turn
-                    {
-                        addCellToList(cell); // add new position to list of cell positions covered by straight tunnel
-                    }                    
+                    addCellToList(cell); // add new position to list of cell positions covered by straight tunnel
 
                     setCenter(length, growthDirection); // adjust the center to the new block
                     BlockIntervalEvent(isBlockMultiple, cell, this);
@@ -91,14 +81,6 @@ namespace Tunnel
         }
 
         /**
-         * When a turn is being made in the next cell set a flag, so we don't add a straight segment at the next cell interval (we will add a corner instaed)
-         */
-        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
-        {
-            isDecision = true;
-        }
-
-        /**
          * Stop subscribing to onGrow event
          */
         private void onStop()
@@ -108,7 +90,6 @@ namespace Tunnel
                 float scale = transform.localScale.y;
                 isStopped = true;
                 FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
-                FindObjectOfType<Worm.Movement>().DecisionEvent -= onDecision;
 
                 BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
                 BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;

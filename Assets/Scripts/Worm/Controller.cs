@@ -12,14 +12,22 @@ namespace Worm
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
 
+        public delegate void InitDecision(Direction directionl);
+        public event InitDecision InitDecisionEvent;
+
+        private bool isGameStart;
+
         private void OnEnable()
         {
-            PlayerInputEvent += FindObjectOfType<Movement>().onPlayerInput;
+            PlayerInputEvent += FindObjectOfType<InputProcessor>().onPlayerInput;
+            InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
+            InitDecisionEvent += FindObjectOfType<Tunnel.Turn>().onInitDecision;
         }
 
         // Start is called before the first frame update
         void Awake()
         {
+            isGameStart = true;
             direction = Direction.None;
         }
 
@@ -52,7 +60,12 @@ namespace Worm
             {
                 Direction localDirection = getDirection(inputKeyPair); // direction with respect to tunnel
 
-                if (PlayerInputEvent != null)
+                if (isGameStart)
+                {
+                    InitDecisionEvent(localDirection);
+                    isGameStart = false;
+                }
+                else if (PlayerInputEvent != null)
                 {
                     PlayerInputEvent(localDirection);
                 }
@@ -63,7 +76,15 @@ namespace Worm
         {
             if (FindObjectOfType<Movement>())
             {
-                PlayerInputEvent -= FindObjectOfType<Movement>().onPlayerInput;
+                PlayerInputEvent -= FindObjectOfType<InputProcessor>().onPlayerInput;
+            }
+            if (FindObjectOfType<Tunnel.Map>())
+            {
+                InitDecisionEvent -= Tunnel.CollisionManager.Instance.onInitDecision;
+            }
+            if (FindObjectOfType<Tunnel.Turn>())
+            {
+                InitDecisionEvent += FindObjectOfType<Tunnel.Turn>().onInitDecision;
             }
         }
     }

@@ -19,14 +19,12 @@ namespace Tunnel
          */
         public static CellMove getCellMove(Tunnel tunnel, DirectionPair directionPair)
         {
-            if (tunnel != null)
-            {
-                return new CellMove(tunnel, directionPair.prevDir); // get cell position using ingress direction going into the next cell
-            }
-            else
-            {
-                return new CellMove(directionPair.curDir, TunnelManager.Instance.initialCell); // on game start, there is no previous direction so use current direction                
-            }
+            return new CellMove(tunnel, directionPair.prevDir); // get cell position using ingress direction going into the next cell
+        }
+
+        public static CellMove getInitialCellMove(Direction direction)
+        {
+            return new CellMove(direction, TunnelManager.Instance.initialCell); // on game start, there is no previous direction so use current direction                
         }
 
         /**

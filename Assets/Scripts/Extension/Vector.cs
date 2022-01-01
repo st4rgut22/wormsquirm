@@ -20,7 +20,7 @@ public static class Vector
     public static Vector3Int getNextVector3Int(this Vector3Int thisObj, Direction direction)
     {
         Vector3 vector = getNextVector(thisObj, direction);
-        Vector3Int cellLoc = castToVector3Int(vector);
+        Vector3Int cellLoc = vector.castToVector3Int();
         return cellLoc;
     }
 

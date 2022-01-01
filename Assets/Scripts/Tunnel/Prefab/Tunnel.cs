@@ -30,6 +30,9 @@ namespace Tunnel
 
         public int holeCount;
 
+        [SerializeField]
+        private Vector3Int lastCellPos;
+
         protected void OnEnable()
         {
             FindObjectOfType<NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
@@ -43,7 +46,7 @@ namespace Tunnel
 
         public void addCellToList(Vector3Int cellPosition)
         {
-            print("add cell pos " + cellPosition);
+            lastCellPos = cellPosition;
             cellPositionList.Add(cellPosition);
         }
 
@@ -73,7 +76,7 @@ namespace Tunnel
             return copiedTunnel;
         }
 
-        /**
+        /** 
          * When a tunnel at beginning of game, initialize center
          * 
          * @direction worm direction

@@ -23,17 +23,14 @@ namespace Worm
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
 
-        public delegate void Decision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel);
-        public event Decision DecisionEvent;
+        public delegate void DecisionProcessing(bool isDecisionProcessing);
+        public event DecisionProcessing DecisionProcessingEvent;
 
         private const float SPEED = Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
-
-        Tunnel.Tunnel changeDirTunnel;
 
         private void Awake()
         {
             waypointIndex = 0;
-            changeDirTunnel = null;
             waypointList = new List<Vector3>();
             nextWaypointList = new List<Vector3>();
             unitVectorDirection = Vector3.zero; // initially the worm is not moving
@@ -44,15 +41,16 @@ namespace Worm
         private void OnEnable() 
         {
             CompleteTurnEvent += Tunnel.Turn.Instance.onCompleteTurn;
-            DecisionEvent += Tunnel.Turn.Instance.onDecision;
             CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
             CompleteTurnEvent += FindObjectOfType<Rotation>().onCompleteTurn;
-            DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
+            DecisionProcessingEvent += FindObjectOfType<InputProcessor>().onDecisionProcessing;
         }
 
-        public void onInitWormPosition(Vector3 initPos)
+        public void onInitWormPosition(Vector3 initPos, Direction direction)
         {
-            transform.position = initPos;
+            float offset = Tunnel.TunnelManager.Instance.getHeadOffset();
+            Vector3 offsetVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            transform.position = initPos + offset * offsetVector;
         }
 
         private void FixedUpdate()
@@ -85,23 +83,17 @@ namespace Worm
          */
         private void completeTurn()
         {
+            print("complete turn");
             waypointList = nextWaypointList;
             if (waypointList.Count == 0)
             {
+
                 CompleteTurnEvent(egressWaypointDirection);
+                DecisionProcessingEvent(false);
             }
             waypointIndex = 0;
             nextWaypointList.Clear();
             direction = egressWaypointDirection;
-        }
-
-
-        /**
-         * Ignore player input if waypoints list is being followed and first waypoint has not been reached yet
-         */
-        private bool isEligibleForInput()
-        {
-            return waypointList.Count == 0 || waypointIndex > 0;
         }
 
         /**
@@ -126,6 +118,7 @@ namespace Worm
 
             if (this.waypointList.Count > 0)
             {
+                print("queue up next waypoint list");
                 nextWaypointList = waypointList;
             }
             else
@@ -160,42 +153,10 @@ namespace Worm
             direction = tunnel.growthDirection;
         }
 
-        /**
-         * Move the worm in a different direction and determine whether it has reached one of the six block decision points
-         */
-        public void onPlayerInput(Direction turnDirection)
-        {
-            if (isEligibleForInput())
-            {
-                unitVectorDirection = Dir.Vector.getUnitVectorFromDirection(turnDirection);
-                Vector3 inputPosition = transform.position + unitVectorDirection * SPEED;
-
-                Vector3Int cell = inputPosition.getNextVector3(direction);
-                print("input position is " + inputPosition + " next cell (HEAD) is " + cell);
-                changeDirTunnel = Tunnel.Map.getTunnelFromDict(cell);
-                bool isDecision = Tunnel.ActionPoint.instance.isDecisionBoundaryCrossed(changeDirTunnel, inputPosition, turnDirection);
-
-                if (isDecision)
-                {
-                    if (changeDirTunnel != null)
-                    {
-                        transform.position = changeDirTunnel.center; // center the worm after making a decision
-                    }
-                    bool isStraightTunnel = changeDirTunnel == null || changeDirTunnel.type == Tunnel.Type.Name.STRAIGHT; // if this is the first tunnel it should be straight type
-                    DecisionEvent(isStraightTunnel, turnDirection, changeDirTunnel);
-                }
-            }
-        }
-
         private void OnDisable()
         {
-            if (FindObjectOfType<Tunnel.Map>())
-            {
-                DecisionEvent -= FindObjectOfType<Tunnel.Map>().onDecision;
-            }
             if (FindObjectOfType<Tunnel.Turn>())
             {
-                DecisionEvent -= FindObjectOfType<Tunnel.Turn>().onDecision;
                 CompleteTurnEvent -= FindObjectOfType<Tunnel.Turn>().onCompleteTurn;                
             }
             if (FindObjectOfType<Controller>())
@@ -205,6 +166,10 @@ namespace Worm
             if (FindObjectOfType<Rotation>())
             {
                 CompleteTurnEvent -= FindObjectOfType<Rotation>().onCompleteTurn;
+            }
+            if (FindObjectOfType<InputProcessor>())
+            {
+                DecisionProcessingEvent -= FindObjectOfType<InputProcessor>().onDecisionProcessing;
             }
         }
     }

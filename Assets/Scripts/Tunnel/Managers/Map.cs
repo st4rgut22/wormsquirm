@@ -12,12 +12,10 @@ namespace Tunnel
         public static Dictionary<Vector3Int, Tunnel> TunnelMapDict;
         public static List<Vector3Int> cellList;
 
-        private bool isDecision;
-        private bool isInit = true; // the first tunnel is created
+        public static Vector3Int startingCell; // the cell location of the first tunnel
 
         private void Awake()
         {
-            isDecision = false;
             cellList = new List<Vector3Int>() { TunnelManager.Instance.initialCell };
             TunnelMapDict = new Dictionary<Vector3Int, Tunnel>();
         }
@@ -30,16 +28,12 @@ namespace Tunnel
             }            
         }
 
-        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
+        /**
+         * Store the first cell added
+         */
+        public void onStartMove(Direction direction)
         {
-            if (isStraightTunnel)
-            {
-                isDecision = true;
-            }
-            if (tunnel != null)
-            {
-                isInit = false;
-            }
+            startingCell = Dir.Vector.getNextCellFromDirection(TunnelManager.Instance.initialCell, direction);
         }
 
         /**
@@ -49,19 +43,16 @@ namespace Tunnel
         {
             if (isBlockInterval)
             {
-                if (containsCell(blockPositionInt))
+                // before traversing cell check that the next cell is empty to decide whether to intersect it
+                Vector3Int nextBlockPositionInt = blockPositionInt.getNextVector3Int(tunnel.growthDirection);
+                if (containsCell(nextBlockPositionInt))
                 {
-                    Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
+                    Tunnel intersectTunnel = TunnelMapDict[nextBlockPositionInt];
                     DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection); // go straight
                     CollideEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect
                 }
                 // or is initial straight tunnel, where decision event is created even though we are not technically turning
-                else if (!isDecision || isInit) // in straight tunnel a turn decision has been made so don't add the next tunnel segment
-                {
-                    addCell(blockPositionInt, tunnel);
-                }
-
-                isDecision = false; // reset flag in order to add new cells until a decision is made
+                addCell(blockPositionInt, tunnel);
             }
         }
 
@@ -83,9 +74,9 @@ namespace Tunnel
             return (roundedDistance % 1) == 0;
         }
 
-        public void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
+        public void onAddTunnel(Tunnel tunnel, Vector3Int cellLocation, DirectionPair directionPair)
         {
-            addCell(cell, tunnel);
+            addCell(cellLocation, tunnel);
         }
 
         public static bool containsCell(Vector3Int cell)
@@ -114,6 +105,10 @@ namespace Tunnel
             }
             else
             {
+                if (cellLocation == null)
+                {
+                    throw new Exception("Missing cell " + cellLocation);
+                }
                 return null;
             }
         }

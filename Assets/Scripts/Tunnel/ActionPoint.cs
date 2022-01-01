@@ -32,11 +32,6 @@ namespace Tunnel
          */
         public bool isDecisionBoundaryCrossed(Tunnel tunnel, Vector3 position, Direction direction)
         {
-            if (tunnel == null)
-            {
-                return true;
-            }
-
             if (isDirectionAlongDecisionAxis(tunnel, direction))
             {
                 MoveEvent(direction); // send the move command to the worm because move is along a decision axis (ie not in same direction of travel)

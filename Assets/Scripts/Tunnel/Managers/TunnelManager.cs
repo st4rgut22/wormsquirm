@@ -9,6 +9,11 @@ namespace Tunnel
 
         public Vector3Int initialCell = Vector3Int.zero; // initial cell
 
+        [SerializeField]
+        public const float HEAD_WORM_OFFSET = 0.5f; // Distance between head of tunnel and worm. Must be beteween 0 and 1s
+
+        public Vector3Int startingCell;
+
         private new void Awake()
         {
             base.Awake();
@@ -18,6 +23,18 @@ namespace Tunnel
         public void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
         {
             TunnelList.Add(tunnel);
+        }
+
+        public float getHeadOffset()
+        {
+            if (HEAD_WORM_OFFSET >= 1 || HEAD_WORM_OFFSET <= 0)
+            {
+                throw new System.Exception("Head offset must be between 0 and 1");
+            }
+            else
+            {
+                return 1 - HEAD_WORM_OFFSET;
+            }
         }
 
         public Tunnel getLastTunnel()

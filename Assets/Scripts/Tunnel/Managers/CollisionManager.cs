@@ -7,7 +7,7 @@ namespace Tunnel
         public delegate void SliceTunnel(Straight collidedTunnel, Direction ingressDirection, Vector3 contactPosition);
         private event SliceTunnel SliceTunnelEvent; // fired when current tunnel intersects another tunnel
 
-        public delegate void InitWormPosition(Vector3 position);
+        public delegate void InitWormPosition(Vector3 position, Direction direction);
         public event InitWormPosition InitWormPositionEvent;
 
         public delegate void Stop();
@@ -25,10 +25,12 @@ namespace Tunnel
         protected void OnEnable()
         {
             CreateTunnelEvent += FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
+            CreateTunnelEvent += FindObjectOfType<Worm.InputProcessor>().onCreateTunnel;
             SliceTunnelEvent += FindObjectOfType<Intersect.Slicer>().sliceTunnel;
             CreateJunctionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunction;
             CreateJunctionEvent += FindObjectOfType<Worm.Movement>().onCreateJunction;
             InitWormPositionEvent += FindObjectOfType<Worm.Movement>().onInitWormPosition;
+            CreateJunctionEvent += FindObjectOfType<Worm.InputProcessor>().onCreateJunction;
         }
 
         /**
@@ -60,22 +62,30 @@ namespace Tunnel
         }
 
         /**
+         * The first decision made will initialize a tunnel by emitting a Change Direction event
+         */
+        public void onInitDecision(Direction direction)
+        {
+            CellMove cellMove = CellMove.getInitialCellMove(direction);
+            InitWormPositionEvent(cellMove.startPosition, direction);
+
+            DirectionPair sameDirPair = new DirectionPair(direction, direction);
+            CreateTunnelEvent(cellMove, sameDirPair);
+        }
+
+        /**
          * Tunnel direction change triggers creation or modification of the next tunnel. 
          * 
          * @directionPair indicates direction of travel and determines type of tunnel to create
          */
         public void onChangeDirection(DirectionPair directionPair)
         {
-            if (StopEvent != null)
-            {
-                StopEvent(); // Stop the last growing tunnel
-            }
             Tunnel tunnel = TunnelManager.Instance.getLastTunnel();
             // get cell from map, check if tunnel w/ egress at curDirection already exists
             CellMove cellMove = CellMove.getCellMove(tunnel, directionPair);
-            if (cellMove.isInit)
+            if (StopEvent != null)
             {
-                InitWormPositionEvent(cellMove.startPosition);
+                StopEvent(); // Stop the last growing tunnel
             }
             Tunnel existingTunnel = Map.getTunnelFromDict(cellMove.cell);
 
@@ -102,14 +112,16 @@ namespace Tunnel
             if (FindObjectOfType<Worm.Movement>())
             {
                 CreateJunctionEvent -= FindObjectOfType<Worm.Movement>().onCreateJunction;
+                InitWormPositionEvent -= FindObjectOfType<Worm.Movement>().onInitWormPosition;
+            }
+            if (FindObjectOfType<Worm.InputProcessor>())
+            {
+                CreateJunctionEvent += FindObjectOfType<Worm.InputProcessor>().onCreateJunction;
+                CreateTunnelEvent += FindObjectOfType<Worm.InputProcessor>().onCreateTunnel;
             }
             if (FindObjectOfType<Factory>())
             {
                 CreateTunnelEvent -= FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
-            }
-            if (FindObjectOfType<Worm.Movement>())
-            {
-                InitWormPositionEvent -= FindObjectOfType<Worm.Movement>().onInitWormPosition;
             }
         }
     }

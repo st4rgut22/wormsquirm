@@ -42,6 +42,7 @@ namespace Tunnel
          */
         private void initializeTurnWaypointList(DirectionPair directionPair, Vector3 startWaypointPosition)
         {
+            print("init waypoint list prev dir " + directionPair.prevDir + " cur dir " + directionPair.curDir);
             Vector3 centerWaypointOffset = Dir.Vector.getUnitVectorFromDirection(directionPair.prevDir) * Tunnel.CENTER_OFFSET;
             Vector3 ExitWaypointOffset = Dir.Vector.getUnitVectorFromDirection(directionPair.curDir) * Tunnel.CENTER_OFFSET;
 
@@ -59,12 +60,8 @@ namespace Tunnel
         {
             isDecision = false;
             ChangeDirectionEvent(directionPair); // rotate tunnel in the direction
-
-            if (tunnel != null) // check the tunnel exists
-            {
-                Vector3 egressPosition = Tunnel.getEgressPosition(directionPair.prevDir, tunnel.center);
-                initializeTurnWaypointList(directionPair, egressPosition);
-            }
+            Vector3 egressPosition = Tunnel.getEgressPosition(directionPair.prevDir, tunnel.center);
+            initializeTurnWaypointList(directionPair, egressPosition);
         }
 
         /**
@@ -79,6 +76,14 @@ namespace Tunnel
         }
 
         /**
+         * Setup the initial direciton
+         */
+        public void onInitDecision(Direction direction)
+        {
+            directionPair.curDir = direction;
+        }
+
+        /**
          * Called on receipt of decision to change direction
          * 
          * @isWaitBlockEvent before executing turn, should wait for blockIntervalEvent? (applicable for straight tunnels)
@@ -88,11 +93,9 @@ namespace Tunnel
         public void onDecision(bool isWaitBlockEvent, Direction direction, Tunnel tunnel)
         {
             this.isDecision = true;
-            this.isWaitBlockEvent = isWaitBlockEvent;
             directionPair.prevDir = directionPair.curDir;
             directionPair.curDir = direction;
             print("decide to go in curDirection " + direction);
-            turn(tunnel);
         }
 
         /**
@@ -105,7 +108,7 @@ namespace Tunnel
         {
             this.isBlockSizeMultiple = isBlockSizeMultiple;
 
-            if (isBlockSizeMultiple && isTurning()) // initiate turn for straight tunnels
+            if (isTurning()) // initiate turn for straight tunnels
             {
                 turn(tunnel);
             }
@@ -116,16 +119,9 @@ namespace Tunnel
          */
         public bool isTurning()
         {
-            if (isDecision)
+            if (this.isBlockSizeMultiple && isDecision)
             {
-                if (isWaitBlockEvent) // certain tunnels (eg straight) require certain length to turn
-                {
-                    return isBlockSizeMultiple;
-                }
-                else
-                {
-                    return true;
-                }
+                return true;
             }
             return false;            
         }
