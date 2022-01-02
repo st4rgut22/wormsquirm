@@ -132,7 +132,7 @@ namespace Tunnel
             {
                 ChangeDirectionEvent -= FindObjectOfType<CollisionManager>().onChangeDirection;
                 FollowWaypointEvent -= FindObjectOfType<Worm.Movement>().onFollowWaypoint;
-            }            
+            }
         }
     }
 

@@ -56,6 +56,26 @@ namespace Tunnel
         }
 
         /**
+         * Add holes from worm entrance and return a flag indicating if a new hole has been added
+         */
+        private bool addHoleDirs(List<Direction> allHoleList, List<Direction>egressHoleList, Direction inDirHole, Direction egressHole)
+        {
+            bool isNewHolesAdded = false;
+            if (!allHoleList.Contains(inDirHole))
+            {
+                isNewHolesAdded = true;
+                allHoleList.Add(inDirHole);
+            }
+            if (!allHoleList.Contains(egressHole))
+            {
+                isNewHolesAdded = true;
+                allHoleList.Add(egressHole);
+                egressHoleList.Add(egressHole);
+            }
+            return isNewHolesAdded;
+        }
+
+        /**
          * Given the previous direction, current direction and current tunnel create the next tunnel segment
          */
         public override Tunnel getTunnel()
@@ -65,11 +85,11 @@ namespace Tunnel
             string junctionId = Type.JUNCTION + " " + junctionCount;
 
             List<Direction> allHoleDirections = new List<Direction>(holeDirections);
-            Direction newHoleDir = Dir.Base.getOppositeDirection(directionPair.prevDir);
+            Direction ingressHoleDir = Dir.Base.getOppositeDirection(directionPair.prevDir);
+            bool isJunctionNew = addHoleDirs(allHoleDirections, holeDirections, ingressHoleDir, directionPair.curDir);
 
-            if (!allHoleDirections.Contains(newHoleDir))
+            if (isJunctionNew)
             {
-                allHoleDirections.Add(newHoleDir);
                 Transform junctionType = getJunction(allHoleDirections);
 
                 GameObject junctionGO = gameObject.instantiate(cellMove.startPosition, Type.instance.TunnelNetwork, junctionType, directionPair, holeDirections, junctionId);
@@ -79,7 +99,7 @@ namespace Tunnel
             }
             else
             {
-                return collidedTunnel; // the collided tunnel already has the ingress hole
+                return collidedTunnel;
             }
         }
     }

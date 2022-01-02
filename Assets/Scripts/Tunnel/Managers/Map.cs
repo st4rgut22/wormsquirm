@@ -14,10 +14,13 @@ namespace Tunnel
 
         public static Vector3Int startingCell; // the cell location of the first tunnel
 
+        private bool isTurnDecision;
+
         private void Awake()
         {
             cellList = new List<Vector3Int>() { TunnelManager.Instance.initialCell };
             TunnelMapDict = new Dictionary<Vector3Int, Tunnel>();
+            isTurnDecision = false;
         }
 
         private void OnEnable()
@@ -37,6 +40,15 @@ namespace Tunnel
         }
 
         /**
+         * When a decision has been made set a flag in order to prevent junction creation on collision. Instead, let 
+         * ChangeDirectionEvent() trigger junction creation
+         */
+        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
+        {
+            isTurnDecision = true;
+        }
+
+        /**
          * Adds tunnel type to the map at the provided coordinate
          */
         public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel)
@@ -45,11 +57,12 @@ namespace Tunnel
             {
                 // before traversing cell check that the next cell is empty to decide whether to intersect it
                 Vector3Int nextBlockPositionInt = blockPositionInt.getNextVector3Int(tunnel.growthDirection);
-                if (containsCell(nextBlockPositionInt))
+                if (containsCell(nextBlockPositionInt) && !isTurnDecision)
                 {
                     Tunnel intersectTunnel = TunnelMapDict[nextBlockPositionInt];
                     DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection); // go straight
-                    CollideEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect
+                    CollideEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect AND not turning
+                    isTurnDecision = false;
                 }
                 // or is initial straight tunnel, where decision event is created even though we are not technically turning
                 addCell(blockPositionInt, tunnel);

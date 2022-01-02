@@ -16,12 +16,15 @@ namespace Tunnel
         }
 
         /**
-         * Add the hole created from the ingress direction to the holes of the previous junction
+         * Add the hole created from the ingress direction to the holes of the previous junction if it hasn't already been added
          */
         public override void setHoleDirections(DirectionPair dirPair)
         {
             Direction newHoleDirection = Dir.Base.getOppositeDirection(dirPair.prevDir);
-            holeDirectionList.Add(newHoleDirection);
+            if (!holeDirectionList.Contains(newHoleDirection))
+            {
+                holeDirectionList.Add(newHoleDirection);
+            }
         }
 
         new private void Awake()

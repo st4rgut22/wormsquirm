@@ -30,7 +30,8 @@ namespace Tunnel
         private Vector3 startPos = new Vector3(-10, -10, 10);
 
         private const float OFFSET_MULTIPLIER = .1f;
-        private const float CUBE_EDGE_MULTIPLIER = .375f;
+        private Vector3 raycastHitOrigin = new Vector3(0, .5f, 0);
+        private Vector3 raycastHitDir = new Vector3(.375f, .375f, 0);
 
         private List<Vector3> dirList = new List<Vector3>() { Vector3.left, Vector3.right, Vector3.up, Vector3.down, Vector3.forward, Vector3.back };
 
@@ -83,6 +84,7 @@ namespace Tunnel
                     };
 
             // <center of cube side, worm direction>
+            // if a worm is approaching from direction back, then the cube should be positioned at the forward side of the cell
             ingressPosDict = new Dictionary<Vector3, string>
                     {
                         { upPos, "down" },
@@ -118,13 +120,16 @@ namespace Tunnel
                             {
                                 foreach (float z in eulerAngleList)
                                 {
-                                    jct.localPosition = ingressPos;
-                                    string ingressDir = ingressPosDict[ingressPos];
 
-                                    Quaternion rotation = Quaternion.Euler(x, y, z);
-                                    jct.rotation = rotation;
-                                    yield return new WaitForSeconds(.2f);
-                                    fireRaycastAtHoles(jct, ingressDir);
+                                    string ingressDir = ingressPosDict[ingressPos];
+                                    //if (ingressDir == "back" && x == 0 && y == 90 && z == 270)
+                                    //{
+                                        jct.localPosition = ingressPos;
+                                        Quaternion rotation = Quaternion.Euler(x, y, z);
+                                        jct.rotation = rotation;
+                                        yield return new WaitForSeconds(.2f);
+                                        fireRaycastAtHoles(jct, ingressDir);
+                                    //}
                                 }
                             }
                         }
@@ -143,10 +148,14 @@ namespace Tunnel
                 string[] ingressArr = entry.Key.Split(' ');
                 string ingressDir = ingressArr[0];
                 string remainingIngress = "";
-                for (int i=1;i<ingressArr.Length;i++)
+                string ingressHoleDir = oppDirDict[ingressDir];
+                foreach (string holeName in ingressArr)
                 {
-                    remainingIngress += " ";
-                    remainingIngress += ingressArr[i];
+                    if (holeName != ingressHoleDir)
+                    {
+                        remainingIngress += " ";
+                        remainingIngress += holeName;
+                    }
                 }
                 Vector3 rot = entry.Value;
                 string jctName = jctNameDict[entry.Key];
@@ -174,7 +183,6 @@ namespace Tunnel
                 List<Vector3> offsetList = raycastOffsetDict[raycastDirNameDict[raycastDir]];
 
                 bool anyIsHit = false;
-                Vector3 raycastHitOrigin = raycastOrigin + CUBE_EDGE_MULTIPLIER * offsetList[0];
 
                 foreach (Vector3 offset in offsetList)
                 {
@@ -182,19 +190,17 @@ namespace Tunnel
 
                     Vector3 offsetOrigin = raycastOrigin + OFFSET_MULTIPLIER * offset;
                     bool isHit = Physics.Raycast(offsetOrigin, raycastDir, out hit, maxDistance: 1f);
-                    //if (raycastDir == Vector3.forward || raycastDir == Vector3.back)
-                    //{
-                    //    Debug.DrawRay(offsetOrigin, raycastDir, Color.green, 30);
-                    //}
+                    if (raycastDir == Vector3.forward || raycastDir == Vector3.back)
+                    {
+                        Debug.DrawRay(offsetOrigin, raycastDir, Color.green, 30);
+                    }
                     if (isHit)
                     {
                         anyIsHit = true;
                     }
                 }
-                RaycastHit hitEdge;
-                bool hitCubeEdge = Physics.Raycast(raycastHitOrigin, raycastDir, out hitEdge, maxDistance: 1);
 
-                if (!anyIsHit && hitCubeEdge) // clear path, holes are aligned hopefully  
+                if (!anyIsHit) // clear path, holes are aligned hopefully  
                 {
                     noHitCount += 1;
                     string otherIngressDir = raycastDirNameDict[raycastDir];
@@ -211,7 +217,11 @@ namespace Tunnel
                 }
             }
 
-            if (junction.holeCount == noHitCount)
+            RaycastHit hitEdge; // ensure junction is in the correct cell
+            bool hitCubeEdge = Physics.Raycast(raycastHitOrigin, raycastHitDir, out hitEdge, maxDistance: .375f);
+            Debug.DrawRay(raycastHitOrigin, raycastHitDir, Color.blue, 30);
+
+            if (junction.holeCount == noHitCount && hitCubeEdge)
             {
                 addValidTransform(jctTransform, hitDirList, otherIngressDirList);
             }

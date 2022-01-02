@@ -16,7 +16,7 @@ namespace Test
 
     public class ExampleNetwork : MonoBehaviour
     {
-        //public static List<Checkpoint> threeIntersectLoopCorner;
+        public static List<Checkpoint> threeIntersectLoopCorner;
         public static List<Checkpoint> threeIntersectLoopStraight;
         //public static Network zigzagNetwork;
 
@@ -30,21 +30,18 @@ namespace Test
             Checkpoint cp5 = new Checkpoint(Direction.Right, 5);
             threeIntersectLoopStraight = new List<Checkpoint>() { cp0, cp1, cp2, cp3, cp4, cp5 };
 
-            //initThreeIntersectLoopCorner(threeIntersectLoopStraight);
+            initThreeIntersectLoopCorner(threeIntersectLoopStraight);
         }
 
-        //private void initThreeIntersectLoopCorner(List<Checkpoint> threeIntersectLoopStraight)
-        //{
-        //    List<Checkpoint> threeIntersectLoopCorner = new List<Checkpoint>(threeIntersectLoopStraight);
-        //    Checkpoint cpLast = threeIntersectLoopCorner[threeIntersectLoopCorner.Count - 1];
-        //    Checkpoint cpFirst = threeIntersectLoopCorner[0];
-        //    Direction egressDir = Dir.Base.getOppositeDirection(cpFirst.dirPair.prevDir);
-        //    Checkpoint cpTurn = new Checkpoint(cpLast.cell, new DirectionPair(cpLast.dirPair.prevDir, egressDir));
-        //    threeIntersectLoopCorner.Remove(cpLast);
-        //    threeIntersectLoopCorner.Add(cpTurn);
-
-        //    threeIntersectLoopCornerNetwork = new Network(Direction.Up, threeIntersectLoopCorner);
-        //}
+        private void initThreeIntersectLoopCorner(List<Checkpoint> threeIntersectLoopStraight)
+        {
+            threeIntersectLoopCorner = new List<Checkpoint>(threeIntersectLoopStraight);
+            threeIntersectLoopCorner.RemoveAt(threeIntersectLoopCorner.Count - 1);
+            Checkpoint cp = new Checkpoint(Direction.Right, 4);
+            Checkpoint cpTurn = new Checkpoint(Direction.Up, 1);
+            threeIntersectLoopCorner.Add(cp);
+            threeIntersectLoopCorner.Add(cpTurn);
+        }
 
         //private void initZigzag()
         //{

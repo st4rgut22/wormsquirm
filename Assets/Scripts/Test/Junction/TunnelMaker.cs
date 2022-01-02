@@ -21,9 +21,6 @@ namespace Test
         public delegate void InitDecision(Direction direction);
         public event InitDecision InitDecisionEvent;
 
-        public delegate void Decision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel);
-        public event Decision DecisionEvent;
-
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
 
@@ -46,7 +43,7 @@ namespace Test
          */
         private void Start()
         {
-            checkpointList = ExampleNetwork.threeIntersectLoopStraight;
+            checkpointList = ExampleNetwork.threeIntersectLoopCorner;
             currentCheckpoint = checkpointList[0];
 
             InitDecisionEvent(currentCheckpoint.direction);

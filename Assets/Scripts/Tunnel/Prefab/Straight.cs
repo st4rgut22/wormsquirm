@@ -114,6 +114,7 @@ namespace Tunnel
 
         void OnDisable()
         {
+            base.OnDisable();
             if (FindObjectOfType<CollisionManager>()) // check if TunnelManager hasn't been deleted before this GO
             {
                 FindObjectOfType<CollisionManager>().StopEvent -= onStop;

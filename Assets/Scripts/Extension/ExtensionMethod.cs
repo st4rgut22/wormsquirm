@@ -4,11 +4,11 @@ using System.Collections.Generic;
 public static class ExtensionMethod
 {
 
-    public static GameObject instantiate(this GameObject thisObj, Vector3 position, Transform parent, Transform prefabParent, DirectionPair directionPair, List<Direction> originalHoleDirectionList, string id)
+    public static GameObject instantiate(this GameObject thisObj, Vector3 position, Transform parent, Transform prefabParent, DirectionPair directionPair, List<Direction> egressHoleDirectionList, string id)
     {
         Direction ingressDir = directionPair.prevDir == Direction.None ? directionPair.curDir : directionPair.prevDir;
 
-        Rotation.Rotation rotation = Tunnel.TunnelManager.Instance.GetPrefabFromHoleList(ingressDir, originalHoleDirectionList, prefabParent).GetComponent<Rotation.Rotation>();
+        Rotation.Rotation rotation = Tunnel.TunnelManager.Instance.GetPrefabFromHoleList(ingressDir, egressHoleDirectionList, prefabParent).GetComponent<Rotation.Rotation>();
         GameObject prefab = rotation.rotatedPrefab;
 
         GameObject tunnelGO = GameObject.Instantiate(prefab, position, Quaternion.identity, parent);
@@ -16,10 +16,10 @@ public static class ExtensionMethod
 
         Tunnel.Tunnel tunnel = tunnelGO.GetComponent<Tunnel.Tunnel>();
 
-        tunnel.holeDirectionList = new List<Direction>(originalHoleDirectionList);
+        tunnel.holeDirectionList = new List<Direction>(egressHoleDirectionList);
         tunnel.setHoleDirections(directionPair);
 
-        rotation.rotate(ingressDir, originalHoleDirectionList, tunnel.transform); // the type of rotation is set in Awake eg CornerRotation, StraightRotation
+        rotation.rotate(ingressDir, egressHoleDirectionList, tunnel.transform); // the type of rotation is set in Awake eg CornerRotation, StraightRotation
 
         if (directionPair.prevDir == Direction.None)
         {

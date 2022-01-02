@@ -27,10 +27,12 @@ namespace Tunnel
             CreateTunnelEvent += FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
             CreateTunnelEvent += FindObjectOfType<Worm.InputProcessor>().onCreateTunnel;
             SliceTunnelEvent += FindObjectOfType<Intersect.Slicer>().sliceTunnel;
+
             CreateJunctionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunction;
             CreateJunctionEvent += FindObjectOfType<Worm.Movement>().onCreateJunction;
-            InitWormPositionEvent += FindObjectOfType<Worm.Movement>().onInitWormPosition;
             CreateJunctionEvent += FindObjectOfType<Worm.InputProcessor>().onCreateJunction;
+
+            InitWormPositionEvent += FindObjectOfType<Worm.Movement>().onInitWormPosition;
         }
 
         /**
@@ -50,14 +52,15 @@ namespace Tunnel
                 throw new System.Exception("vectors are not equivalent");
             }
 
-            if (nextTunnel != null)
+            if (nextTunnel.type == Type.Name.STRAIGHT)
             {
-                if (nextTunnel.type == Type.Name.STRAIGHT)
-                {
-                    SliceTunnelEvent((Straight)nextTunnel, exitDirection, contactPosition);
-                }
-                CreateJunctionEvent(nextTunnel, directionPair, cellMove);
+                SliceTunnelEvent((Straight)nextTunnel, exitDirection, contactPosition);
             }
+            else
+            {
+                Destroy(nextTunnel.gameObject);
+            }
+            CreateJunctionEvent(nextTunnel, directionPair, cellMove);
             StopEvent();
         }
 
@@ -93,7 +96,7 @@ namespace Tunnel
             {
                 CreateTunnelEvent(cellMove, directionPair);
             }
-            else // tunnel exists where we want to create a corner. issue slice event
+            else // tunnel exists where we want to create a corner. 
             {
                 onCollide(directionPair, tunnel, existingTunnel);
             }
