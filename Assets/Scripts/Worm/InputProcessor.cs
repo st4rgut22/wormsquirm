@@ -5,7 +5,8 @@ namespace Worm
 {
     public class InputProcessor : MonoBehaviour
     {
-        public static float INPUT_SPEED = Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
+        private const float INSTANT_TURN = 1.0f;
+        public static float INPUT_SPEED = INSTANT_TURN; // Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
 
         private Vector3 unitVectorDirection;
         Tunnel.Tunnel changeDirTunnel;

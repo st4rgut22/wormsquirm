@@ -125,12 +125,16 @@ namespace Worm
          * @direction the new direction
          * @tunnel The tunnel the decision to change direction is made from
          */
-        public void onDecision(bool isWaitBlockEvent, Direction direction, Tunnel.Tunnel tunnel)
+        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
         {
-            this.isDecision = true;
+            isDecision = true;
             directionPair.prevDir = directionPair.curDir;
             directionPair.curDir = direction;
             print("decide to go in curDirection " + direction);
+            if (!isStraightTunnel) // turn immediately (dont wait for block interval event) if in junction or corner
+            {
+                turn(tunnel); 
+            }
         }
 
         /**

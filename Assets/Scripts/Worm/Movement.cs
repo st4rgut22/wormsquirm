@@ -67,6 +67,10 @@ namespace Worm
                 {
                     waypointIndex += 1;
 
+                    if (waypoint.move == MoveType.CENTER)
+                    {
+                        DecisionProcessingEvent(false); // allow decisions to be made again
+                    }
                     if (waypoint.move == MoveType.EXIT) 
                     {
                         completeTurn(waypoint);
@@ -112,7 +116,6 @@ namespace Worm
             {
                 clearWaypoints(waypointList);
                 CompleteTurnEvent(egressWaypointDirection); // goes straight
-                DecisionProcessingEvent(false);
             }
             direction = egressWaypointDirection;
         }

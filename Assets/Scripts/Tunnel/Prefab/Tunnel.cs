@@ -6,7 +6,7 @@ namespace Tunnel
 {
     public abstract class Tunnel : MonoBehaviour
     {
-        public const float GROWTH_RATE = .02f; // must be a divisor of 1 so tunnel length will be a multiple of BLOCK_SIZE
+        public const float GROWTH_RATE = .01f; // .02f; // must be a divisor of 1 so tunnel length will be a multiple of BLOCK_SIZE
 
         public static int BLOCK_SIZE = 1;    
         public const int SCALE_TO_LENGTH = 2; // scale of 1 : 2 world units
