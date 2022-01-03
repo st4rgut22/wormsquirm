@@ -16,14 +16,16 @@ namespace Tunnel
         {
             base.OnEnable();
             FindObjectOfType<CollisionManager>().StopEvent += onStop;
+            FindObjectOfType<Worm.Movement>().GrowEvent += onGrow;
 
             BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
-            BlockIntervalEvent += Turn.Instance.onBlockInterval; // subscribe turn to the BlockSize event
+            BlockIntervalEvent += Worm.Turn.Instance.onBlockInterval; // subscribe turn to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Worm.Movement>().onBlockInterval;  // subscribe worm so it can go to the center of the created block
 
             if (FindObjectOfType<Test.TunnelMaker>())
             {
                 BlockIntervalEvent += FindObjectOfType<Test.TunnelMaker>().onBlockInterval;
+                FindObjectOfType<Test.TunnelMaker>().GrowEvent += onGrow;
             }
         }
 
@@ -32,7 +34,7 @@ namespace Tunnel
             base.Awake();
 
             type = Type.Name.STRAIGHT;
-            isStopped = false;
+            isStopped = true;
             ingressPosition = transform.position;
         }
 
@@ -90,15 +92,24 @@ namespace Tunnel
                 float scale = transform.localScale.y;
                 isStopped = true;
                 FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
+                FindObjectOfType<Worm.Movement>().GrowEvent -= onGrow; // unsubscribe from grow messages
 
                 BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
                 BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;
-            }            
+            }
         }
 
         private float getLength()
         {
             return (transform.localScale.y * BLOCK_SIZE * SCALE_TO_LENGTH); // scale of 1 : 2 meters or 0.5 : 1 meter
+        }
+
+        /**
+         * Enable tunnel to grow
+         */
+        public void onGrow()
+        {
+            isStopped = false;
         }
 
         /**
@@ -125,11 +136,14 @@ namespace Tunnel
             }
             if (FindObjectOfType<Worm.Movement>())
             {
+                FindObjectOfType<Worm.Movement>().GrowEvent -= onGrow;
+                BlockIntervalEvent -= Worm.Turn.Instance.onBlockInterval;
                 BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;
             }
             if (FindObjectOfType<Test.TunnelMaker>())
             {
                 BlockIntervalEvent -= FindObjectOfType<Test.TunnelMaker>().onBlockInterval;
+                FindObjectOfType<Test.TunnelMaker>().GrowEvent -= onGrow;
             }
         }
 

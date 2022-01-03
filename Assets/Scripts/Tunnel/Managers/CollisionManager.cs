@@ -26,10 +26,11 @@ namespace Tunnel
         {
             CreateTunnelEvent += FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
             CreateTunnelEvent += FindObjectOfType<Worm.InputProcessor>().onCreateTunnel;
+
             SliceTunnelEvent += FindObjectOfType<Intersect.Slicer>().sliceTunnel;
 
             CreateJunctionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunction;
-            CreateJunctionEvent += FindObjectOfType<Worm.Movement>().onCreateJunction;
+            CreateJunctionEvent += FindObjectOfType<Worm.Turn>().onCreateJunction;
             CreateJunctionEvent += FindObjectOfType<Worm.InputProcessor>().onCreateJunction;
 
             InitWormPositionEvent += FindObjectOfType<Worm.Movement>().onInitWormPosition;
@@ -98,6 +99,7 @@ namespace Tunnel
             }
             else // tunnel exists where we want to create a corner. 
             {
+                print("collision occurred on turn at " + cellMove.cell);
                 onCollide(directionPair, tunnel, existingTunnel);
             }
         }
@@ -112,9 +114,9 @@ namespace Tunnel
             {
                 CreateJunctionEvent -= FindObjectOfType<ModTunnelFactory>().onCreateJunction;
             }
-            if (FindObjectOfType<Worm.Movement>())
+            if (FindObjectOfType<Worm.Turn>())
             {
-                CreateJunctionEvent -= FindObjectOfType<Worm.Movement>().onCreateJunction;
+                CreateJunctionEvent -= FindObjectOfType<Worm.Turn>().onCreateJunction;
                 InitWormPositionEvent -= FindObjectOfType<Worm.Movement>().onInitWormPosition;
             }
             if (FindObjectOfType<Worm.InputProcessor>())

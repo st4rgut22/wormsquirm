@@ -12,11 +12,14 @@ namespace Tunnel
         [SerializeField]
         public const float HEAD_WORM_OFFSET = 0.5f; // Distance between head of tunnel and worm. Must be beteween 0 and 1s
 
+        public float WORM_OFFSET; // Length of offset from beginning of a new block = 1 - HEAD_WORM_OFFSET
+
         public Vector3Int startingCell;
 
         private new void Awake()
         {
             base.Awake();
+            setHeadOffset();
             TunnelList = new List<Tunnel>();
         }
 
@@ -25,7 +28,7 @@ namespace Tunnel
             TunnelList.Add(tunnel);
         }
 
-        public float getHeadOffset()
+        public void setHeadOffset()
         {
             if (HEAD_WORM_OFFSET >= 1 || HEAD_WORM_OFFSET <= 0)
             {
@@ -33,7 +36,7 @@ namespace Tunnel
             }
             else
             {
-                return 1 - HEAD_WORM_OFFSET;
+                WORM_OFFSET = 1 - HEAD_WORM_OFFSET;
             }
         }
 

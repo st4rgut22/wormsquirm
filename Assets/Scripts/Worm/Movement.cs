@@ -11,14 +11,16 @@ namespace Worm
         private Direction direction; // direction of worm travel
         private Direction egressWaypointDirection; // direction exiting a corner, saved on receipt of followWaypoints event
 
-        private Vector3 unitVectorDirection;
         private int waypointIndex;
 
-        private List<Vector3> waypointList;
-        private List<Vector3> nextWaypointList; // queued up waypoint list if turning while navigating a corner
+        private List<Waypoint> waypointList;
+        private List<Waypoint> nextWaypointList; // queued up waypoint list if turning while navigating a corner
 
         public delegate void CompleteTurn(Direction direction); // when turn is completed notify Turn so we can proceed straight
         public event CompleteTurn CompleteTurnEvent;
+
+        public delegate void Grow();
+        public event Grow GrowEvent;
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
@@ -31,16 +33,15 @@ namespace Worm
         private void Awake()
         {
             waypointIndex = 0;
-            waypointList = new List<Vector3>();
-            nextWaypointList = new List<Vector3>();
-            unitVectorDirection = Vector3.zero; // initially the worm is not moving
+            waypointList = new List<Waypoint>();
+            nextWaypointList = new List<Waypoint>();
             transform.position = Tunnel.TunnelManager.Instance.initialCell;
             direction = Direction.None;
         }
 
         private void OnEnable() 
         {
-            CompleteTurnEvent += Tunnel.Turn.Instance.onCompleteTurn;
+            CompleteTurnEvent += Turn.Instance.onCompleteTurn;
             CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
             CompleteTurnEvent += FindObjectOfType<Rotation>().onCompleteTurn;
             DecisionProcessingEvent += FindObjectOfType<InputProcessor>().onDecisionProcessing;
@@ -48,7 +49,7 @@ namespace Worm
 
         public void onInitWormPosition(Vector3 initPos, Direction direction)
         {
-            float offset = Tunnel.TunnelManager.Instance.getHeadOffset();
+            float offset = Tunnel.TunnelManager.Instance.WORM_OFFSET;
             Vector3 offsetVector = Dir.Vector.getUnitVectorFromDirection(direction);
             transform.position = initPos + offset * offsetVector;
         }
@@ -57,17 +58,23 @@ namespace Worm
         {
             if (waypointList.Count > 0) // iterate over waypoint list
             {
-                Vector3 waypoint = waypointList[waypointIndex];
+                Waypoint waypoint = waypointList[waypointIndex];
+                Vector3 waypointPos = waypoint.position;
 
-                transform.position = Vector3.MoveTowards(transform.position, waypoint, SPEED);
+                transform.position = Vector3.MoveTowards(transform.position, waypointPos, SPEED);
 
-                if (transform.position.Equals(waypoint))
+                if (transform.position.Equals(waypointPos))
                 {
                     waypointIndex += 1;
 
-                    if (waypointIndex >= waypointList.Count) // when last waypoint has been reached, clear waypoints from list
+                    if (waypoint.move == MoveType.EXIT) 
                     {
-                        completeTurn();
+                        completeTurn(waypoint);
+                    }
+                    if (waypoint.move == MoveType.OFFSET)
+                    {
+                        GrowEvent();
+                        clearWaypoints(waypointList);
                     }
                 }
             }
@@ -78,21 +85,35 @@ namespace Worm
             }
         }
 
+        private void clearWaypoints(List<Waypoint> waypoints)
+        {
+            waypoints.Clear();
+            waypointIndex = 0;
+        }
+
         /**
          * Finish a turn and check if any turns are queued up 
+         * 
+         * @waypoint The waypoint that completes the turn
          */
-        private void completeTurn()
+        private void completeTurn(Waypoint waypoint)
         {
-            print("complete turn");
-            waypointList = nextWaypointList;
-            if (waypointList.Count == 0)
+            if (waypointIndex != waypointList.Count)
             {
+                throw new System.Exception("completing turn should be the last action in waypoint list");
+            }
 
-                CompleteTurnEvent(egressWaypointDirection);
+            if (nextWaypointList.Count > 0) // additional turns
+            {
+                waypointList = new List<Waypoint>(nextWaypointList);
+                clearWaypoints(nextWaypointList);
+            }
+            else
+            {
+                clearWaypoints(waypointList);
+                CompleteTurnEvent(egressWaypointDirection); // goes straight
                 DecisionProcessingEvent(false);
             }
-            waypointIndex = 0;
-            nextWaypointList.Clear();
             direction = egressWaypointDirection;
         }
 
@@ -108,11 +129,19 @@ namespace Worm
         }
 
         /**
+         * Issue grow event for first tunnel because worm is initially offset from HEAD
+         */
+        public void onInitDecision(Direction direction)
+        {
+            GrowEvent();
+        }
+
+        /**
          * Follow waypoints when navigating corners. If already following waypoints, queue up the next waypoints list
          * 
          * @waypointList a list of coordinates the worm follows to navigate a corner
          */
-        public void onFollowWaypoint(List<Vector3> waypointList, DirectionPair directionPair)
+        public void onFollowWaypoint(List<Waypoint> waypointList, DirectionPair directionPair)
         {
             egressWaypointDirection = directionPair.curDir; // save the last egress directionPair
 
@@ -128,22 +157,6 @@ namespace Worm
         }
 
         /**
-         * When junction has been created it triggers the worm to send out block interval events instead of the tunnel
-         *
-         *@cellMove info about the junction such as center position, ingress position
-         */
-        public void onCreateJunction(Tunnel.Tunnel collisionTunnel, DirectionPair dirPair, Tunnel.CellMove cellMove)
-        {
-            Tunnel.CollisionManager.Instance.isCreatingNewTunnel = true;
-
-            if (waypointList.Count == 0) // means we are not executing a turn into the junction
-            {
-                waypointList.Add(cellMove.startPosition); // go the ingress position of the junction
-                egressWaypointDirection = dirPair.curDir; // direction remains same as the straight tunnel worm is currently in
-            }
-        }
-
-        /**
          * When a straight tunnel is extended, the worm should follow in the same direction
          * 
          * @tunnel the tunnel that has been extended
@@ -155,9 +168,9 @@ namespace Worm
 
         private void OnDisable()
         {
-            if (FindObjectOfType<Tunnel.Turn>())
+            if (Turn.Instance)
             {
-                CompleteTurnEvent -= FindObjectOfType<Tunnel.Turn>().onCompleteTurn;                
+                CompleteTurnEvent -= Turn.Instance.onCompleteTurn;
             }
             if (FindObjectOfType<Controller>())
             {

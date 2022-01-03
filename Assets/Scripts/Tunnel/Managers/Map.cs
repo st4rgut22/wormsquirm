@@ -59,13 +59,14 @@ namespace Tunnel
                 Vector3Int nextBlockPositionInt = blockPositionInt.getNextVector3Int(tunnel.growthDirection);
                 if (containsCell(nextBlockPositionInt) && !isTurnDecision)
                 {
+                    print("collision occurred with straight tunnel at " + blockPositionInt);
                     Tunnel intersectTunnel = TunnelMapDict[nextBlockPositionInt];
                     DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection); // go straight
                     CollideEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect AND not turning
-                    isTurnDecision = false;
                 }
                 // or is initial straight tunnel, where decision event is created even though we are not technically turning
                 addCell(blockPositionInt, tunnel);
+                isTurnDecision = false; // reset isTurnDecision after reaching a block interval in order to permite collisions with straight tunnel
             }
         }
 

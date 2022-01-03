@@ -18,7 +18,7 @@ namespace Worm
 
         private void OnEnable()
         {
-            DecisionEvent += Tunnel.Turn.Instance.onDecision;
+            DecisionEvent += Turn.Instance.onDecision;
             DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
         }
 
@@ -94,9 +94,9 @@ namespace Worm
 
         private void OnDisable()
         {
-            if (FindObjectOfType<Tunnel.Turn>())
+            if (FindObjectOfType<Turn>())
             {
-                DecisionEvent -= FindObjectOfType<Tunnel.Turn>().onDecision;
+                DecisionEvent -= FindObjectOfType<Turn>().onDecision;
             }
             if (FindObjectOfType<Tunnel.Map>())
             {

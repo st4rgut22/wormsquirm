@@ -24,6 +24,9 @@ namespace Test
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
 
+        public delegate void Grow();
+        public event Grow GrowEvent;
+
         private void Awake()
         {
             tunnelSegmentCounter = 0; // maintains count of added segments onBlockInterval event to decide when to turn
@@ -35,7 +38,7 @@ namespace Test
         {
             PlayerInputEvent += FindObjectOfType<Worm.InputProcessor>().onPlayerInput;
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
-            InitDecisionEvent += FindObjectOfType<Tunnel.Turn>().onInitDecision;
+            InitDecisionEvent += FindObjectOfType<Worm.Turn>().onInitDecision;
         }
 
         /**
@@ -47,6 +50,7 @@ namespace Test
             currentCheckpoint = checkpointList[0];
 
             InitDecisionEvent(currentCheckpoint.direction);
+            GrowEvent();
         }
 
         /**
@@ -98,9 +102,9 @@ namespace Test
             {
                 InitDecisionEvent -= Tunnel.CollisionManager.Instance.onInitDecision;
             }
-            if (FindObjectOfType<Tunnel.Turn>())
+            if (FindObjectOfType<Worm.Turn>())
             {
-                InitDecisionEvent += FindObjectOfType<Tunnel.Turn>().onInitDecision;
+                InitDecisionEvent += FindObjectOfType<Worm.Turn>().onInitDecision;
             }
         }
     }

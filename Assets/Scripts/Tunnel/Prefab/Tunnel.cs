@@ -69,8 +69,8 @@ namespace Tunnel
         public Tunnel copy(Transform tunnelParent)
         {
             GameObject tunnelCopy = Instantiate(gameObject, tunnelParent);
-            Tunnel copiedTunnel = tunnelCopy.GetComponent<Tunnel>();
-            copiedTunnel.isStopped = true; // copied tunnel should not grow
+            Straight copiedTunnel = tunnelCopy.GetComponent<Straight>();
+            FindObjectOfType<Worm.Movement>().GrowEvent -= copiedTunnel.onGrow; // copied tunnel should not grow       
             copiedTunnel.ingressPosition = ingressPosition;
             copiedTunnel.holeDirectionList = holeDirectionList;
             return copiedTunnel;

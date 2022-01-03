@@ -12,6 +12,11 @@ public class DirectionPair
         this.prevDir = prevDir;
         this.curDir = curDir;
     }
+
+    public bool isStraight()
+    {
+        return prevDir == curDir;
+    }
 }
 
 public enum Direction
