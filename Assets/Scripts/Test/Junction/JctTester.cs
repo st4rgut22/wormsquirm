@@ -64,36 +64,35 @@ namespace Tunnel
             };
 
             raycastOriginDict = new Dictionary<Vector3, Vector3>
-                    {
-                        { Vector3.up, new Vector3(0, -.5f, 0) },
-                        { Vector3.down, new Vector3(0, 1.5f, 0) },
-                        { Vector3.right, new Vector3(-1, .5f, 0) },
-                        { Vector3.left, new Vector3(1, .5f, 0) },
-                        { Vector3.forward, new Vector3(0, .5f, -1) },
-                        { Vector3.back, new Vector3(0, .5f, 1) },
-                    };
+                {
+                    { Vector3.up, new Vector3(0, -.5f, 0) },
+                    { Vector3.down, new Vector3(0, 1.5f, 0) },
+                    { Vector3.right, new Vector3(-1, .5f, 0) },
+                    { Vector3.left, new Vector3(1, .5f, 0) },
+                    { Vector3.forward, new Vector3(0, .5f, -1) },
+                    { Vector3.back, new Vector3(0, .5f, 1) },
+                };
 
             raycastDirNameDict = new Dictionary<Vector3, string>
-                    {
-                        { Vector3.up, "up" },
-                        { Vector3.down, "down" },
-                        { Vector3.right, "right" },
-                        { Vector3.left, "left" },
-                        { Vector3.forward, "forward" },
-                        { Vector3.back, "back" },
-                    };
+                {
+                    { Vector3.up, "up" },
+                    { Vector3.down, "down" },
+                    { Vector3.right, "right" },
+                    { Vector3.left, "left" },
+                    { Vector3.forward, "forward" },
+                    { Vector3.back, "back" },
+                };
 
             // <center of cube side, worm direction>
-            // if a worm is approaching from direction back, then the cube should be positioned at the forward side of the cell
             ingressPosDict = new Dictionary<Vector3, string>
-                    {
-                        { upPos, "down" },
-                        { downPos, "up" },
-                        { leftPos, "right" },
-                        { rightPos, "left" },
-                        { backPos, "forward" },
-                        { forwardPos, "back" },
-                    };
+                {
+                    { upPos, "down" },
+                    { downPos, "up" },
+                    { leftPos, "right" },
+                    { rightPos, "left" },
+                    { backPos, "forward" },
+                    { forwardPos, "back" },
+                };
 
             eulerAngleList = new List<int>() { 0, 90, 180, 270 };
         }
@@ -146,9 +145,8 @@ namespace Tunnel
             foreach (KeyValuePair<string, Vector3> entry in rotationDict)
             {
                 string[] ingressArr = entry.Key.Split(' ');
-                string ingressDir = ingressArr[0];
                 string remainingIngress = "";
-                string ingressHoleDir = oppDirDict[ingressDir];
+                string ingressHoleDir = ingressArr[0]; // exclude the entrance hole from List<EGRESS_DIR_LIST>
                 foreach (string holeName in ingressArr)
                 {
                     if (holeName != ingressHoleDir)
@@ -159,7 +157,7 @@ namespace Tunnel
                 }
                 Vector3 rot = entry.Value;
                 string jctName = jctNameDict[entry.Key];
-
+                string ingressDir = oppDirDict[ingressHoleDir];
                 print("ingress dir is " + ingressDir + " remaining ingress list is (" + remainingIngress + ") rotation is " + rot + " for gameobject " + jctName);
             }
         }
@@ -202,16 +200,15 @@ namespace Tunnel
 
                 if (!anyIsHit) // clear path, holes are aligned hopefully  
                 {
-                    noHitCount += 1;
-                    string otherIngressDir = raycastDirNameDict[raycastDir];
-                    if (otherIngressDir == ingressDir)
+                    noHitCount += 1;                    
+                    string egressDir = oppDirDict[raycastDirNameDict[raycastDir]];
+                    if (egressDir == oppDirDict[ingressDir])
                     {
-                        otherIngressDirList.Insert(0, ingressDir);
+                        otherIngressDirList.Insert(0, egressDir);
                     }
                     else
                     {
-                        string holeLoc = oppDirDict[otherIngressDir]; // opp of ingress dir is hole loc
-                        otherIngressDirList.Add(otherIngressDir);
+                        otherIngressDirList.Add(egressDir); // egress dirs added
                     }
                     hitDirList.Add(raycastDir);
                 }
