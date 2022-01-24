@@ -19,13 +19,13 @@ namespace Tunnel
          * @ingressDirection the direction intering the collided tunnel
          * @contactPosition the position the tunnels made contact (center of the tunnel)
          */
-        public void onCreateJunction(Tunnel collisionTunnel, DirectionPair dirPair, CellMove cellMove)
+        public void onCreateJunction(Tunnel collisionTunnel, DirectionPair dirPair, CellMove cellMove, Tunnel currentTunnel)
         {
             collidedTunnel = collisionTunnel;
             directionPair = dirPair;
             this.cellMove = cellMove;
             Tunnel tunnel = getTunnel();
-            addTunnel(tunnel);
+            addTunnel(tunnel, collisionTunnel.wormCreatorId);
         }
 
         private Transform getJunction(List<Direction> holeDirectionList)

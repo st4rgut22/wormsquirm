@@ -6,10 +6,10 @@ namespace Worm
     /**
      * Worm movement
      */
-    public class Movement: MonoBehaviour
+    public class Movement: WormBody
     {
-        private Direction direction; // direction of worm travel
         private Direction egressWaypointDirection; // direction exiting a corner, saved on receipt of followWaypoints event
+        private Direction direction; // direction of worm travel
 
         private int waypointIndex;
 
@@ -19,8 +19,8 @@ namespace Worm
         public delegate void CompleteTurn(Direction direction); // when turn is completed notify Turn so we can proceed straight
         public event CompleteTurn CompleteTurnEvent;
 
-        public delegate void Grow();
-        public event Grow GrowEvent;
+        public delegate void MoveToWaypoint(Waypoint waypoint); // isTurn flag allows us to override straight move
+        public event MoveToWaypoint MoveToWaypointEvent;
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
@@ -28,11 +28,11 @@ namespace Worm
         public delegate void DecisionProcessing(bool isDecisionProcessing);
         public event DecisionProcessing DecisionProcessingEvent;
 
-        private const float SPEED = Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
+        public delegate void AddForce(Rigidbody rigidbody, Vector3 forceVector);
+        public event AddForce ForceEvent;
 
-        private void Awake()
+        private new void Awake()
         {
-            waypointIndex = 0;
             waypointList = new List<Waypoint>();
             nextWaypointList = new List<Waypoint>();
             transform.position = Tunnel.TunnelManager.Instance.initialCell;
@@ -41,58 +41,42 @@ namespace Worm
 
         private void OnEnable() 
         {
-            CompleteTurnEvent += Turn.Instance.onCompleteTurn;
-            CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
-            CompleteTurnEvent += FindObjectOfType<Rotation>().onCompleteTurn;
-            DecisionProcessingEvent += FindObjectOfType<InputProcessor>().onDecisionProcessing;
-        }
+            ForceEvent += GetComponent<Force>().onForce;
+            CompleteTurnEvent += GetComponent<Turn>().onCompleteTurn;
+            MoveToWaypointEvent += GetComponent<Turn>().onMoveToWaypoint;
+            DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
 
-        public void onInitWormPosition(Vector3 initPos, Direction direction)
-        {
-            float offset = Tunnel.TunnelManager.Instance.WORM_OFFSET;
-            Vector3 offsetVector = Dir.Vector.getUnitVectorFromDirection(direction);
-            transform.position = initPos + offset * offsetVector;
+            CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
+
+            Tunnel.CollisionManager.Instance.InitWormPositionEvent += onInitWormPosition;
         }
 
         private void FixedUpdate()
         {
-            if (waypointList.Count > 0) // iterate over waypoint list
+            if (direction != Direction.None)
             {
-                Waypoint waypoint = waypointList[waypointIndex];
-                Vector3 waypointPos = waypoint.position;
-
-                transform.position = Vector3.MoveTowards(transform.position, waypointPos, SPEED);
-
-                if (transform.position.Equals(waypointPos))
-                {
-                    waypointIndex += 1;
-
-                    if (waypoint.move == MoveType.CENTER)
-                    {
-                        DecisionProcessingEvent(false); // allow decisions to be made again
-                    }
-                    if (waypoint.move == MoveType.EXIT) 
-                    {
-                        completeTurn(waypoint);
-                    }
-                    if (waypoint.move == MoveType.OFFSET)
-                    {
-                        GrowEvent();
-                        clearWaypoints(waypointList);
-                    }
-                }
+                Vector3 forceDir = -head.transform.up; // negative because worm's forward vector is opposite world space forward vector
+                Debug.Log("go in the direction" + forceDir);
+                ForceEvent(head, forceDir); // make the worm go striaght ahead
             }
-            else if (direction != Direction.None)
-            {
-                Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(direction);
-                transform.position += unitVector * (float)Tunnel.Tunnel.SCALED_GROWTH_RATE; // position moves at the same rate as the straight tunnel
-            }
+        }
+
+        public void onInitWormPosition(Vector3 initPos, Direction direction)
+        {
+            this.direction = direction;
+            float offset = Tunnel.TunnelManager.Instance.START_TUNNEL_RING_OFFSET;
+            Vector3 offsetVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            ring.position = initPos + offset * offsetVector;
         }
 
         private void clearWaypoints(List<Waypoint> waypoints)
         {
             waypoints.Clear();
-            waypointIndex = 0;
+        }
+
+        public void setCompleteTurnDelegate(Tunnel.Corner corner)
+        {
+            CompleteTurnEvent += corner.onCompleteTurn;
         }
 
         /**
@@ -102,7 +86,7 @@ namespace Worm
          */
         private void completeTurn(Waypoint waypoint)
         {
-            if (waypointIndex != waypointList.Count)
+            if (waypointIndex < waypointList.Count - 1)
             {
                 throw new System.Exception("completing turn should be the last action in waypoint list");
             }
@@ -115,28 +99,53 @@ namespace Worm
             else
             {
                 clearWaypoints(waypointList);
+
+                Tunnel.Tunnel tunnel = GetComponent<WormTunnelBroker>().getCurTunnel(direction);
+                if (tunnel.type != Tunnel.Type.Name.CORNER)
+                {
+                    throw new System.Exception("not a corner tunnel, wrong tunnel selected");
+                }
+                direction = egressWaypointDirection; // set the new direction as the exit direction
                 CompleteTurnEvent(egressWaypointDirection); // goes straight
+
+                CompleteTurnEvent -= ((Tunnel.Corner)tunnel).onCompleteTurn;
             }
-            direction = egressWaypointDirection;
         }
 
         /**
-         * After player's input is validated (ie it is along a plane not already traveling in) then issue the move command
-         *
-         *@deltaPosition is the change in position
+         * When rigidbody reaches waypoint go to next waypoint or complete waypoints
          */
-        public void onMove(Direction direction)
+        public void onReachWaypoint(Waypoint waypoint)
         {
-            Vector3 moveUnitVector = Dir.Vector.getUnitVectorFromDirection(direction);
-            transform.position += moveUnitVector * SPEED;
-        }
+            if (waypoint.move == MoveType.ENTRANCE)
+            {
+                DecisionProcessingEvent(true); // no turns allowed when entering a turn (from current position to center of the turn tunnel segment)
+            }
+            else if (waypoint.move == MoveType.CENTER)
+            {
+                print("apply up force to the ring rgbdy");
+                DecisionProcessingEvent(false); // allow decisions to be made again when center of tunnel is reached (eg a consecutive turn)
+            }
+            else if (waypoint.move == MoveType.EXIT)
+            {
+                completeTurn(waypoint); // complete the current turn and determine what next move is (navigating out of turn or turning again)
+            }
+            else if (waypoint.move == MoveType.OFFSET)
+            {
+                clearWaypoints(waypointList);
+            }
+            else
+            {
+                return;
+            }
 
-        /**
-         * Issue grow event for first tunnel because worm is initially offset from HEAD
-         */
-        public void onInitDecision(Direction direction)
-        {
-            GrowEvent();
+            waypointIndex = waypointList.FindIndex(wp => waypoint.position.Equals(wp.position));
+            if (waypointIndex < waypointList.Count - 1) // if not the last waypoint in the list
+            {
+                waypointIndex += 1;
+                Waypoint nextWaypoint = waypointList[waypointIndex];
+                MoveToWaypointEvent(nextWaypoint);
+            }
         }
 
         /**
@@ -147,45 +156,39 @@ namespace Worm
         public void onFollowWaypoint(List<Waypoint> waypointList, DirectionPair directionPair)
         {
             egressWaypointDirection = directionPair.curDir; // save the last egress directionPair
+            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(egressWaypointDirection);
 
             if (this.waypointList.Count > 0)
             {
-                print("queue up next waypoint list");
                 nextWaypointList = waypointList;
             }
             else
             {
                 this.waypointList = waypointList;
             }
-        }
-
-        /**
-         * When a straight tunnel is extended, the worm should follow in the same direction
-         * 
-         * @tunnel the tunnel that has been extended
-         */
-        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPosition, Tunnel.Straight tunnel)
-        {
-            direction = tunnel.growthDirection;
+            Waypoint firstWaypoint = this.waypointList[0];
+            MoveToWaypointEvent(firstWaypoint);
         }
 
         private void OnDisable()
         {
-            if (Turn.Instance)
+            if (GetComponent<Turn>())
             {
-                CompleteTurnEvent -= Turn.Instance.onCompleteTurn;
+                ForceEvent -= GetComponent<Force>().onForce;
+                CompleteTurnEvent -= GetComponent<Turn>().onCompleteTurn;
+                MoveToWaypointEvent -= GetComponent<Turn>().onMoveToWaypoint;
             }
             if (FindObjectOfType<Controller>())
             {
                 CompleteTurnEvent -= FindObjectOfType<Controller>().onCompleteTurn;
             }
-            if (FindObjectOfType<Rotation>())
-            {
-                CompleteTurnEvent -= FindObjectOfType<Rotation>().onCompleteTurn;
-            }
             if (FindObjectOfType<InputProcessor>())
             {
                 DecisionProcessingEvent -= FindObjectOfType<InputProcessor>().onDecisionProcessing;
+            }
+            if (Tunnel.CollisionManager.Instance != null)
+            {
+                Tunnel.CollisionManager.Instance.InitWormPositionEvent -= onInitWormPosition;
             }
         }
     }

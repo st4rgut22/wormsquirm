@@ -5,6 +5,8 @@ namespace Tunnel
 {
     public class Corner : Tunnel
     {
+        private GameObject DeadEndInstance;
+
         private new void Awake()
         {
             base.Awake();
@@ -12,8 +14,20 @@ namespace Tunnel
             type = Type.Name.CORNER;
         }
 
-        public override void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
+        /**
+         * When turn is completed, remove the dead-end cap to the tunnel
+         */
+        public void onCompleteTurn(Direction direction)
         {
+            Destroy(DeadEndInstance);
+        }
+
+        public override void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        {
+            Vector3 egressPosition = getEgressPosition(directionPair.curDir, center);
+            Quaternion deadEndRotation = Rotation.DeadEndRot.getRotationFromDirection(directionPair.curDir);
+            DeadEndInstance = Instantiate(DeadEnd, egressPosition, deadEndRotation, Type.instance.TunnelNetwork);
+
             addCellToList(cell);
             FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
         }

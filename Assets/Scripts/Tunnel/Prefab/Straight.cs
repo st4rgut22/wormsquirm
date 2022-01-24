@@ -6,7 +6,11 @@ namespace Tunnel
 {    
     public class Straight : Tunnel
     {
+        private GameObject DeadEndInstance;
         public Direction growthDirection;
+
+        Vector3Int lastCell;
+        int lastBlockLen; // last block added used to retroactively add blocks that did not fall on an interval
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
@@ -16,16 +20,13 @@ namespace Tunnel
         {
             base.OnEnable();
             FindObjectOfType<CollisionManager>().StopEvent += onStop;
-            FindObjectOfType<Worm.Movement>().GrowEvent += onGrow;
 
             BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
-            BlockIntervalEvent += Worm.Turn.Instance.onBlockInterval; // subscribe turn to the BlockSize event
-            BlockIntervalEvent += FindObjectOfType<Worm.Movement>().onBlockInterval;  // subscribe worm so it can go to the center of the created block
+            BlockIntervalEvent += FindObjectOfType<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
 
             if (FindObjectOfType<Test.TunnelMaker>())
             {
                 BlockIntervalEvent += FindObjectOfType<Test.TunnelMaker>().onBlockInterval;
-                FindObjectOfType<Test.TunnelMaker>().GrowEvent += onGrow;
             }
         }
 
@@ -34,45 +35,18 @@ namespace Tunnel
             base.Awake();
 
             type = Type.Name.STRAIGHT;
-            isStopped = true;
             ingressPosition = transform.position;
+            isStopped = false;
+            lastBlockLen = -1;
+            lastCell = TunnelManager.Instance.initialCell;
         }
 
         private void Start()
         {
             growthDirection = holeDirectionList[0];
-        }
 
-        private void FixedUpdate()
-        {
-            if (!isStopped)
-            {
-                grow();
-
-                float length = getLength(); // transforms scale to length
-
-                bool isBlockMultiple = Map.isDistanceMultiple(length);
-
-                Vector3 unitVectorInDir = Dir.Vector.getUnitVectorFromDirection(growthDirection);
-
-                Vector3 position = transform.position;
-
-                Vector3 deltaPosition = length * unitVectorInDir;
-                Vector3 cellPosition = position + deltaPosition;
-
-                if (isBlockMultiple)
-                {
-                    Vector3Int cell = getLastCellPosition().getNextVector3Int(growthDirection);
-                    addCellToList(cell); // add new position to list of cell positions covered by straight tunnel
-
-                    setCenter(length, growthDirection); // adjust the center to the new block
-                    BlockIntervalEvent(isBlockMultiple, cell, this);
-                }
-                else
-                {
-                    BlockIntervalEvent(isBlockMultiple, Vector3Int.zero, this);
-                }
-            }
+            Quaternion deadEndRotation = Rotation.DeadEndRot.getRotationFromDirection(growthDirection);
+            DeadEndInstance = Instantiate(DeadEnd, transform.position, deadEndRotation, Type.instance.TunnelNetwork);
         }
 
         public override void setHoleDirections(DirectionPair dirPair)
@@ -83,20 +57,76 @@ namespace Tunnel
         }
 
         /**
-         * Stop subscribing to onGrow event
+         * Get exit position of a tunnel to position a dead end cap
          */
-        private void onStop()
+        private Vector3 getExitPosition(float length)
         {
-            if (!isStopped) // only unsubscribe from GrowEvent once
+            float originAxisPosition = Dir.Vector.getAxisPositionFromDirection(growthDirection, transform.position);
+            float exitAxisPosition = Dir.Base.isDirectionNegative(growthDirection) ? originAxisPosition - length : originAxisPosition + length;
+            Vector3 deadEndPosition = Dir.Vector.substituteVector3FromDirection(growthDirection, transform.position, exitAxisPosition);
+            return deadEndPosition;
+        }
+
+        /**
+         * Subscribe to grow events from the worm
+         * 
+         * @position is the point of reference used for scaling the tunnel's head
+         */
+        public void onGrow(Vector3 position)
+        {
+            if (!isStopped)
             {
-                float scale = transform.localScale.y;
+                setTunnelScale(position); // set tunnel scale using worm's position
+                
+                float length = getLength(); // get length of tunnel
+                Vector3 deadEndPosition = getExitPosition(length);
+                DeadEndInstance.transform.position = deadEndPosition;
+
+                bool isBlockMultiple = Map.isDistanceMultiple(length);
+                Vector3 unitVectorInDir = Dir.Vector.getUnitVectorFromDirection(growthDirection);
+
+                if (isBlockMultiple)
+                {
+                    int curBlockLen = (int)length;
+                    if (curBlockLen > lastBlockLen)
+                    {
+                        lastBlockLen = curBlockLen;
+                        if (!lastCell.Equals(TunnelManager.Instance.initialCell))
+                        {
+                            addCellToList(lastCell); // add new position to list of cell positions covered by straight tunnel
+                            setCenter(length, growthDirection); // adjust the center to the new block
+                            BlockIntervalEvent(isBlockMultiple, lastCell, this);
+                        }
+                        Vector3Int lastCellPosition = getLastCellPosition();
+                        lastCell = Dir.Vector.getNextVector3Int(lastCellPosition, growthDirection);
+                    }
+                }
+                else
+                {
+                    BlockIntervalEvent(isBlockMultiple, Vector3Int.zero, this);
+                }
+            }
+        }
+
+        /**
+         * Stop subscribing to events
+         */
+        private void onStop(string tunnelId)
+        {
+            if (gameObject.name == tunnelId)
+            {
                 isStopped = true;
+                FindObjectOfType<CollisionManager>().StopEvent -= onStop;
                 FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
-                FindObjectOfType<Worm.Movement>().GrowEvent -= onGrow; // unsubscribe from grow messages
+                Destroy(DeadEndInstance); // remove the end cap
 
                 BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
-                BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;
             }
+        }
+
+        private float getScale(float length)
+        {
+            return length / (BLOCK_SIZE * SCALE_TO_LENGTH); // scale of 1 : 2 meters or 0.5 : 1 meter
         }
 
         private float getLength()
@@ -105,22 +135,27 @@ namespace Tunnel
         }
 
         /**
-         * Enable tunnel to grow
+         * Sets the tunnel's scale so it is offset in front of the worm
          */
-        public void onGrow()
+        private void setTunnelScale(Vector3 position)
         {
-            isStopped = false;
-        }
+            int roundedLength = (int) getLength();
 
-        /**
-         *  Scale in direction of growth
-         */
-        private void grow()
-        {
+            float dist = Dir.Vector.getAxisScaleFromDirection(growthDirection, position);
+            float totalDist = Mathf.Abs(dist) + TunnelManager.Instance.RING_OFFSET;
+
+            if (roundedLength != -1 && roundedLength > lastBlockLen) // skipped block interval
+            {
+                print("prev block is " + roundedLength + " length is " + getLength() + " last added block is " + lastBlockLen);
+                totalDist = roundedLength;
+            }
+
+            float scale = getScale(totalDist);
+
+            print("worm ring position is " + position.y + " rounded scale is " + scale);
+
             Vector3 curScale = transform.localScale;
-            float length = curScale.y + GROWTH_RATE;
-            float roundedLength = (float)Math.Round(length, 2);
-            transform.localScale = new Vector3(curScale.x, roundedLength, curScale.z);
+            transform.localScale = new Vector3(curScale.x, scale, curScale.z);
         }
 
         void OnDisable()
@@ -136,14 +171,11 @@ namespace Tunnel
             }
             if (FindObjectOfType<Worm.Movement>())
             {
-                FindObjectOfType<Worm.Movement>().GrowEvent -= onGrow;
-                BlockIntervalEvent -= Worm.Turn.Instance.onBlockInterval;
-                BlockIntervalEvent -= FindObjectOfType<Worm.Movement>().onBlockInterval;
+                BlockIntervalEvent -= FindObjectOfType<Worm.Turn>().onBlockInterval;
             }
             if (FindObjectOfType<Test.TunnelMaker>())
             {
                 BlockIntervalEvent -= FindObjectOfType<Test.TunnelMaker>().onBlockInterval;
-                FindObjectOfType<Test.TunnelMaker>().GrowEvent -= onGrow;
             }
         }
 

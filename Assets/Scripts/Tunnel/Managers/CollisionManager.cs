@@ -10,13 +10,13 @@ namespace Tunnel
         public delegate void InitWormPosition(Vector3 position, Direction direction);
         public event InitWormPosition InitWormPositionEvent;
 
-        public delegate void Stop();
+        public delegate void Stop(string tunnelId);
         public event Stop StopEvent;
 
-        public delegate void CreateJunction(Tunnel collisionTunnel, DirectionPair dirPair, CellMove cellMove);
-        private event CreateJunction CreateJunctionEvent;
+        public delegate void CreateJunction(Tunnel collisionTunnel, DirectionPair dirPair, CellMove cellMove, Tunnel currentTunnel);
+        public event CreateJunction CreateJunctionEvent;
 
-        public delegate void CreateTunnel(CellMove cellMove, DirectionPair directionPair);
+        public delegate void CreateTunnel(CellMove cellMove, DirectionPair directionPair, Tunnel tunnel, string wormId);
         public event CreateTunnel CreateTunnelEvent;
 
         public bool isCreatingNewTunnel = false;
@@ -25,15 +25,10 @@ namespace Tunnel
         protected void OnEnable()
         {
             CreateTunnelEvent += FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
-            CreateTunnelEvent += FindObjectOfType<Worm.InputProcessor>().onCreateTunnel;
 
             SliceTunnelEvent += FindObjectOfType<Intersect.Slicer>().sliceTunnel;
 
             CreateJunctionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunction;
-            CreateJunctionEvent += FindObjectOfType<Worm.Turn>().onCreateJunction;
-            CreateJunctionEvent += FindObjectOfType<Worm.InputProcessor>().onCreateJunction;
-
-            InitWormPositionEvent += FindObjectOfType<Worm.Movement>().onInitWormPosition;
         }
 
         /**
@@ -61,20 +56,20 @@ namespace Tunnel
             {
                 Destroy(nextTunnel.gameObject);
             }
-            CreateJunctionEvent(nextTunnel, directionPair, cellMove);
-            StopEvent();
+            StopEvent(curTunnel.gameObject.name);
+            CreateJunctionEvent(nextTunnel, directionPair, cellMove, curTunnel);
         }
 
         /**
          * The first decision made will initialize a tunnel by emitting a Change Direction event
          */
-        public void onInitDecision(Direction direction)
+        public void onInitDecision(Direction direction, string wormId)
         {
             CellMove cellMove = CellMove.getInitialCellMove(direction);
             InitWormPositionEvent(cellMove.startPosition, direction);
 
             DirectionPair sameDirPair = new DirectionPair(direction, direction);
-            CreateTunnelEvent(cellMove, sameDirPair);
+            CreateTunnelEvent(cellMove, sameDirPair, null, wormId);
         }
 
         /**
@@ -82,25 +77,25 @@ namespace Tunnel
          * 
          * @directionPair indicates direction of travel and determines type of tunnel to create
          */
-        public void onChangeDirection(DirectionPair directionPair)
+        public void onChangeDirection(DirectionPair directionPair, string wormId)
         {
-            Tunnel tunnel = TunnelManager.Instance.getLastTunnel();
+            Tunnel prevTunnel = TunnelManager.Instance.getLastTunnel();
             // get cell from map, check if tunnel w/ egress at curDirection already exists
-            CellMove cellMove = CellMove.getCellMove(tunnel, directionPair);
+            CellMove cellMove = CellMove.getCellMove(prevTunnel, directionPair);
             if (StopEvent != null)
             {
-                StopEvent(); // Stop the last growing tunnel
+                StopEvent(prevTunnel.gameObject.name); // Stop the last growing tunnel
             }
             Tunnel existingTunnel = Map.getTunnelFromDict(cellMove.cell);
 
             if (existingTunnel == null)
             {
-                CreateTunnelEvent(cellMove, directionPair);
+                CreateTunnelEvent(cellMove, directionPair, prevTunnel, wormId);
             }
             else // tunnel exists where we want to create a corner. 
             {
                 print("collision occurred on turn at " + cellMove.cell);
-                onCollide(directionPair, tunnel, existingTunnel);
+                onCollide(directionPair, prevTunnel, existingTunnel);
             }
         }
 
@@ -113,16 +108,6 @@ namespace Tunnel
             if (FindObjectOfType<ModTunnelFactory>())
             {
                 CreateJunctionEvent -= FindObjectOfType<ModTunnelFactory>().onCreateJunction;
-            }
-            if (FindObjectOfType<Worm.Turn>())
-            {
-                CreateJunctionEvent -= FindObjectOfType<Worm.Turn>().onCreateJunction;
-                InitWormPositionEvent -= FindObjectOfType<Worm.Movement>().onInitWormPosition;
-            }
-            if (FindObjectOfType<Worm.InputProcessor>())
-            {
-                CreateJunctionEvent += FindObjectOfType<Worm.InputProcessor>().onCreateJunction;
-                CreateTunnelEvent += FindObjectOfType<Worm.InputProcessor>().onCreateTunnel;
             }
             if (FindObjectOfType<Factory>())
             {

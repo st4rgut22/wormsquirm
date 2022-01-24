@@ -28,6 +28,7 @@ public enum Direction
     Right,
     Up,
     None,
+    Same
 }
 
 

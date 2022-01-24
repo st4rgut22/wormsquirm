@@ -6,6 +6,7 @@ namespace Worm
 {
     public enum MoveType
     {
+        STRAIGHT,
         ENTRANCE,
         CENTER,
         EXIT,
@@ -16,10 +17,13 @@ namespace Worm
     {
         public Vector3 position { get; private set; }
         public MoveType move { get; private set; }
-        public Waypoint(Vector3 position, MoveType move)
+        public Direction direction { get; private set; } // direction of movement to pass the waypoint
+
+        public Waypoint(Vector3 position, MoveType move, Direction direction)
         {
             this.position = position;
             this.move = move;
+            this.direction = direction;
         }
     }
 

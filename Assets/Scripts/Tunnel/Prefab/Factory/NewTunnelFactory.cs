@@ -14,12 +14,14 @@ namespace Tunnel
          * @CellMove the position of the next cell
          * @directionPair the next ingress/egress directions
          */
-        public void onCreateTunnel(CellMove cellMove, DirectionPair directionPair)
+        public void onCreateTunnel(CellMove cellMove, DirectionPair directionPair, Tunnel prevTunnel, string wormId)
         {
             this.cellMove = cellMove;
             this.directionPair = directionPair;
             Tunnel tunnel = getTunnel();
-            addTunnel(tunnel); // for corners, must wait until the straight tunnel has stopped growing
+            tunnel.setWormCreatorId(wormId);
+
+            addTunnel(tunnel, wormId); // for corners, must wait until the straight tunnel has stopped growing
         }
 
         /**

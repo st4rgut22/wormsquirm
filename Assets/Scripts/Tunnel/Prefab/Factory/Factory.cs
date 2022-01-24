@@ -4,7 +4,7 @@ namespace Tunnel
 {
     public abstract class Factory : MonoBehaviour
     {
-        public delegate void AddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair);
+        public delegate void AddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId); // wormId is the id of the worm that created the tunnel
         public event AddTunnel AddTunnelEvent;
 
         protected CellMove cellMove;
@@ -33,9 +33,9 @@ namespace Tunnel
          * 
          * @tunnel newly created tunnel
          */
-        protected void addTunnel(Tunnel tunnel)
+        protected void addTunnel(Tunnel tunnel, string wormId)
         {
-            AddTunnelEvent(tunnel, cellMove.cell, directionPair);
+            AddTunnelEvent(tunnel, cellMove.cell, directionPair, wormId);
         }
 
         protected void OnDisable()

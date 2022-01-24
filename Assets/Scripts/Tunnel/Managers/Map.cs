@@ -56,7 +56,7 @@ namespace Tunnel
             if (isBlockInterval)
             {
                 // before traversing cell check that the next cell is empty to decide whether to intersect it
-                Vector3Int nextBlockPositionInt = blockPositionInt.getNextVector3Int(tunnel.growthDirection);
+                Vector3Int nextBlockPositionInt = Dir.Vector.getNextVector3Int(blockPositionInt, tunnel.growthDirection);
                 if (containsCell(nextBlockPositionInt) && !isTurnDecision)
                 {
                     print("collision occurred with straight tunnel at " + blockPositionInt);
@@ -88,7 +88,7 @@ namespace Tunnel
             return (roundedDistance % 1) == 0;
         }
 
-        public void onAddTunnel(Tunnel tunnel, Vector3Int cellLocation, DirectionPair directionPair)
+        public void onAddTunnel(Tunnel tunnel, Vector3Int cellLocation, DirectionPair directionPair, string wormId)
         {
             addCell(cellLocation, tunnel);
         }
@@ -103,7 +103,6 @@ namespace Tunnel
          */
         public static void addCell(Vector3Int cellLocation, Tunnel tunnel)
         {
-            print("debug add cell " + cellLocation + " belonging to tunnel " + tunnel.name);
             TunnelMapDict[cellLocation] = tunnel;
             cellList.Add(cellLocation);
         }

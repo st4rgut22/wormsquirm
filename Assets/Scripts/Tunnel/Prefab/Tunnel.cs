@@ -6,6 +6,9 @@ namespace Tunnel
 {
     public abstract class Tunnel : MonoBehaviour
     {
+        [SerializeField]
+        protected GameObject DeadEnd;
+
         public const float GROWTH_RATE = .01f; // .02f; // must be a divisor of 1 so tunnel length will be a multiple of BLOCK_SIZE
 
         public static int BLOCK_SIZE = 1;    
@@ -24,6 +27,8 @@ namespace Tunnel
         public List<Vector3Int> cellPositionList; // a list of coordinates the tunnel traverses
 
         public Type.Name type;
+
+        public string wormCreatorId { get; private set; }
 
         public abstract void setHoleDirections(DirectionPair dirPair);
         public abstract Vector3 getContactPosition(DirectionPair dirPair); // get point of contact with the NEXT tunnel
@@ -44,6 +49,16 @@ namespace Tunnel
             cellPositionList = new List<Vector3Int>();
         }
 
+        public void setWormCreatorId(string wormId)
+        {
+            wormCreatorId = wormId;
+        }
+
+        public bool isTunnelType(Type.Name tunnelType)
+        {
+            return type == tunnelType;
+        }
+
         public void addCellToList(Vector3Int cellPosition)
         {
             lastCellPos = cellPosition;
@@ -58,7 +73,7 @@ namespace Tunnel
         /**
          * When the tunnel is initialized, add it to the cellPosList because the first couple blocks won't trigger blockIntervalEvent 
          */
-        public virtual void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
+        public virtual void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
         {
             addCellToList(cell);
         }
@@ -70,7 +85,6 @@ namespace Tunnel
         {
             GameObject tunnelCopy = Instantiate(gameObject, tunnelParent);
             Straight copiedTunnel = tunnelCopy.GetComponent<Straight>();
-            FindObjectOfType<Worm.Movement>().GrowEvent -= copiedTunnel.onGrow; // copied tunnel should not grow       
             copiedTunnel.ingressPosition = ingressPosition;
             copiedTunnel.holeDirectionList = holeDirectionList;
             return copiedTunnel;

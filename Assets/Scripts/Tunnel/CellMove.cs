@@ -38,9 +38,9 @@ namespace Tunnel
             lastCellPosition = tunnel.getLastCellPosition(); // start at the end of prev tunnel
 
             startPosition = Tunnel.getEgressPosition(curDirection, tunnel.center); // get the correct egress position using the curDirection
-            cell = lastCellPosition.getNextVector3Int(curDirection);
+            cell = Dir.Vector.getNextVector3Int(lastCellPosition, curDirection);
 
-            Debug.Log("last cell position " + lastCellPosition + " start position " + startPosition + " cell " + cell);
+            //Debug.Log("last cell position " + lastCellPosition + " start position " + startPosition + " cell " + cell);
             nextCell = Dir.Vector.getNextCellFromDirection(cell, curDirection);
             isInit = false;
         }
@@ -55,7 +55,7 @@ namespace Tunnel
             Direction oppDir = Dir.Base.getOppositeDirection(initialDirection);
             startPosition = Tunnel.getEgressPosition(oppDir, initialCenter);
 
-            cell = initialCenter.castToVector3Int();
+            cell = Dir.Vector.castToVector3Int(initialCenter);
             nextCell = Dir.Vector.getNextCellFromDirection(cell, initialDirection);
             isInit = true;
         }

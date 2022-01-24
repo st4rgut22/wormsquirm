@@ -10,34 +10,39 @@ namespace Tunnel
         public Vector3Int initialCell = Vector3Int.zero; // initial cell
 
         [SerializeField]
-        public const float HEAD_WORM_OFFSET = 0.5f; // Distance between head of tunnel and worm. Must be beteween 0 and 1s
+        public float RING_OFFSET = .5f; // Length of offset from beginning of a new block = 1 - HEAD_WORM_OFFSET. It is used for initially positioning worm
 
-        public float WORM_OFFSET; // Length of offset from beginning of a new block = 1 - HEAD_WORM_OFFSET
+        public float START_TUNNEL_RING_OFFSET;
 
         public Vector3Int startingCell;
 
         private new void Awake()
         {
             base.Awake();
-            setHeadOffset();
+            START_TUNNEL_RING_OFFSET = 1 - RING_OFFSET; // Distance between start of tunnel and worm ring
             TunnelList = new List<Tunnel>();
         }
 
-        public void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair)
+        /**
+          * Use the current cell to position the next corner tunnel. If worm is currently 'chasing' the tunnel head, use the tunnel's last added cell.
+          * If worm is in a prexisting cell use worm's rounded position as the cell position
+          */
+        public Tunnel getCurrentTunnel(Vector3 position, Direction direction)
+        {
+            Vector3Int cellPos = Dir.Vector.castToVector3Int(position);
+            Tunnel tunnel = Map.getTunnelFromDict(cellPos);
+            return tunnel;
+        }
+
+        public void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
         {
             TunnelList.Add(tunnel);
         }
 
-        public void setHeadOffset()
+        public Vector3Int getCurTunnelPosition(Tunnel tunnel)
         {
-            if (HEAD_WORM_OFFSET >= 1 || HEAD_WORM_OFFSET <= 0)
-            {
-                throw new System.Exception("Head offset must be between 0 and 1");
-            }
-            else
-            {
-                WORM_OFFSET = 1 - HEAD_WORM_OFFSET;
-            }
+            Vector3Int cellPos = tunnel.getLastCellPosition();
+            return cellPos;
         }
 
         public Tunnel getLastTunnel()

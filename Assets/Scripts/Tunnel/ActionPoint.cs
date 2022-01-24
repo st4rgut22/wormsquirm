@@ -14,17 +14,9 @@ namespace Tunnel
 
         private static Dictionary<Direction, float> decisionPointBoundary;
 
-        public delegate void Move(Direction direction);
-        public event Move MoveEvent;
-
         private void Awake()
         {
             instance = this;
-        }
-
-        private void OnEnable()
-        {
-            MoveEvent += FindObjectOfType<Worm.Movement>().onMove;
         }
 
         /**
@@ -32,29 +24,29 @@ namespace Tunnel
          */
         public bool isDecisionBoundaryCrossed(Tunnel tunnel, Vector3 position, Direction direction)
         {
-            if (isDirectionAlongDecisionAxis(tunnel, direction))
+            Vector3 directionVector = Dir.Vector.getUnitVectorFromDirection(direction);
+
+            decisionPointBoundary = new Dictionary<Direction, float>();
+            setBoundaryPoints(tunnel.center);
+
+            float axisPosition = Dir.Vector.getAxisPositionFromDirection(direction, position);
+
+            if (isTriggerDecision(axisPosition, direction))
             {
-                MoveEvent(direction); // send the move command to the worm because move is along a decision axis (ie not in same direction of travel)
-
-                decisionPointBoundary = new Dictionary<Direction, float>();
-                setBoundaryPoints(tunnel.center);
-
-                float axisPosition = Dir.Vector.getAxisPositionFromDirection(direction, position);
-
-                if (isTriggerDecision(axisPosition, direction))
-                {
-                    print("decision is triggered");
-                    return true;
-                }
+                print("decision is triggered");
+                return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
         }
 
         /**
          * Decisions involve creating tunnel pieces and only apply to non-straight tunnels that cannot scale.
          * Check that direction is along a non-scalable axis
          */
-        private bool isDirectionAlongDecisionAxis(Tunnel tunnel, Direction direction)
+        public bool isDirectionAlongDecisionAxis(Tunnel tunnel, Direction direction)
         {
             if (tunnel.type != Type.Name.STRAIGHT)
             {
@@ -123,14 +115,5 @@ namespace Tunnel
                 decisionPointBoundary[direction] = getDecisionBoundary(direction, tunnelCenter);
             });
         }
-
-        private void OnDisable()
-        {
-            if (FindObjectOfType<Worm.Movement>())
-            {
-                MoveEvent -= FindObjectOfType<Worm.Movement>().onMove;
-            }
-        }
-
     }
 }

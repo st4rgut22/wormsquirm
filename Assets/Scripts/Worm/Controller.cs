@@ -5,14 +5,14 @@ using UnityEngine;
  */
 namespace Worm
 {
-    public class Controller : MonoBehaviour
+    public class Controller : WormBody
     {
         private Direction direction;
         
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
 
-        public delegate void InitDecision(Direction direction);
+        public delegate void InitDecision(Direction direction, string wormId);
         public event InitDecision InitDecisionEvent;
 
         private bool isGameStart;
@@ -22,7 +22,6 @@ namespace Worm
             PlayerInputEvent += FindObjectOfType<InputProcessor>().onPlayerInput;
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
             InitDecisionEvent += FindObjectOfType<Turn>().onInitDecision;
-            InitDecisionEvent += FindObjectOfType<Movement>().onInitDecision;
         }
 
         // Start is called before the first frame update
@@ -38,7 +37,7 @@ namespace Worm
         }
 
         private Direction getDirection(InputKeyPair inputKeyPair)
-        {
+        {            
             InputKey pressedKey = inputKeyPair.getPressedInputKey();
 
             if (direction == Direction.None)
@@ -54,7 +53,6 @@ namespace Worm
 
         void Update()
         {
-
             InputKeyPair inputKeyPair = InputManager.instance.getInputKeyPair();
 
             if (inputKeyPair != null)
@@ -63,7 +61,7 @@ namespace Worm
 
                 if (isGameStart)
                 {
-                    InitDecisionEvent(localDirection);
+                    InitDecisionEvent(localDirection, wormId);
                     isGameStart = false;
                 }
                 else if (PlayerInputEvent != null)
@@ -77,7 +75,6 @@ namespace Worm
         {
             if (FindObjectOfType<Movement>())
             {
-                InitDecisionEvent -= FindObjectOfType<Movement>().onInitDecision;
                 PlayerInputEvent -= FindObjectOfType<InputProcessor>().onPlayerInput;
             }
             if (FindObjectOfType<Tunnel.Map>())
