@@ -11,15 +11,19 @@ namespace Tunnel
 
         public const float GROWTH_RATE = .01f; // .02f; // must be a divisor of 1 so tunnel length will be a multiple of BLOCK_SIZE
 
-        public static int BLOCK_SIZE = 1;    
+        protected const float MARGIN_OF_ERROR = .07f;
+        protected const float WALL_THICKNESS = .25f;
+
+        public static int BLOCK_SIZE = 1;
         public const int SCALE_TO_LENGTH = 2; // scale of 1 : 2 world units
         public const float SCALED_GROWTH_RATE = GROWTH_RATE * SCALE_TO_LENGTH;
 
         public static float CENTER_OFFSET = BLOCK_SIZE / 2.0f;
 
         public bool isStopped;
+        protected bool isTurning;
 
-        public Vector3 ingressPosition { get; protected set; }
+        public Vector3 ingressPosition { get; set; }
 
         public List<Direction> holeDirectionList;
 
@@ -29,24 +33,23 @@ namespace Tunnel
         public Type.Name type;
 
         public string wormCreatorId { get; private set; }
+        protected Vector3 wormPosition;
+        protected Direction wormDirection;
+
+        protected bool isCollision;
 
         public abstract void setHoleDirections(DirectionPair dirPair);
         public abstract Vector3 getContactPosition(DirectionPair dirPair); // get point of contact with the NEXT tunnel
 
         public int holeCount;
 
-        [SerializeField]
-        private Vector3Int lastCellPos;
-
-        protected virtual void OnEnable()
-        {
-            FindObjectOfType<NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
-        }
-
         protected void Awake()
         {
             holeDirectionList = new List<Direction>();
             cellPositionList = new List<Vector3Int>();
+            wormPosition = Vector3.zero;
+            isTurning = false;
+            isCollision = false;
         }
 
         public void setWormCreatorId(string wormId)
@@ -59,15 +62,24 @@ namespace Tunnel
             return type == tunnelType;
         }
 
+        /**
+         * When a tunnel is created, add its original position to its list of cells
+         * 
+         * @cellPosition starting cell position of tunnel segment
+         */
         public void addCellToList(Vector3Int cellPosition)
         {
-            lastCellPos = cellPosition;
             cellPositionList.Add(cellPosition);
         }
 
         public Vector3Int getLastCellPosition()
         {
             return cellPositionList[cellPositionList.Count - 1];
+        }
+
+        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
+        {
+            isTurning = true;
         }
 
         /**
@@ -83,10 +95,7 @@ namespace Tunnel
          */
         public Tunnel copy(Transform tunnelParent)
         {
-            GameObject tunnelCopy = Instantiate(gameObject, tunnelParent);
-            Straight copiedTunnel = tunnelCopy.GetComponent<Straight>();
-            copiedTunnel.ingressPosition = ingressPosition;
-            copiedTunnel.holeDirectionList = holeDirectionList;
+            Tunnel copiedTunnel = gameObject.instantiateSliced(tunnelParent, ingressPosition, holeDirectionList);
             return copiedTunnel;
         }
 
@@ -116,6 +125,19 @@ namespace Tunnel
         }
 
         /**
+         * Get exit position on tunnel using worm's direction
+         * 
+         * @direction worm direction
+         * @center center of tunnel
+         */
+        public static Vector3 getIngressPosition(Direction direction, Vector3 center)
+        {
+            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            Vector3 egressPosition = center - unitVector * CENTER_OFFSET;
+            return egressPosition;
+        }
+
+        /**
          * Get the center of the last block in this tunnel
          * 
          * @direction is the direction the tunnel is entered
@@ -132,14 +154,6 @@ namespace Tunnel
         private void OnDrawGizmos()
         {
             Gizmos.DrawCube(center, new Vector3(.1f, .1f, .1f));
-        }
-
-        protected virtual void OnDisable()
-        {
-            if (FindObjectOfType<NewTunnelFactory>())
-            {
-                FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
-            }
         }
     }
 }

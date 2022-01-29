@@ -18,16 +18,11 @@ namespace Worm
         [SerializeField]
         private float maxVelocity;
 
-        private float originalForceMagnitude;
-        private float originalMaxVelocity;
-
         private Vector3 directionalVector = Vector3.zero;
 
         // Start is called before the first frame update
         void Start()
         {
-            originalForceMagnitude = forceMagnitude;
-            originalMaxVelocity = maxVelocity;
             movingRigidbody = ring;
         }
 

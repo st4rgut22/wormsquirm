@@ -19,8 +19,6 @@ namespace Worm
         public delegate void Grow(Tunnel.Tunnel tunnel, Vector3 wormPos);
         public event Grow GrowEvent;
 
-        private Direction prevDir;
-
         private void OnEnable()
         {
             DecisionEvent += FindObjectOfType<Turn>().onDecision;
@@ -29,10 +27,10 @@ namespace Worm
 
         private new void Awake()
         {
+            base.Awake();
             changeDirTunnel = null;
             unitVectorDirection = Vector3.zero; // initially the worm is not moving
             isDecisionProcessing = false;
-            prevDir = Direction.None;
         }
 
         /**
@@ -41,17 +39,6 @@ namespace Worm
         public void onDecisionProcessing(bool isDecisionProcessing)
         {
             this.isDecisionProcessing = isDecisionProcessing;
-        }
-
-        /**
-         * player input results in a turn, then the prevDir should be used to determine the prev tunnel
-         */
-        public void onChangeDirection(DirectionPair directionPair, string wormId)
-        {
-            if (wormId == this.wormId)
-            {
-                prevDir = directionPair.prevDir;
-            }
         }
 
         /**
@@ -65,7 +52,7 @@ namespace Worm
 
                 Vector3 inputPosition = ring.position + unitVectorDirection * INPUT_SPEED;
 
-                changeDirTunnel = GetComponent<WormTunnelBroker>().getCurTunnel(direction);                
+                changeDirTunnel = Tunnel.Map.getCurrentTunnel(clit.position);
 
                 bool isSameDirection = Tunnel.ActionPoint.instance.isDirectionAlongDecisionAxis(changeDirTunnel, direction);
 
@@ -77,7 +64,10 @@ namespace Worm
                     {
                         bool isStraightTunnel = changeDirTunnel.type == Tunnel.Type.Name.STRAIGHT; // if this is the first tunnel it should be straight type
                         isDecisionProcessing = true;
+
+                        DecisionEvent += changeDirTunnel.onDecision;
                         DecisionEvent(isStraightTunnel, direction, changeDirTunnel);
+                        DecisionEvent -= changeDirTunnel.onDecision;
                     }
                 }
 

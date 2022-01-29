@@ -19,8 +19,6 @@ namespace Tunnel
         public delegate void CreateTunnel(CellMove cellMove, DirectionPair directionPair, Tunnel tunnel, string wormId);
         public event CreateTunnel CreateTunnelEvent;
 
-        public bool isCreatingNewTunnel = false;
-
         // Start is called before the first frame update
         protected void OnEnable()
         {
@@ -56,7 +54,10 @@ namespace Tunnel
             {
                 Destroy(nextTunnel.gameObject);
             }
-            StopEvent(curTunnel.gameObject.name);
+            if (StopEvent != null) // it may be the case where StopEvent is already unsubscribed because tunnel has already been stopped. For example onChangeDirection
+            {
+                StopEvent(curTunnel.gameObject.name);
+            }
             CreateJunctionEvent(nextTunnel, directionPair, cellMove, curTunnel);
         }
 
@@ -74,6 +75,7 @@ namespace Tunnel
 
         /**
          * Tunnel direction change triggers creation or modification of the next tunnel. 
+         * Note: direction may not change at all (eg straight tunnel created after a corner)
          * 
          * @directionPair indicates direction of travel and determines type of tunnel to create
          */

@@ -1,13 +1,17 @@
 using UnityEngine;
-using System.Collections.Generic;
 
 namespace Tunnel
 {    
-    public class Junction : Tunnel
+    public class Junction : TurnableTunnel
     {
-        protected override void OnEnable()
+        new private void Awake()
         {
-            FindObjectOfType<ModTunnelFactory>().AddTunnelEvent += onAddTunnel;
+            base.Awake();
+        }
+
+        public void onReachJunctionExit()
+        {
+            Destroy(DeadEndInstance);
         }
 
         public override Vector3 getContactPosition(DirectionPair dirPair)
@@ -27,12 +31,7 @@ namespace Tunnel
             }
         }
 
-        new private void Awake()
-        {
-            base.Awake();
-        }
-
-        protected override void OnDisable()
+        public void OnDisable()
         {
             if (FindObjectOfType<ModTunnelFactory>())
             {

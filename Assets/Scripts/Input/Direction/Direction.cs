@@ -4,21 +4,19 @@ namespace Dir
 {
     public class Vector
     {
-        const float XZ_BLOCK_INTERVAL = .5f; // interval falls on halfway marks unlike the y direction
-
         /**
          * Get the next cell using the current direction
          */
         public static Vector3Int getNextVector3Int(Vector3Int thisObj, Direction direction)
         {
             Vector3 vector = getNextVector(thisObj, direction);
-            Vector3Int cellLoc = Vector.castToVector3Int(vector);
+            Vector3Int cellLoc = castToVector3Int(vector);
             return cellLoc;
         }
 
         private static Vector3 getNextVector(Vector3 vector, Direction direction)
         {
-            if (Dir.Base.isDirectionNegative(direction))
+            if (Base.isDirectionNegative(direction))
             {
                 if (direction == Direction.Left)
                 {
@@ -51,22 +49,11 @@ namespace Dir
         }
 
         /**
-         * Converts position to block # along horizontal axis
-         * Horizontal blocked intervals fall on y=.5x (eg .5, 1, 1.5, 2, 2.5)
-         */
-        private static int getHorBlockInterval(float position)
-        {
-            return (int)(position / XZ_BLOCK_INTERVAL);
-        }
-
-        /**
          * Convert position to integer
          */
         public static Vector3Int castToVector3Int(Vector3 thisObj)
         {
-            int xCoord = getHorBlockInterval(thisObj.x);
-            int zCoord = getHorBlockInterval(thisObj.z);
-            Vector3Int castedVector = new Vector3Int(xCoord, (int)thisObj.y, zCoord);
+            Vector3Int castedVector = new Vector3Int((int)thisObj.x, (int)thisObj.y, (int)thisObj.z);
             Debug.Log("cast vector " + thisObj + " is " + castedVector);
             return castedVector;
         }

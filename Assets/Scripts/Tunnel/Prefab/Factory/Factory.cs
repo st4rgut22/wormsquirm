@@ -29,13 +29,15 @@ namespace Tunnel
         }
 
         /**
-         * Adds tunnel to list of tunnels and the map
+         * Adds tunnel to list of tunnels and the map, and subscribes/unsubscribes tunnels from the addTunnel event
          * 
          * @tunnel newly created tunnel
          */
         protected void addTunnel(Tunnel tunnel, string wormId)
         {
+            AddTunnelEvent += tunnel.onAddTunnel;
             AddTunnelEvent(tunnel, cellMove.cell, directionPair, wormId);
+            AddTunnelEvent -= tunnel.onAddTunnel;
         }
 
         protected void OnDisable()

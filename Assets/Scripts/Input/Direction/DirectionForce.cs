@@ -40,8 +40,8 @@ namespace Dir
                 {
                     { Direction.Forward, Vector3.right },
                     { Direction.Back, Vector3.left },
-                    { Direction.Left, Vector3.forward },
-                    { Direction.Right, Vector3.back }
+                    { Direction.Left, Vector3.back },
+                    { Direction.Right, Vector3.forward }
                 }
             },
             {
@@ -49,8 +49,8 @@ namespace Dir
                 {
                     { Direction.Forward, Vector3.up },
                     { Direction.Back, Vector3.down },
-                    { Direction.Up, Vector3.forward },
-                    { Direction.Down, Vector3.back }
+                    { Direction.Up, Vector3.back },
+                    { Direction.Down, Vector3.forward }
                 }
             },
             {

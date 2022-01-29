@@ -9,16 +9,16 @@ namespace Tunnel
         private GameObject DeadEndInstance;
         public Direction growthDirection;
 
-        Vector3Int lastCell;
+        private bool isSliced;
+
         int lastBlockLen; // last block added used to retroactively add blocks that did not fall on an interval
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
 
         // Start is called before the first frame update
-        new void OnEnable()
+        void OnEnable()
         {
-            base.OnEnable();
             FindObjectOfType<CollisionManager>().StopEvent += onStop;
 
             BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
@@ -33,20 +33,23 @@ namespace Tunnel
         new private void Awake()
         {
             base.Awake();
-
             type = Type.Name.STRAIGHT;
             ingressPosition = transform.position;
             isStopped = false;
+            isSliced = false;
             lastBlockLen = -1;
-            lastCell = TunnelManager.Instance.initialCell;
         }
 
         private void Start()
         {
-            growthDirection = holeDirectionList[0];
+            if (!isSliced)
+            {
+                growthDirection = holeDirectionList[0];
 
-            Quaternion deadEndRotation = Rotation.DeadEndRot.getRotationFromDirection(growthDirection);
-            DeadEndInstance = Instantiate(DeadEnd, transform.position, deadEndRotation, Type.instance.TunnelNetwork);
+                Quaternion deadEndRotation = Rotation.DeadEndRot.getRotationFromDirection(growthDirection);
+                DeadEndInstance = Instantiate(DeadEnd, transform.position, deadEndRotation, Type.instance.TunnelNetwork);
+                DeadEndInstance.name = gameObject.name + "DEADEND";
+            }
         }
 
         public override void setHoleDirections(DirectionPair dirPair)
@@ -67,12 +70,29 @@ namespace Tunnel
             return deadEndPosition;
         }
 
+        /** 
+         * Unsubscribe tunnel from addTunnelEvent after being added
+         */
+        public override void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        {
+            base.onAddTunnel(tunnel, cell, directionPair, wormId);
+            FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
+        }
+
+        /**
+         * Whether the straight tunnel is a prexisting tunnel that is sliced
+         */
+        public void setIsSliced()
+        {
+            isSliced = true;
+        }
+
         /**
          * Subscribe to grow events from the worm
          * 
          * @position is the point of reference used for scaling the tunnel's head
          */
-        public void onGrow(Vector3 position)
+        public void onGrow( Vector3 position)
         {
             if (!isStopped)
             {
@@ -84,24 +104,30 @@ namespace Tunnel
 
                 bool isBlockMultiple = Map.isDistanceMultiple(length);
                 Vector3 unitVectorInDir = Dir.Vector.getUnitVectorFromDirection(growthDirection);
+                int curBlockLen = (int)length;
 
                 if (isBlockMultiple)
                 {
-                    int curBlockLen = (int)length;
-                    if (curBlockLen > lastBlockLen)
+                    print("cur block " + curBlockLen + " last block " + lastBlockLen + " position is " + position);
+                    if (curBlockLen >= 1 && curBlockLen > lastBlockLen) // the first block is already added on tunnel creation 
                     {
                         lastBlockLen = curBlockLen;
-                        if (!lastCell.Equals(TunnelManager.Instance.initialCell))
-                        {
-                            addCellToList(lastCell); // add new position to list of cell positions covered by straight tunnel
-                            setCenter(length, growthDirection); // adjust the center to the new block
-                            BlockIntervalEvent(isBlockMultiple, lastCell, this);
-                        }
+                        setCenter(length, growthDirection); // adjust the center to the new block
+
                         Vector3Int lastCellPosition = getLastCellPosition();
-                        lastCell = Dir.Vector.getNextVector3Int(lastCellPosition, growthDirection);
+                        Vector3Int curCell = Dir.Vector.getNextVector3Int(lastCellPosition, growthDirection);
+
+                        bool isCollision = Map.getTunnelFromDict(curCell) != null;
+
+                        if (!isTurning && !isCollision)
+                        {
+                            addCellToList(curCell);
+                        }
+
+                        BlockIntervalEvent(isBlockMultiple, curCell, this);
                     }
                 }
-                else
+                else // notify listeners that there is not a block multple
                 {
                     BlockIntervalEvent(isBlockMultiple, Vector3Int.zero, this);
                 }
@@ -117,11 +143,16 @@ namespace Tunnel
             {
                 isStopped = true;
                 FindObjectOfType<CollisionManager>().StopEvent -= onStop;
-                FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
-                Destroy(DeadEndInstance); // remove the end cap
-
+                print("destroy deadEnd " + DeadEndInstance.name);
+                destroyDeadEnd();
                 BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
             }
+        }
+
+        private void destroyDeadEnd()
+        {
+            Destroy(DeadEndInstance); // remove the end cap
+
         }
 
         private float getScale(float length)
@@ -141,8 +172,10 @@ namespace Tunnel
         {
             int roundedLength = (int) getLength();
 
+            float offsetOriginDist = Dir.Vector.getAxisPositionFromDirection(growthDirection, ingressPosition);
             float dist = Dir.Vector.getAxisScaleFromDirection(growthDirection, position);
-            float totalDist = Mathf.Abs(dist) + TunnelManager.Instance.RING_OFFSET;
+            float distToRing = Mathf.Abs(dist - offsetOriginDist); // distance between position of worm (ahead of tunnel) and tunnel
+            float totalDist = distToRing + TunnelManager.Instance.RING_OFFSET;
 
             if (roundedLength != -1 && roundedLength > lastBlockLen) // skipped block interval
             {
@@ -160,7 +193,6 @@ namespace Tunnel
 
         void OnDisable()
         {
-            base.OnDisable();
             if (FindObjectOfType<CollisionManager>()) // check if TunnelManager hasn't been deleted before this GO
             {
                 FindObjectOfType<CollisionManager>().StopEvent -= onStop;

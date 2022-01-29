@@ -2,18 +2,50 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WormBody : MonoBehaviour
+namespace Worm
 {
-    [SerializeField]
-    protected Rigidbody ring;
+    public class WormBody : MonoBehaviour
+    {
+        [SerializeField]
+        protected Rigidbody ring;
 
-    [SerializeField]
-    protected Rigidbody head;
+        [SerializeField]
+        protected Rigidbody head;
 
-    [SerializeField]
-    protected Rigidbody neck;
+        [SerializeField]
+        protected Rigidbody clit;
+                
+        protected WormDir wormDir; // stores shared variables across worm prefab classes
 
-    protected bool isLeadingTunnel = true; // if worm is actively creating a new tunnel (instead of traveling in a pre-existing tunnel)
+        protected string wormId = "fakeId"; // TEMPORARY, later assign ids from worm manager
 
-    protected string wormId = "fakeId"; // TEMPORARY, later assign ids from worm manager
+        public delegate void ChangeDirection(DirectionPair directionPair, string wormId);
+        public event ChangeDirection ChangeDirectionEvent;
+
+        protected void OnEnable()
+        {
+        }
+
+        protected void Awake()
+        {
+            wormDir = GetComponent<WormDir>();
+        }
+
+        protected void RaiseChangeDirectionEvent(DirectionPair directionPair, string wormId)
+        {
+            if (ChangeDirectionEvent == null)
+            {
+                ChangeDirectionEvent += Tunnel.CollisionManager.Instance.onChangeDirection;
+            }            
+            ChangeDirectionEvent(directionPair, wormId);
+        }
+
+        protected void OnDisable()
+        {
+            if (Tunnel.CollisionManager.Instance && ChangeDirectionEvent != null)
+            {
+                ChangeDirectionEvent -= Tunnel.CollisionManager.Instance.onChangeDirection;
+            }
+        }
+    }
 }

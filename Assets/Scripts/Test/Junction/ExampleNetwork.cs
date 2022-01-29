@@ -37,7 +37,7 @@ namespace Test
         {
             threeIntersectLoopCorner = new List<Checkpoint>(threeIntersectLoopStraight);
             threeIntersectLoopCorner.RemoveAt(threeIntersectLoopCorner.Count - 1);
-            Checkpoint cp = new Checkpoint(Direction.Right, 4);
+            Checkpoint cp = new Checkpoint(Direction.Right, 6);
             Checkpoint cpTurn = new Checkpoint(Direction.Up, 1);
             threeIntersectLoopCorner.Add(cp);
             threeIntersectLoopCorner.Add(cpTurn);

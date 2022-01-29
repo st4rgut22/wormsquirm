@@ -10,7 +10,7 @@ namespace Tunnel
         public Vector3Int initialCell = Vector3Int.zero; // initial cell
 
         [SerializeField]
-        public float RING_OFFSET = .5f; // Length of offset from beginning of a new block = 1 - HEAD_WORM_OFFSET. It is used for initially positioning worm
+        public float RING_OFFSET = .5f; 
 
         public float START_TUNNEL_RING_OFFSET;
 
@@ -23,26 +23,9 @@ namespace Tunnel
             TunnelList = new List<Tunnel>();
         }
 
-        /**
-          * Use the current cell to position the next corner tunnel. If worm is currently 'chasing' the tunnel head, use the tunnel's last added cell.
-          * If worm is in a prexisting cell use worm's rounded position as the cell position
-          */
-        public Tunnel getCurrentTunnel(Vector3 position, Direction direction)
-        {
-            Vector3Int cellPos = Dir.Vector.castToVector3Int(position);
-            Tunnel tunnel = Map.getTunnelFromDict(cellPos);
-            return tunnel;
-        }
-
         public void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
         {
             TunnelList.Add(tunnel);
-        }
-
-        public Vector3Int getCurTunnelPosition(Tunnel tunnel)
-        {
-            Vector3Int cellPos = tunnel.getLastCellPosition();
-            return cellPos;
         }
 
         public Tunnel getLastTunnel()

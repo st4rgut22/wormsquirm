@@ -16,6 +16,8 @@ namespace Tunnel
 
         private bool isTurnDecision;
 
+        private const float XZ_INTERVAL_OFFSET = .5f;
+
         private void Awake()
         {
             cellList = new List<Vector3Int>() { TunnelManager.Instance.initialCell };
@@ -53,21 +55,55 @@ namespace Tunnel
          */
         public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel)
         {
-            if (isBlockInterval)
+            if (isBlockInterval && !isTurnDecision)
             {
                 // before traversing cell check that the next cell is empty to decide whether to intersect it
-                Vector3Int nextBlockPositionInt = Dir.Vector.getNextVector3Int(blockPositionInt, tunnel.growthDirection);
-                if (containsCell(nextBlockPositionInt) && !isTurnDecision)
+                if (containsCell(blockPositionInt)) // exclude turn tunnel segments from part of the straight tunnel
                 {
                     print("collision occurred with straight tunnel at " + blockPositionInt);
-                    Tunnel intersectTunnel = TunnelMapDict[nextBlockPositionInt];
+                    Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
                     DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection); // go straight
                     CollideEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect AND not turning
                 }
-                // or is initial straight tunnel, where decision event is created even though we are not technically turning
-                addCell(blockPositionInt, tunnel);
-                isTurnDecision = false; // reset isTurnDecision after reaching a block interval in order to permite collisions with straight tunnel
+                else
+                {
+                    addCell(blockPositionInt, tunnel);
+                }
             }
+            else if (isBlockInterval)
+            {
+                isTurnDecision = false; // reset isTurnDecision after reaching a block interval in order to permit collisions with straight tunnel
+            }
+        }
+
+        /**
+          * Use worm's rounded position as the cell position. Add an offset on the XZ directions to get the map cell positions
+          * 
+          * @position clit position
+          */
+        public static Tunnel getCurrentTunnel(Vector3 position)
+        {
+            print("clit position before " + position);
+            if (position.x > XZ_INTERVAL_OFFSET)
+            {
+                position.x += XZ_INTERVAL_OFFSET;
+            }
+            else if (position.x < -XZ_INTERVAL_OFFSET)
+            {
+                position.x -= XZ_INTERVAL_OFFSET;
+            }
+            if (position.z > XZ_INTERVAL_OFFSET)
+            {
+                position.z += XZ_INTERVAL_OFFSET;
+            }
+            else if (position.z < -XZ_INTERVAL_OFFSET)
+            {
+                position.z -= XZ_INTERVAL_OFFSET;
+            }
+            Vector3Int cellPos = Dir.Vector.castToVector3Int(position);
+            print("clit position after adjustment " + position + " equals cell position " + cellPos);
+            Tunnel tunnel = getTunnelFromDict(cellPos);
+            return tunnel;
         }
 
         /**
@@ -105,6 +141,8 @@ namespace Tunnel
         {
             TunnelMapDict[cellLocation] = tunnel;
             cellList.Add(cellLocation);
+            print("add cell " + cellLocation + " belonging to " + tunnel.gameObject.name + " to map"); // should not be adding a cell
+
         }
 
         /**

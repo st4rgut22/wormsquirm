@@ -7,11 +7,14 @@ namespace Test
      * A testing class that confirms orientation of junctions + # of holes is correct 
      */
     public class TunnelMaker : MonoBehaviour
-    {      
+    {
+        [SerializeField]
+        private Rigidbody head;
+
         List<Checkpoint> checkpointList;
         int checkPointIdx;
 
-        string wormId = "wormId";
+        string wormId = "fakeId";
         private const float INSTANT_TURN = 1.0f;
         private int tunnelSegmentCounter;
         Checkpoint currentCheckpoint;
@@ -24,7 +27,6 @@ namespace Test
 
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
-
         private void Awake()
         {
             tunnelSegmentCounter = 1; // maintains count of added segments onBlockInterval event to decide when to turn
@@ -102,7 +104,7 @@ namespace Test
             }
             if (FindObjectOfType<Worm.Turn>())
             {
-                InitDecisionEvent += FindObjectOfType<Worm.Turn>().onInitDecision;
+                InitDecisionEvent -= FindObjectOfType<Worm.Turn>().onInitDecision;
             }
         }
     }

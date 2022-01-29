@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Worm
@@ -9,20 +7,26 @@ namespace Worm
         public delegate void Grow(Vector3 ringPosition);
         public event Grow GrowEvent;
 
+        public delegate void Move(Vector3 ringPosition, Direction direction);
+        public event Move MoveEvent;
+
         Tunnel.Straight prevStraightTunnel;
-        Tunnel.Tunnel prevTunnel;
 
         private void OnEnable()
         {
-            Tunnel.CollisionManager.Instance.CreateJunctionEvent += onCreateJunction;
-            FindObjectOfType<Tunnel.Factory>().AddTunnelEvent += onAddTunnel;
+            FindObjectOfType<Tunnel.NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
+            FindObjectOfType<Tunnel.ModTunnelFactory>().AddTunnelEvent += onAddTunnel;
         }
 
         // Start is called before the first frame update
-        void Start()
+        private new void Awake()
         {
+            base.Awake();
             prevStraightTunnel = null;
-            prevTunnel = null;
+        }
+
+        private void Update()
+        {
         }
 
         /**
@@ -36,28 +40,11 @@ namespace Worm
             }
         }
 
-        public Tunnel.Tunnel getCurTunnel(Direction direction)
-        {
-            if (!isLeadingTunnel)
-            {
-                return Tunnel.TunnelManager.Instance.getCurrentTunnel(ring.position, direction);
-            }
-            else
-            {
-                return prevTunnel;
-            }
-        }
-
-
         public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
         {
             if (wormId == this.wormId)
             {
-                isLeadingTunnel = true; // worm is creating a tunnel so it is leading it
-
-                prevTunnel = tunnel;
                 bool isTunnelStraight = tunnel.isTunnelType(Tunnel.Type.Name.STRAIGHT);
-                bool isTunnelCorner = tunnel.isTunnelType(Tunnel.Type.Name.CORNER);
 
                 // unregister the previous tunnel's grow event, and register the new one
                 if (prevStraightTunnel != null)
@@ -67,40 +54,30 @@ namespace Worm
                 }
                 if (isTunnelStraight)
                 {
-                    prevStraightTunnel = (Tunnel.Straight)(tunnel);
+                    prevStraightTunnel = (Tunnel.Straight) tunnel;
                     GrowEvent += prevStraightTunnel.onGrow;
                 }
-                if (isTunnelCorner)
+                else if (!directionPair.isStraight())// if the tunnel is not straight (eg one direction) then it is turnable
                 {
-                    Tunnel.Corner corner = (Tunnel.Corner)(tunnel);
-                    GetComponent<Movement>().setCompleteTurnDelegate(corner); // set handler for complete turn
+                    Tunnel.TurnableTunnel turnableTunnel = (Tunnel.TurnableTunnel)(tunnel);
+                    GetComponent<Movement>().setCompleteTurnDelegate(turnableTunnel); // set handler for complete turn
+                }
+                else
+                {
+                    GetComponent<Movement>().goStraightThroughJunction(tunnel); // create junction here 
                 }
             }
         }
-
-        /**
-         * If worm created a junction, it is entering an existing tunnel so set leading flag to false
-         * 
-         * @currentTunnel is the tunnel prior to the junction, whose creator is also entering the junction
-         */
-        public void onCreateJunction(Tunnel.Tunnel collisionTunnel, DirectionPair dirPair, Tunnel.CellMove cellMove, Tunnel.Tunnel prevTunnel)
-        {
-            if (prevTunnel.wormCreatorId == wormId)
-            {
-                isLeadingTunnel = false;
-            }
-        }
-
 
         private void OnDisable()
         {
-            if (FindObjectOfType<Tunnel.Factory>())
+            if (FindObjectOfType<Tunnel.NewTunnelFactory>())
             {
-                FindObjectOfType<Tunnel.Factory>().AddTunnelEvent -= onAddTunnel;
+                FindObjectOfType<Tunnel.NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
             }
-            if (Tunnel.CollisionManager.Instance)
+            if (FindObjectOfType<Tunnel.ModTunnelFactory>())
             {
-                Tunnel.CollisionManager.Instance.CreateJunctionEvent -= onCreateJunction;
+                FindObjectOfType<Tunnel.ModTunnelFactory>().AddTunnelEvent -= onAddTunnel;
             }
         }
     }
