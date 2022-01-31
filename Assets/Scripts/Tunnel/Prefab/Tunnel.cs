@@ -106,7 +106,7 @@ namespace Tunnel
          */
         public static Vector3 initializeCenter(Direction direction, Vector3 center)
         {
-            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
             Vector3 initialCenter = center + unitVector * CENTER_OFFSET;
             return initialCenter;
         }
@@ -119,7 +119,7 @@ namespace Tunnel
          */
         public static Vector3 getEgressPosition(Direction direction, Vector3 center)
         {
-            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
             Vector3 egressPosition =  center + unitVector * CENTER_OFFSET;
             return egressPosition;
         }
@@ -132,7 +132,7 @@ namespace Tunnel
          */
         public static Vector3 getIngressPosition(Direction direction, Vector3 center)
         {
-            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
             Vector3 egressPosition = center - unitVector * CENTER_OFFSET;
             return egressPosition;
         }
@@ -145,7 +145,7 @@ namespace Tunnel
          */
         public void setCenter(float distToEnd, Direction direction)
         {
-            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
             Vector3 blockEndPosition = transform.position + distToEnd * unitVector;
             Vector3 centerOffsetVector = unitVector * CENTER_OFFSET;
             center = blockEndPosition - centerOffsetVector;

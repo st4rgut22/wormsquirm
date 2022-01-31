@@ -47,10 +47,12 @@ namespace Worm
             ForceEvent += GetComponent<Force>().onForce;
             CompleteTurnEvent += GetComponent<Turn>().onCompleteTurn;
             MoveToWaypointEvent += GetComponent<Turn>().onMoveToWaypoint;
-            DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
             CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
-
             Tunnel.CollisionManager.Instance.InitWormPositionEvent += onInitWormPosition;
+            if (GetComponent<InputProcessor>())
+            {
+                DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
+            }
         }
 
         private void FixedUpdate()
@@ -67,7 +69,7 @@ namespace Worm
         {
             wormDir.direction = direction;
             float offset = Tunnel.TunnelManager.Instance.START_TUNNEL_RING_OFFSET;
-            Vector3 offsetVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            Vector3 offsetVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
             ring.position = initPos + offset * offsetVector;
         }
 
@@ -192,7 +194,7 @@ namespace Worm
         public void onFollowWaypoint(List<Waypoint> waypointList, DirectionPair directionPair)
         {
             egressWaypointDirection = directionPair.curDir; // save the last egress directionPair
-            Vector3 unitVector = Dir.Vector.getUnitVectorFromDirection(egressWaypointDirection);
+            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(egressWaypointDirection);
 
             if (this.waypointList.Count > 0)
             {

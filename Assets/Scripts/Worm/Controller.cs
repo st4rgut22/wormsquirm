@@ -19,9 +19,12 @@ namespace Worm
 
         private void OnEnable()
         {
-            PlayerInputEvent += FindObjectOfType<InputProcessor>().onPlayerInput;
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
             InitDecisionEvent += FindObjectOfType<Turn>().onInitDecision;
+            if (FindObjectOfType<InputProcessor>())
+            {
+                PlayerInputEvent += FindObjectOfType<InputProcessor>().onPlayerInput;
+            }
         }
 
         // Start is called before the first frame update

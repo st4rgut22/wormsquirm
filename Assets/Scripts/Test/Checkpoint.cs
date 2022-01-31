@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Checkpoint : MonoBehaviour
+public class Checkpoint
 {
     public Direction direction { get; private set; }
     public int length { get; private set; }

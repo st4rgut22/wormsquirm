@@ -63,8 +63,8 @@ namespace Dir
          */
         public static Vector3 getOffsetFromDirections(Direction direction1, Direction direction2)
         {
-            Vector3 unitVector1 = getUnitVectorFromDirection(direction1);
-            Vector3 unitVector2 = getUnitVectorFromDirection(direction2);
+            Vector3 unitVector1 = Dir.CellDirection.getUnitVectorFromDirection(direction1);
+            Vector3 unitVector2 = Dir.CellDirection.getUnitVectorFromDirection(direction2);
             Vector3 offset = (unitVector1 + unitVector2) / 2;
             return offset;
         }
@@ -72,7 +72,7 @@ namespace Dir
 
         public static Vector3Int getNextCellFromDirection(Vector3Int cellPosition, Direction direction)
         {
-            Vector3 unitVector = getUnitVectorFromDirection(direction);
+            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
             Vector3Int unitVectorInt = new Vector3Int((int)unitVector.x, (int)unitVector.y, (int)unitVector.z);
             return cellPosition + unitVectorInt;
         }
@@ -117,27 +117,6 @@ namespace Dir
                 throw new System.Exception("Not a valid direction " + direction);
             }
             return substitudedVector3;
-        }
-
-        public static Vector3 getUnitVectorFromDirection(Direction direction)
-        {
-            switch (direction)
-            {
-                case Direction.Up:
-                    return Vector3.up;
-                case Direction.Right:
-                    return Vector3.right;
-                case Direction.Left:
-                    return Vector3.left;
-                case Direction.Forward:
-                    return Vector3.forward;
-                case Direction.Back:
-                    return Vector3.back;
-                case Direction.Down:
-                    return Vector3.down;
-                default:
-                    throw new System.Exception("Not a valid direction " + direction);
-            }
         }
 
         public static float getAxisScaleFromDirection(Direction direction, Vector3 vector)

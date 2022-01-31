@@ -27,6 +27,7 @@ namespace Test
 
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
+
         private void Awake()
         {
             tunnelSegmentCounter = 1; // maintains count of added segments onBlockInterval event to decide when to turn
@@ -36,19 +37,23 @@ namespace Test
 
         private void OnEnable()
         {
-            PlayerInputEvent += FindObjectOfType<Worm.InputProcessor>().onPlayerInput;
+            if (FindObjectOfType<Worm.InputProcessor>())
+            {
+                PlayerInputEvent += FindObjectOfType<Worm.InputProcessor>().onPlayerInput;
+            }
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
             InitDecisionEvent += FindObjectOfType<Worm.Turn>().onInitDecision;
         }
 
         /**
-         * Initiate movement
+         * Tunnel maker receives a checkpoint list for a worm to execute
+         * 
+         * @TODO: worm id specifies which worm should follow the checkpoints
          */
-        private void Start()
+        public void onInitCheckpointList(List<Checkpoint> checkpointList)
         {
-            checkpointList = ExampleNetwork.threeIntersectLoopCorner;
-            currentCheckpoint = checkpointList[0];
-
+            this.checkpointList = checkpointList;
+            currentCheckpoint = this.checkpointList[0];
             InitDecisionEvent(currentCheckpoint.direction, wormId);
         }
 

@@ -24,7 +24,7 @@ namespace Tunnel
          */
         public bool isDecisionBoundaryCrossed(Tunnel tunnel, Vector3 position, Direction direction)
         {
-            Vector3 directionVector = Dir.Vector.getUnitVectorFromDirection(direction);
+            Vector3 directionVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
 
             decisionPointBoundary = new Dictionary<Direction, float>();
             setBoundaryPoints(tunnel.center);
@@ -96,7 +96,7 @@ namespace Tunnel
          */
         private float getDecisionBoundary(Direction direction, Vector3 tunnelCenter)
         {
-            Vector3 centerOffset = Dir.Vector.getUnitVectorFromDirection(direction) * Tunnel.CENTER_OFFSET;
+            Vector3 centerOffset = Dir.CellDirection.getUnitVectorFromDirection(direction) * Tunnel.CENTER_OFFSET;
 
             float offsetAlongAxis = Dir.Vector.getAxisPositionFromDirection(direction, centerOffset);
             float positionAlongAxis = Dir.Vector.getAxisPositionFromDirection(direction, tunnelCenter);

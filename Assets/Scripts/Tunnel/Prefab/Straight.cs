@@ -103,7 +103,7 @@ namespace Tunnel
                 DeadEndInstance.transform.position = deadEndPosition;
 
                 bool isBlockMultiple = Map.isDistanceMultiple(length);
-                Vector3 unitVectorInDir = Dir.Vector.getUnitVectorFromDirection(growthDirection);
+                Vector3 unitVectorInDir = Dir.CellDirection.getUnitVectorFromDirection(growthDirection);
                 int curBlockLen = (int)length;
 
                 if (isBlockMultiple)

@@ -48,7 +48,7 @@ namespace Worm
         {
             if (!isDecisionProcessing)
             {
-                unitVectorDirection = Dir.Vector.getUnitVectorFromDirection(direction);
+                unitVectorDirection = Dir.CellDirection.getUnitVectorFromDirection(direction);
 
                 Vector3 inputPosition = ring.position + unitVectorDirection * INPUT_SPEED;
 

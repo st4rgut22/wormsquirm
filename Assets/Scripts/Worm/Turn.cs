@@ -72,7 +72,7 @@ namespace Worm
 
         private Vector3 getOffsetPosition(Vector3 position, Direction direction, float offset)
         {
-            Vector3 offsetVector = Dir.Vector.getUnitVectorFromDirection(direction) * offset;
+            Vector3 offsetVector = Dir.CellDirection.getUnitVectorFromDirection(direction) * offset;
             return position + offsetVector;
         }
 

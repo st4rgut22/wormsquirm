@@ -14,4 +14,12 @@ public static class Vector
         float biggest = big > z ? big : z;
         return biggest;
     }
+
+    /**
+     * Check if two cells are adjacent
+     */
+    public static bool isAdjacent(this Vector3Int thisCell, Vector3Int otherCell)
+    {
+        return Vector3Int.Distance(thisCell, otherCell) <= 1;
+    }
 }
