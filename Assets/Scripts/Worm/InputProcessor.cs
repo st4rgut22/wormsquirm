@@ -9,7 +9,7 @@ namespace Worm
         public static float INPUT_SPEED = INSTANT_TURN; // Tunnel.Tunnel.SCALED_GROWTH_RATE; // Match the tunnel growth rate
 
         private Vector3 unitVectorDirection;
-        Tunnel.Tunnel changeDirTunnel;
+        Tunnel.Tunnel currentTunnel;
 
         private bool isDecisionProcessing;
 
@@ -23,14 +23,25 @@ namespace Worm
         {
             DecisionEvent += FindObjectOfType<Turn>().onDecision;
             DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
+
+            FindObjectOfType<Tunnel.NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
+            FindObjectOfType<Tunnel.ModTunnelFactory>().AddTunnelEvent += onAddTunnel;
         }
 
         private new void Awake()
         {
             base.Awake();
-            changeDirTunnel = null;
+            currentTunnel = null;
             unitVectorDirection = Vector3.zero; // initially the worm is not moving
             isDecisionProcessing = false;
+        }
+
+        public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        {
+            if (wormId == this.wormId)
+            {
+                currentTunnel = tunnel;
+            }
         }
 
         /**
@@ -46,28 +57,29 @@ namespace Worm
          */
         public void onPlayerInput(Direction direction)
         {
+            print("received player input event in dir " + direction + " decision processing is " + isDecisionProcessing + " clit position is " + clit.position);
+
             if (!isDecisionProcessing)
             {
                 unitVectorDirection = Dir.CellDirection.getUnitVectorFromDirection(direction);
 
                 Vector3 inputPosition = ring.position + unitVectorDirection * INPUT_SPEED;
 
-                changeDirTunnel = Tunnel.Map.getCurrentTunnel(clit.position);
-
-                bool isSameDirection = Tunnel.ActionPoint.instance.isDirectionAlongDecisionAxis(changeDirTunnel, direction);
-
+                bool isSameDirection = Tunnel.ActionPoint.instance.isDirectionAlongDecisionAxis(currentTunnel, direction);
+                print("isSameDecision is " + isSameDirection);
                 if (isSameDirection)
                 {
-                    bool isDecision = Tunnel.ActionPoint.instance.isDecisionBoundaryCrossed(changeDirTunnel, inputPosition, direction);
+                    bool isDecision = Tunnel.ActionPoint.instance.isDecisionBoundaryCrossed(currentTunnel, inputPosition, direction);
 
+                    print("isDecision is " + isDecision);
                     if (isDecision)
                     {
-                        bool isStraightTunnel = changeDirTunnel.type == Tunnel.Type.Name.STRAIGHT; // if this is the first tunnel it should be straight type
+                        bool isStraightTunnel = currentTunnel.type == Tunnel.Type.Name.STRAIGHT; // if this is the first tunnel it should be straight type
                         isDecisionProcessing = true;
 
-                        DecisionEvent += changeDirTunnel.onDecision;
-                        DecisionEvent(isStraightTunnel, direction, changeDirTunnel);
-                        DecisionEvent -= changeDirTunnel.onDecision;
+                        DecisionEvent += currentTunnel.onDecision;
+                        DecisionEvent(isStraightTunnel, direction, currentTunnel);
+                        DecisionEvent -= currentTunnel.onDecision;
                     }
                 }
 
@@ -85,6 +97,14 @@ namespace Worm
             if (FindObjectOfType<Tunnel.Map>())
             {
                 DecisionEvent -= FindObjectOfType<Tunnel.Map>().onDecision;
+            }
+            if (FindObjectOfType<Tunnel.NewTunnelFactory>())
+            {
+                FindObjectOfType<Tunnel.NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
+            }
+            if (FindObjectOfType<Tunnel.ModTunnelFactory>())
+            {
+                FindObjectOfType<Tunnel.ModTunnelFactory>().AddTunnelEvent -= onAddTunnel;
             }
         }
     }

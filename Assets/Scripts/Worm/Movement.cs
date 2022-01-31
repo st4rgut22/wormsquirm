@@ -18,6 +18,9 @@ namespace Worm
         public delegate void CompleteTurn(Direction direction); // when turn is completed notify Turn so we can proceed straight
         public event CompleteTurn CompleteTurnEvent;
 
+        public delegate void ExitTurn(Direction direction); // exiting a turn into a straight segment
+        public event ExitTurn ExitTurnEvent;
+
         public delegate void MoveToWaypoint(Waypoint waypoint); // isTurn flag allows us to override straight move
         public event MoveToWaypoint MoveToWaypointEvent;
 
@@ -45,13 +48,14 @@ namespace Worm
         {
             base.OnEnable();
             ForceEvent += GetComponent<Force>().onForce;
-            CompleteTurnEvent += GetComponent<Turn>().onCompleteTurn;
+            ExitTurnEvent += GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent += GetComponent<Turn>().onMoveToWaypoint;
             CompleteTurnEvent += FindObjectOfType<Controller>().onCompleteTurn;
             Tunnel.CollisionManager.Instance.InitWormPositionEvent += onInitWormPosition;
-            if (GetComponent<InputProcessor>())
+            DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
+            if (FindObjectOfType<Test.TunnelMaker>()) // applies to AI
             {
-                DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
+                DecisionProcessingEvent += FindObjectOfType<Test.TunnelMaker>().onDecisionProcessing;
             }
         }
 
@@ -91,11 +95,6 @@ namespace Worm
             onFollowWaypoint(waypointList, dirPair);
         }
 
-        public void setCompleteTurnDelegate(Tunnel.TurnableTunnel turnableTunnel)
-        {
-            CompleteTurnEvent += turnableTunnel.onCompleteTurn;
-        }
-
         /** 
          * Finish going straight to the exit point of a junction
          */
@@ -121,6 +120,8 @@ namespace Worm
                 throw new System.Exception("completing turn should be the last action in waypoint list");
             }
 
+            Tunnel.Tunnel tunnel = Tunnel.Map.getCurrentTunnel(clit.position);
+
             if (nextWaypointList.Count > 0) // additional turns
             {
                 waypointList = new List<Waypoint>(nextWaypointList);
@@ -130,16 +131,16 @@ namespace Worm
             {
                 clearWaypoints(waypointList);
 
-                Tunnel.Tunnel tunnel = Tunnel.Map.getCurrentTunnel(clit.position);
                 if (tunnel.type == Tunnel.Type.Name.STRAIGHT)
                 {
                     throw new System.Exception("not a turning tunnel, wrong tunnel selected");
                 }
-                wormDir.direction = egressWaypointDirection; // set the new direction as the exit direction
-                CompleteTurnEvent(egressWaypointDirection); // goes straight
-
-                CompleteTurnEvent -= ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
+                wormDir.direction = egressWaypointDirection; 
+                ExitTurnEvent(egressWaypointDirection);
             }
+            CompleteTurnEvent += ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
+            CompleteTurnEvent(egressWaypointDirection); // set the new direction as the exit direction
+            CompleteTurnEvent -= ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
         }
 
         /**
@@ -214,7 +215,7 @@ namespace Worm
             if (GetComponent<Turn>())
             {
                 ForceEvent -= GetComponent<Force>().onForce;
-                CompleteTurnEvent -= GetComponent<Turn>().onCompleteTurn;
+                CompleteTurnEvent -= GetComponent<Turn>().onExitTurn;
                 MoveToWaypointEvent -= GetComponent<Turn>().onMoveToWaypoint;
             }
             if (FindObjectOfType<Controller>())
@@ -228,6 +229,10 @@ namespace Worm
             if (Tunnel.CollisionManager.Instance != null)
             {
                 Tunnel.CollisionManager.Instance.InitWormPositionEvent -= onInitWormPosition;
+            }
+            if (FindObjectOfType<Test.TunnelMaker>()) // applies to AI
+            {
+                DecisionProcessingEvent -= GetComponent<Test.TunnelMaker>().onDecisionProcessing;
             }
         }
     }

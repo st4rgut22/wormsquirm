@@ -59,8 +59,7 @@ namespace Worm
                 }
                 else if (!directionPair.isStraight())// if the tunnel is not straight (eg one direction) then it is turnable
                 {
-                    Tunnel.TurnableTunnel turnableTunnel = (Tunnel.TurnableTunnel)(tunnel);
-                    GetComponent<Movement>().setCompleteTurnDelegate(turnableTunnel); // set handler for complete turn
+                    Tunnel.TurnableTunnel turnableTunnel = (Tunnel.TurnableTunnel)tunnel;
                 }
                 else
                 {

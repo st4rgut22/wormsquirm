@@ -112,7 +112,7 @@ namespace Worm
          * 
          * @direction is the exit direction
          */
-        public void onCompleteTurn(Direction direction)
+        public void onExitTurn(Direction direction)
         {
             wormDir.isStraight = true;
             DirectionPair straightDirectionPair = new DirectionPair(direction, direction);
