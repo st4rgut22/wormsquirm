@@ -45,7 +45,7 @@ namespace Worm
         }
 
         /**
-         * If worm is following waypoints, prevent decision making
+         * If worm is following waypoints, prevent decision making, and when finished signal readiness for more decision-making
          */
         public void onDecisionProcessing(bool isDecisionProcessing)
         {

@@ -64,9 +64,9 @@ namespace Tunnel
         /**
          * The first decision made will initialize a tunnel by emitting a Change Direction event
          */
-        public void onInitDecision(Direction direction, string wormId)
+        public void onInitDecision(Direction direction, string wormId, Vector3Int initialCell)
         {
-            CellMove cellMove = CellMove.getInitialCellMove(direction);
+            CellMove cellMove = CellMove.getInitialCellMove(direction, initialCell);
             InitWormPositionEvent(cellMove.startPosition, direction);
 
             DirectionPair sameDirPair = new DirectionPair(direction, direction);

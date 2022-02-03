@@ -23,13 +23,16 @@ namespace Test
         public delegate void ChangeDirection(DirectionPair directionPair);
         public event ChangeDirection ChangeDirectionEvent;
 
-        public delegate void InitDecision(Direction direction, string wormId);
+        public delegate void InitDecision(Direction direction, string wormId, Vector3Int initialCell);
         public event InitDecision InitDecisionEvent;
 
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
 
         private bool isReadyToTurn; // used to time changeDirection events when the worm is ready to turn
+        private string currentTunnelName;
+
+        Vector3Int initialCell = Vector3Int.zero;
 
         private void Awake()
         {
@@ -37,6 +40,7 @@ namespace Test
             checkPointIdx = 0; // does not include the initial tunnel
             Worm.InputProcessor.INPUT_SPEED = INSTANT_TURN; // turn instantly on one player input
             isReadyToTurn = false;
+            currentTunnelName = "";
         }
 
         private void OnEnable()
@@ -58,7 +62,8 @@ namespace Test
         {
             this.checkpointList = checkpointList;
             currentCheckpoint = this.checkpointList[0];
-            InitDecisionEvent(currentCheckpoint.direction, wormId);
+            print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
+            InitDecisionEvent(currentCheckpoint.direction, wormId, initialCell);
         }
 
         /**
@@ -68,10 +73,9 @@ namespace Test
         {
             if (tunnel.tag == Tunnel.Type.CORNER)
             {
-                changeDirection();
+                changeDirectionConsecutively();
             }
         }
-
 
         /**
          * Flag set when the worm enters a turn and reaches a point in the turn where it is ready to receive another changeDirection event
@@ -79,17 +83,29 @@ namespace Test
         public void onDecisionProcessing(bool isDecisionProcessing)
         {
             print("set decision processing to " + isDecisionProcessing);
-            this.isReadyToTurn = !isDecisionProcessing;
+            isReadyToTurn = !isDecisionProcessing;
         }
 
         public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel)
         {
             if (isBlockInterval)
             {
-                tunnelSegmentCounter += 1;
-                print("Added tunnel segment " + tunnelSegmentCounter);
-                StartCoroutine(changeDirection());
+                if (tunnel.containsCell(blockPositionInt))
+                {
+                    tunnelSegmentCounter += 1;
+
+                    if (currentCheckpoint.length == tunnelSegmentCounter && checkPointIdx < checkpointList.Count)
+                    {
+                        updateCheckpoint();
+                    }
+                }
             }
+            else if (currentCheckpoint.length == 1 && tunnel.name != currentTunnelName) // start of next tunnel
+            {
+                updateCheckpoint();
+            }
+
+            currentTunnelName = tunnel.name;
         }
 
         /**
@@ -98,31 +114,32 @@ namespace Test
         private void updateCheckpoint()
         {
             checkPointIdx++;
+            tunnelSegmentCounter = 1;
             currentCheckpoint = checkpointList[checkPointIdx];
-            tunnelSegmentCounter = 1; // reset the counter
             PlayerInputEvent(currentCheckpoint.direction); // go in new direction, but corner block wont be created until straight block has reached an interval length
+            print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
+            if (currentCheckpoint.length == 0)
+            {
+                StartCoroutine(changeDirectionConsecutively());
+            }
         }
 
         /**
          * Execute turn if block matches decision cell
          */
-        IEnumerator changeDirection()
+        IEnumerator changeDirectionConsecutively()
         {
-            while (currentCheckpoint.length == 1) // consecutive turn is made
+            if (currentCheckpoint.length == 0)
             {
-                if (isReadyToTurn) // break when the decision is done begin processed (eg worm reaches center of turn tunnel)
+                while (true)
                 {
-                    updateCheckpoint();
-                    isReadyToTurn = false;
-                    break;
-                }
-                yield return null;
-            }
-            if (currentCheckpoint.length != 1 && currentCheckpoint.length == tunnelSegmentCounter)
-            {
-                if (checkPointIdx < checkpointList.Count)
-                {
-                    updateCheckpoint();
+                    if (isReadyToTurn) // break when the decision is done begin processed (eg worm reaches center of turn tunnel)
+                    {
+                        updateCheckpoint();
+                        isReadyToTurn = false;
+                        break;
+                    }
+                    yield return null;
                 }
             }
         }

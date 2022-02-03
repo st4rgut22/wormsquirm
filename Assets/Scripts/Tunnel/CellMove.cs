@@ -22,9 +22,9 @@ namespace Tunnel
             return new CellMove(tunnel, directionPair.prevDir); // get cell position using ingress direction going into the next cell
         }
 
-        public static CellMove getInitialCellMove(Direction direction)
+        public static CellMove getInitialCellMove(Direction direction, Vector3Int initialCell)
         {
-            return new CellMove(direction, TunnelManager.Instance.initialCell); // on game start, there is no previous direction so use current direction                
+            return new CellMove(direction, initialCell); // on game start, there is no previous direction so use current direction                
         }
 
         /**

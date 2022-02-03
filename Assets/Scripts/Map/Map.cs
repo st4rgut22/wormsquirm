@@ -20,7 +20,7 @@ namespace Tunnel
 
         private void Awake()
         {
-            cellList = new List<Vector3Int>() { TunnelManager.Instance.initialCell };
+            cellList = new List<Vector3Int>(); // { TunnelManager.Instance.initialCell };
             TunnelMapDict = new Dictionary<Vector3Int, Tunnel>();
             isTurnDecision = false;
         }

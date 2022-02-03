@@ -31,9 +31,8 @@ namespace Map
         /**
          * Initialize landmarks in map
          */
-        private new void Awake()
+        private void Start()
         {
-            base.Awake();
             if (enableLandmarks)
             {
                 obstacleDict = new Dictionary<Vector3Int, GameObject>();
@@ -94,14 +93,12 @@ namespace Map
          */
         private void initializeRandomGoal(Dictionary<Vector3Int, GameObject>prohibitedCellDict)
         {
-            float originDist = 0;
-
-            while (originDist < MINIMUM_GOAL_DIST)
+            while (true)
             {
                 goal = getRandomCell();
                 if (!prohibitedCellDict.ContainsKey(goal))
                 {
-                    originDist = Vector3Int.Distance(goal, Tunnel.TunnelManager.Instance.initialCell);
+                    break;
                 }
             }
             Goal.instantiate(goal, ObstacleNetwork);

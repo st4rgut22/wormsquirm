@@ -126,7 +126,7 @@ namespace Worm
         /**
          * Setup the initial direciton
          */
-        public void onInitDecision(Direction direction, string wormId)
+        public void onInitDecision(Direction direction, string wormId, Vector3Int initialCell)
         {
             directionPair.curDir = direction;
         }

@@ -14,13 +14,11 @@ namespace Tunnel
 
         protected void OnEnable()
         {
+            AddTunnelEvent += TunnelManager.Instance.onAddTunnel;
+
             if (FindObjectOfType<Map>())
             {
                 AddTunnelEvent += FindObjectOfType<Map>().onAddTunnel;
-            }
-            if (FindObjectOfType<TunnelManager>())
-            {
-                AddTunnelEvent += FindObjectOfType<TunnelManager>().onAddTunnel;
             }
             if (FindObjectOfType<Test.TunnelMaker>())
             {

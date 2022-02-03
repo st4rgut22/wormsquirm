@@ -19,6 +19,8 @@ namespace Worm
 
         protected string wormId = "fakeId"; // TEMPORARY, later assign ids from worm manager
 
+        protected Vector3Int initialCell = Vector3Int.zero;
+
         public delegate void ChangeDirection(DirectionPair directionPair, string wormId);
         public event ChangeDirection ChangeDirectionEvent;
 

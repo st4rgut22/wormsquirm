@@ -12,7 +12,7 @@ namespace Worm
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
 
-        public delegate void InitDecision(Direction direction, string wormId);
+        public delegate void InitDecision(Direction direction, string wormId, Vector3Int initialCell);
         public event InitDecision InitDecisionEvent;
 
         private bool isGameStart;
@@ -64,7 +64,7 @@ namespace Worm
 
                 if (isGameStart)
                 {
-                    InitDecisionEvent(localDirection, wormId);
+                    InitDecisionEvent(localDirection, wormId, initialCell);
                     isGameStart = false;
                 }
                 else if (PlayerInputEvent != null)
@@ -79,10 +79,6 @@ namespace Worm
             if (FindObjectOfType<Movement>())
             {
                 PlayerInputEvent -= FindObjectOfType<InputProcessor>().onPlayerInput;
-            }
-            if (FindObjectOfType<Tunnel.Map>())
-            {
-                InitDecisionEvent -= Tunnel.CollisionManager.Instance.onInitDecision;
             }
             if (FindObjectOfType<Turn>())
             {

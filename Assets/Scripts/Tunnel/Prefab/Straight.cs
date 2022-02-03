@@ -177,7 +177,7 @@ namespace Tunnel
             float distToRing = Mathf.Abs(dist - offsetOriginDist); // distance between position of worm (ahead of tunnel) and tunnel
             float totalDist = distToRing + TunnelManager.Instance.RING_OFFSET;
 
-            if (roundedLength != -1 && roundedLength > lastBlockLen) // skipped block interval
+            if (roundedLength != 0 && roundedLength > lastBlockLen) // skipped block interval
             {
                 print("prev block is " + roundedLength + " length is " + getLength() + " last added block is " + lastBlockLen);
                 totalDist = roundedLength;
@@ -185,7 +185,7 @@ namespace Tunnel
 
             float scale = getScale(totalDist);
 
-            print("worm ring position is " + position.y + " rounded scale is " + scale);
+            print("worm ring position is " + position.y + " rounded scale is " + scale.ToString("F4"));
 
             Vector3 curScale = transform.localScale;
             transform.localScale = new Vector3(curScale.x, scale, curScale.z);

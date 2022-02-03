@@ -6,46 +6,32 @@ namespace Test
 {
     public class AstarVisualizer : MonoBehaviour
     {
-        private void OnEnable()
-        {
-            if (FindObjectOfType<Astar>())
-            {
-                FindObjectOfType<Astar>().astarPathEvent += onAstarPath;
-            }
-        }
-
         /**
          * Visualize the astar path the worm will take to get to the goal
          * 
          * @gridCellPathList is the list of cell posiitons along the path
          * @nullCell initially set to a default value, which is the default null value
          */
-        private void visualizePath(List<Vector3Int> gridCellPathList, Vector3 nullCell)
+        private void visualizePath(List<Vector3Int> gridCellPathList)
         {
-            Vector3 lastCell = nullCell;
-            foreach (Vector3Int gridCell in gridCellPathList)
+            for (int i=1;i<gridCellPathList.Count;i++)
             {
+                Vector3Int gridCell = gridCellPathList[i];
+                Vector3Int prevGridCell = gridCellPathList[i - 1];
+                print("grid cell is " + gridCell);
                 // convert cellPos to center of cell
                 Vector3 cellPos = MapUtility.getCellPos(gridCell);
-                if (!lastCell.Equals(nullCell))
+                Vector3 prevGridCellPos = MapUtility.getCellPos(prevGridCell);
+                if (i > 0)
                 {
-                    Debug.DrawLine(lastCell, cellPos, Color.green, 60);
+                    Debug.DrawLine(prevGridCellPos, cellPos, Color.green, 60);
                 }
-                lastCell = cellPos;
             }
         }
 
-        public void onAstarPath(List<Vector3Int>gridCellPathList, Vector3 nullCell)
+        public void onAstarPath(List<Vector3Int>gridCellPathList)
         {
-            visualizePath(gridCellPathList, nullCell);
-        }
-
-        private void OnDisable()
-        {
-            if (FindObjectOfType<Astar>())
-            {
-                FindObjectOfType<Astar>().astarPathEvent -= onAstarPath;
-            }
+            visualizePath(gridCellPathList);
         }
     }
 }

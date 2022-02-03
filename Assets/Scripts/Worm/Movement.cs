@@ -41,7 +41,7 @@ namespace Worm
             base.Awake();
             waypointList = new List<Waypoint>();
             nextWaypointList = new List<Waypoint>();
-            transform.position = Tunnel.TunnelManager.Instance.initialCell;
+            transform.position = initialCell;
         }
 
         private new void OnEnable() 

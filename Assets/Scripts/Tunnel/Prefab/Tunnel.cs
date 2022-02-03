@@ -14,8 +14,8 @@ namespace Tunnel
         protected const float MARGIN_OF_ERROR = .07f;
         protected const float WALL_THICKNESS = .25f;
 
-        public static int BLOCK_SIZE = 1;
-        public const int SCALE_TO_LENGTH = 2; // scale of 1 : 2 world units
+        public static float BLOCK_SIZE = 1;
+        public const float SCALE_TO_LENGTH = 2; // scale of 1 : 2 world units
         public const float SCALED_GROWTH_RATE = GROWTH_RATE * SCALE_TO_LENGTH;
 
         public static float CENTER_OFFSET = BLOCK_SIZE / 2.0f;
@@ -70,6 +70,11 @@ namespace Tunnel
         public void addCellToList(Vector3Int cellPosition)
         {
             cellPositionList.Add(cellPosition);
+        }
+
+        public bool containsCell(Vector3Int cell)
+        {
+            return cellPositionList.Contains(cell);
         }
 
         public Vector3Int getLastCellPosition()
