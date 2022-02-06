@@ -18,12 +18,15 @@ namespace Map
         [SerializeField]
         private Transform ObstacleNetwork;
 
+        private GameObject GoalInstance;
+
         public delegate void initLandmarks(Dictionary<Vector3Int, GameObject> obstacleDict, Vector3Int goalLocation);
         public initLandmarks initLandmarksEvent;
 
         const int MAP_LENGTH = 10; // distance from origin to one edge of the map
         const int OBSTACLE_COUNT = 1500; // # of obstacles increases with difficulty
-        const float MINIMUM_GOAL_DIST = 7; // minimum distance the goal is from the origin. Must be positive
+
+        Vector3Int defaultGoal = Vector3Int.zero;
 
         Dictionary<Vector3Int, GameObject> obstacleDict; // cells the worm is not allowed to enter
         public Vector3Int goal { get; private set; }
@@ -31,15 +34,44 @@ namespace Map
         /**
          * Initialize landmarks in map
          */
-        private void Start()
+        public override void Awake()
         {
-            if (enableLandmarks)
+            base.Awake();
+            goal = defaultGoal;
+        }
+
+
+        /**
+         * Create the landmarks for a worm to navigate around
+         */
+        public void onInitiateLandmarks()
+        {
+            if (!goal.Equals(defaultGoal) || (obstacleDict != null && obstacleDict.Count > 0))
             {
-                obstacleDict = new Dictionary<Vector3Int, GameObject>();
-                initializeLandmarks(); // populate obstacle dictionary
-                goal = new Vector3Int(MAP_LENGTH, MAP_LENGTH, MAP_LENGTH); // initializeGoal(obstacleDict);
-                Goal.instantiate(goal, ObstacleNetwork);
-                initLandmarksEvent(obstacleDict, goal);
+                resetLandmarks();
+            }
+            obstacleDict = new Dictionary<Vector3Int, GameObject>();
+            initializeLandmarks(); // populate obstacle dictionary
+            goal = new Vector3Int(MAP_LENGTH, MAP_LENGTH, MAP_LENGTH); // initializeGoal(obstacleDict);
+            GoalInstance = Goal.instantiate(goal, ObstacleNetwork);
+            initLandmarksEvent(obstacleDict, goal);
+        }
+
+        /**
+         * If landmarks already exist destroy themm before recreating them
+         */
+        private void resetLandmarks()
+        {
+            if (GoalInstance)
+            {
+                Destroy(GoalInstance);
+            }
+            if (obstacleDict.Count > 0)
+            {
+                foreach(KeyValuePair<Vector3Int, GameObject> obstacleEntry in obstacleDict) // destroy all pre-existing obstacle gameobjects
+                {
+                    Destroy(obstacleEntry.Value);
+                }
             }
         }
 

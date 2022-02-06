@@ -30,7 +30,7 @@ public class GenericSingletonClass<T> : MonoBehaviour where T : Component
             instance = this as T;
             DontDestroyOnLoad(this.gameObject);
         }
-        else
+        else if (instance != this)
         {
             Destroy(gameObject);
         }

@@ -88,8 +88,8 @@ namespace Worm
             Vector3 exitWaypointPosition = getOffsetPosition(centerWaypointPosition, directionPair.curDir, Tunnel.Tunnel.CENTER_OFFSET);
 
             Waypoint startWP = new Waypoint(startWaypointPosition, MoveType.ENTRANCE, directionPair.prevDir);
-            Waypoint cellWP = new Waypoint(centerWaypointPosition, MoveType.CENTER, directionPair.curDir);
-            Waypoint exitWP = new Waypoint(exitWaypointPosition, MoveType.EXIT, directionPair.curDir);
+            Waypoint cellWP = new Waypoint(centerWaypointPosition, MoveType.CENTER, directionPair.prevDir);
+            Waypoint exitWP = new Waypoint(exitWaypointPosition, MoveType.EXIT, directionPair.prevDir);
 
             waypointList = new List<Waypoint> { startWP, cellWP, exitWP };
             FollowWaypointEvent(waypointList, directionPair);

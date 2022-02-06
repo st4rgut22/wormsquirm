@@ -23,6 +23,17 @@ namespace Tunnel
             TunnelList = new List<Tunnel>();
         }
 
+        /**
+         * Reset the tunnel network state by destroying all tunnels
+         */
+        public void onDestroyTunnelNetwork()
+        {
+            TunnelList.ForEach((Tunnel tunnel) =>
+            {
+                Destroy(tunnel.gameObject);
+            });
+        }
+
         public void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
         {
             TunnelList.Add(tunnel);

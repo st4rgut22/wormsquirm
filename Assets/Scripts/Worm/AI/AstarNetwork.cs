@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,6 +13,7 @@ namespace Map
         private void OnEnable()
         {
             initCheckpointEvent += FindObjectOfType<Test.TunnelMaker>().onInitCheckpointList;
+            initCheckpointEvent += Test.WormCollider.Instance.onInitCheckpointList;
         }
 
         /**
@@ -64,6 +64,10 @@ namespace Map
             if (FindObjectOfType<Test.TunnelMaker>())
             {
                 initCheckpointEvent -= FindObjectOfType<Test.TunnelMaker>().onInitCheckpointList;
+            }
+            if (FindObjectOfType<Test.WormCollider>())
+            {
+                initCheckpointEvent += Test.WormCollider.Instance.onInitCheckpointList;
             }
         }
     }

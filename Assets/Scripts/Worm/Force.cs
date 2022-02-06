@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace Worm
@@ -13,17 +14,21 @@ namespace Worm
         [SerializeField]
         private float torqueMagnitude;
 
-        private Rigidbody movingRigidbody;
-
         [SerializeField]
         private float maxVelocity;
 
-        private Vector3 directionalVector = Vector3.zero;
+        [SerializeField]
+        private float angularDrag;
 
-        // Start is called before the first frame update
-        void Start()
+        [SerializeField]
+        private float originalAngularDrag;
+
+        [SerializeField]
+        private bool isAngularDragSet;
+
+        private new void Awake()
         {
-            movingRigidbody = ring;
+            base.Awake();
         }
 
         private void addForce(Vector3 forceVector, Rigidbody rigidbody)
@@ -38,12 +43,6 @@ namespace Worm
             {
                 print("braking too fast!");
             }
-        }
-
-        private void addTorque(Vector3 torqueVector, Rigidbody rigidbody)
-        {
-            print("adding torque " + torqueVector);
-            rigidbody.AddTorque(torqueVector);
         }
 
         /**
@@ -62,12 +61,12 @@ namespace Worm
          */
         public void onTorque(DirectionPair dirPair, Waypoint waypoint)
         {
-            if (waypoint.move != MoveType.EXIT && waypoint.move != MoveType.OFFSET)
-            {       
+            if (waypoint.move == MoveType.ENTRANCE || waypoint.move == MoveType.CENTER || waypoint.move == MoveType.EXIT)
+            {
                 Vector3 torqueUnitVector = Dir.DirectionForce.getTorqueVectorFromDirection(dirPair);
                 Vector3 torqueVector = torqueUnitVector * torqueMagnitude;
-                print("apply torque vector " + torqueVector);
-                addTorque(torqueVector, torqueBody);
+                print("apply torque vector " + torqueVector + " for dirPair " + dirPair.prevDir + " , " + dirPair.curDir + " on move " + waypoint.move);
+                torqueBody.AddTorque(torqueVector);
             }
         }   
     }

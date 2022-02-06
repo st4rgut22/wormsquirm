@@ -178,7 +178,7 @@ namespace Worm
                 return;
             }
 
-            waypointIndex = waypointList.FindIndex(wp => waypoint.position.Equals(wp.position));
+            waypointIndex = waypointList.FindIndex(wp => waypoint.position.Equals(wp.position)); // EXIT pos of prevCell equals the ENTER pos of current cell
             if (waypointIndex < waypointList.Count - 1) // if not the last waypoint in the list
             {
                 waypointIndex += 1;

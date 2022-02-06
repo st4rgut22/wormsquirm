@@ -20,10 +20,6 @@ namespace Tunnel
             {
                 AddTunnelEvent += FindObjectOfType<Map>().onAddTunnel;
             }
-            if (FindObjectOfType<Test.TunnelMaker>())
-            {
-                AddTunnelEvent += FindObjectOfType<Test.TunnelMaker>().onAddTunnel;
-            }
         }
 
         /**
@@ -47,10 +43,6 @@ namespace Tunnel
             if (FindObjectOfType<TunnelManager>())
             {
                 AddTunnelEvent -= FindObjectOfType<TunnelManager>().onAddTunnel;
-            }
-            if (FindObjectOfType<Test.TunnelMaker>())
-            {
-                AddTunnelEvent -= FindObjectOfType<Test.TunnelMaker>().onAddTunnel;
             }
         }
     }

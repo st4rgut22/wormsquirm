@@ -51,6 +51,7 @@ namespace Test
             }
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
             InitDecisionEvent += FindObjectOfType<Worm.Turn>().onInitDecision;
+            FindObjectOfType<Worm.Turn>().ReachWaypointEvent += onReachWaypoint;
         }
 
         /**
@@ -66,14 +67,11 @@ namespace Test
             InitDecisionEvent(currentCheckpoint.direction, wormId, initialCell);
         }
 
-        /**
-         * Since block interval events don't include corners which can also be decision cells, need to listen for corner creation
-         */
-        public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        public void onReachWaypoint(Worm.Waypoint waypoint)
         {
-            if (tunnel.tag == Tunnel.Type.CORNER)
+            if (currentCheckpoint.length == 0 && waypoint.move == Worm.MoveType.CENTER)
             {
-                changeDirectionConsecutively();
+                StartCoroutine(changeDirectionConsecutively());
             }
         }
 
@@ -94,7 +92,7 @@ namespace Test
                 {
                     tunnelSegmentCounter += 1;
 
-                    if (currentCheckpoint.length == tunnelSegmentCounter && checkPointIdx < checkpointList.Count)
+                    if (currentCheckpoint.length == tunnelSegmentCounter)
                     {
                         updateCheckpoint();
                     }
@@ -114,13 +112,12 @@ namespace Test
         private void updateCheckpoint()
         {
             checkPointIdx++;
-            tunnelSegmentCounter = 1;
-            currentCheckpoint = checkpointList[checkPointIdx];
-            PlayerInputEvent(currentCheckpoint.direction); // go in new direction, but corner block wont be created until straight block has reached an interval length
-            print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
-            if (currentCheckpoint.length == 0)
+            if (checkPointIdx < checkpointList.Count)
             {
-                StartCoroutine(changeDirectionConsecutively());
+                tunnelSegmentCounter = 1;
+                currentCheckpoint = checkpointList[checkPointIdx];
+                PlayerInputEvent(currentCheckpoint.direction); // go in new direction, but corner block wont be created until straight block has reached an interval length
+                print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
             }
         }
 
@@ -158,6 +155,7 @@ namespace Test
             if (FindObjectOfType<Worm.Turn>())
             {
                 InitDecisionEvent -= FindObjectOfType<Worm.Turn>().onInitDecision;
+                FindObjectOfType<Worm.Turn>().ReachWaypointEvent -= onReachWaypoint;
             }
         }
     }
