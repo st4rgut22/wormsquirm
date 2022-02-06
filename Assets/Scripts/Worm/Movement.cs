@@ -232,7 +232,7 @@ namespace Worm
             }
             if (FindObjectOfType<Test.TunnelMaker>()) // applies to AI
             {
-                DecisionProcessingEvent -= GetComponent<Test.TunnelMaker>().onDecisionProcessing;
+                DecisionProcessingEvent -= FindObjectOfType<Test.TunnelMaker>().onDecisionProcessing;
             }
         }
     }

@@ -10,7 +10,7 @@ namespace Tunnel
         public delegate void InitWormPosition(Vector3 position, Direction direction);
         public event InitWormPosition InitWormPositionEvent;
 
-        public delegate void Stop(string tunnelId);
+        public delegate void Stop(Straight tunnel);
         public event Stop StopEvent;
 
         public delegate void CreateJunction(Tunnel collisionTunnel, DirectionPair dirPair, CellMove cellMove, Tunnel currentTunnel);
@@ -27,6 +27,8 @@ namespace Tunnel
             SliceTunnelEvent += FindObjectOfType<Intersect.Slicer>().sliceTunnel;
 
             CreateJunctionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunction;
+
+            StopEvent += TunnelManager.Instance.onStop;
         }
 
         /**
@@ -54,9 +56,9 @@ namespace Tunnel
             {
                 Destroy(nextTunnel.gameObject);
             }
-            if (StopEvent != null) // it may be the case where StopEvent is already unsubscribed because tunnel has already been stopped. For example onChangeDirection
+            if (StopEvent != null && curTunnel.type == Type.Name.STRAIGHT) // it may be the case where StopEvent is already unsubscribed because tunnel has already been stopped. For example onChangeDirection
             {
-                StopEvent(curTunnel.gameObject.name);
+                StopEvent((Straight)curTunnel);
             }
             CreateJunctionEvent(nextTunnel, directionPair, cellMove, curTunnel);
         }
@@ -84,9 +86,9 @@ namespace Tunnel
             Tunnel prevTunnel = TunnelManager.Instance.getLastTunnel();
             // get cell from map, check if tunnel w/ egress at curDirection already exists
             CellMove cellMove = CellMove.getCellMove(prevTunnel, directionPair);
-            if (StopEvent != null)
+            if (StopEvent != null && prevTunnel.type == Type.Name.STRAIGHT)
             {
-                StopEvent(prevTunnel.gameObject.name); // Stop the last growing tunnel
+                StopEvent((Straight)prevTunnel); // Stop the last growing tunnel
             }
             Tunnel existingTunnel = Map.getTunnelFromDict(cellMove.cell);
 
@@ -114,6 +116,10 @@ namespace Tunnel
             if (FindObjectOfType<Factory>())
             {
                 CreateTunnelEvent -= FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
+            }
+            if (FindObjectOfType<TunnelManager>())
+            {
+                StopEvent -= TunnelManager.Instance.onStop;
             }
         }
     }

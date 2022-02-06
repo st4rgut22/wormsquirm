@@ -78,6 +78,10 @@ namespace Worm
             {
                 FindObjectOfType<Tunnel.ModTunnelFactory>().AddTunnelEvent -= onAddTunnel;
             }
+            if (prevStraightTunnel != null)
+            {
+                GrowEvent -= prevStraightTunnel.onGrow;
+            }
         }
     }
 

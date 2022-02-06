@@ -13,10 +13,16 @@ namespace Map
         private GameObject Goal;
 
         [SerializeField]
+        private Vector3Int goal; // originally <10,10,10>
+
+        [SerializeField]
         private GameObject Obstacle;
 
         [SerializeField]
         private Transform ObstacleNetwork;
+
+        [SerializeField]
+        private int obstacleCount; // originally 1500
 
         private GameObject GoalInstance;
 
@@ -24,12 +30,10 @@ namespace Map
         public initLandmarks initLandmarksEvent;
 
         const int MAP_LENGTH = 10; // distance from origin to one edge of the map
-        const int OBSTACLE_COUNT = 1500; // # of obstacles increases with difficulty
 
         Vector3Int defaultGoal = Vector3Int.zero;
 
         Dictionary<Vector3Int, GameObject> obstacleDict; // cells the worm is not allowed to enter
-        public Vector3Int goal { get; private set; }
 
         /**
          * Initialize landmarks in map
@@ -37,7 +41,7 @@ namespace Map
         public override void Awake()
         {
             base.Awake();
-            goal = defaultGoal;
+            //goal = defaultGoal;
         }
 
 
@@ -52,7 +56,6 @@ namespace Map
             }
             obstacleDict = new Dictionary<Vector3Int, GameObject>();
             initializeLandmarks(); // populate obstacle dictionary
-            goal = new Vector3Int(MAP_LENGTH, MAP_LENGTH, MAP_LENGTH); // initializeGoal(obstacleDict);
             GoalInstance = Goal.instantiate(goal, ObstacleNetwork);
             initLandmarksEvent(obstacleDict, goal);
         }
@@ -66,7 +69,7 @@ namespace Map
             {
                 Destroy(GoalInstance);
             }
-            if (obstacleDict.Count > 0)
+            if (obstacleDict != null && obstacleDict.Count > 0)
             {
                 foreach(KeyValuePair<Vector3Int, GameObject> obstacleEntry in obstacleDict) // destroy all pre-existing obstacle gameobjects
                 {
@@ -106,7 +109,7 @@ namespace Map
          */
         private void initializeLandmarks()
         {
-            for (int i = 0; i < OBSTACLE_COUNT; i++)
+            for (int i = 0; i < obstacleCount; i++)
             {
                 Vector3Int randObstaclePosition = getRandomCell();
                 bool isBlockingOrigin = randObstaclePosition.isAdjacent(Tunnel.TunnelManager.Instance.initialCell);

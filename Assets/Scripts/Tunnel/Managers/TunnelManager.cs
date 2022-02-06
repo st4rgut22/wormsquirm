@@ -5,7 +5,11 @@ namespace Tunnel
 {
     public class TunnelManager : GenericSingletonClass<TunnelManager>
     {
+        public delegate void Stop();
+        public event Stop StopEvent;
+
         private List<Tunnel> TunnelList; // list consisting of straight tunnels and corner tunnels
+        private List<Straight> GrowingTunnelList; // list of straight tunnels that are currently growing
 
         public Vector3Int initialCell = Vector3Int.zero; // initial cell
 
@@ -21,22 +25,54 @@ namespace Tunnel
             base.Awake();
             START_TUNNEL_RING_OFFSET = 1 - RING_OFFSET; // Distance between start of tunnel and worm ring
             TunnelList = new List<Tunnel>();
+            GrowingTunnelList = new List<Straight>();
         }
 
         /**
-         * Reset the tunnel network state by destroying all tunnels
+         * Reset the tunnel network state by stopping all growing tunnels and clearing lists
          */
-        public void onDestroyTunnelNetwork()
+        public void onResetTunnelNetwork()
         {
-            TunnelList.ForEach((Tunnel tunnel) =>
+            GrowingTunnelList.ForEach((Straight tunnel) =>
             {
-                Destroy(tunnel.gameObject);
+                stopTunnel(tunnel);
             });
+
+            GrowingTunnelList.Clear();
+            TunnelList.Clear();
+        }
+
+        /**
+         * Remove stopped tunnel from list of growing tunnels, and notify the affected tunnel
+         */
+        public void onStop(Straight straightTunnel)
+        {
+            if (GrowingTunnelList.Contains(straightTunnel))
+            {
+                GrowingTunnelList.Remove(straightTunnel);
+                stopTunnel(straightTunnel);
+            }
+            else
+            {
+                throw new System.Exception("Cannot find tunnel " + straightTunnel.gameObject.name + " to stop");
+            }
+        }
+
+        private void stopTunnel(Straight tunnel)
+        {
+            StopEvent += tunnel.onStop;
+            StopEvent();
+            StopEvent -= tunnel.onStop;
         }
 
         public void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
         {
             TunnelList.Add(tunnel);
+
+            if (tunnel.type == Type.Name.STRAIGHT)
+            {
+                GrowingTunnelList.Add((Straight) tunnel);
+            }
         }
 
         public Tunnel getLastTunnel()

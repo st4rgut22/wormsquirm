@@ -19,8 +19,6 @@ namespace Tunnel
         // Start is called before the first frame update
         void OnEnable()
         {
-            FindObjectOfType<CollisionManager>().StopEvent += onStop;
-
             BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
 
@@ -94,7 +92,7 @@ namespace Tunnel
          */
         public void onGrow( Vector3 position)
         {
-            if (!isStopped)
+            if (!isStopped && DeadEndInstance != null)
             {
                 setTunnelScale(position); // set tunnel scale using worm's position
                 
@@ -137,16 +135,12 @@ namespace Tunnel
         /**
          * Stop subscribing to events
          */
-        private void onStop(string tunnelId)
+        public void onStop()
         {
-            if (gameObject.name == tunnelId)
-            {
-                isStopped = true;
-                FindObjectOfType<CollisionManager>().StopEvent -= onStop;
-                print("destroy deadEnd " + DeadEndInstance.name);
-                destroyDeadEnd();
-                BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
-            }
+            isStopped = true;
+            print("destroy deadEnd " + DeadEndInstance.name);
+            destroyDeadEnd();
+            BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
         }
 
         private void destroyDeadEnd()
@@ -193,10 +187,6 @@ namespace Tunnel
 
         void OnDisable()
         {
-            if (FindObjectOfType<CollisionManager>()) // check if TunnelManager hasn't been deleted before this GO
-            {
-                FindObjectOfType<CollisionManager>().StopEvent -= onStop;
-            }
             if (FindObjectOfType<Map>())
             {
                 BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval;

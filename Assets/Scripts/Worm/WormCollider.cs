@@ -5,13 +5,13 @@ using UnityEngine.SceneManagement;
 
 namespace Test
 {
-    public class WormCollider : GenericSingletonClass<WormCollider>
+    public class WormCollider : MonoBehaviour
     {
-        public delegate void initiateAstar();
-        public event initiateAstar initiateAstarEvent;
+        public delegate void initiatePathfinding();
+        public event initiatePathfinding initiatePathfindingEvent;
 
-        public delegate void destroyTunnelNetwork();
-        public event destroyTunnelNetwork destroyTunnelNetworkEvent;
+        public delegate void resetTunnelNetwork();
+        public event resetTunnelNetwork resetTunnelNetworkEvent;
 
         private bool isGameReset; // determine the state of the game
 
@@ -24,14 +24,14 @@ namespace Test
 
         private void OnEnable()
         {
-            initiateAstarEvent += Map.MapLandmarks.Instance.onInitiateLandmarks;
-            destroyTunnelNetworkEvent += Tunnel.TunnelManager.Instance.onDestroyTunnelNetwork;
+            initiatePathfindingEvent += Map.MapLandmarks.Instance.onInitiateLandmarks;
+            resetTunnelNetworkEvent += Tunnel.TunnelManager.Instance.onResetTunnelNetwork;
         }
 
         // Start is called before the first frame update
         void Start()
         {
-            initiateAstarEvent();
+            initiatePathfindingEvent();
         }
 
         public void onInitCheckpointList(List<Checkpoint> checkpointList)
@@ -44,6 +44,7 @@ namespace Test
             if (collision.gameObject.tag == GOAL_TAG && !isGameReset) // game reset flag is used to make sure we only reset the game once
             {
                 isGameReset = true;
+                resetTunnelNetworkEvent();
                 SceneManager.LoadScene(0);
             }
         }
@@ -52,11 +53,11 @@ namespace Test
         {
             if (FindObjectOfType<Map.MapLandmarks>())
             {
-                initiateAstarEvent -= Map.MapLandmarks.Instance.onInitiateLandmarks;
+                initiatePathfindingEvent -= Map.MapLandmarks.Instance.onInitiateLandmarks;
             }
             if (FindObjectOfType<Tunnel.TunnelManager>())
             {
-                destroyTunnelNetworkEvent -= Tunnel.TunnelManager.Instance.onDestroyTunnelNetwork;
+                resetTunnelNetworkEvent -= Tunnel.TunnelManager.Instance.onResetTunnelNetwork;
             }
         }
     }

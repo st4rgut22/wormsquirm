@@ -13,7 +13,7 @@ namespace Map
         private void OnEnable()
         {
             initCheckpointEvent += FindObjectOfType<Test.TunnelMaker>().onInitCheckpointList;
-            initCheckpointEvent += Test.WormCollider.Instance.onInitCheckpointList;
+            initCheckpointEvent += FindObjectOfType<Test.WormCollider>().onInitCheckpointList;
         }
 
         /**
@@ -67,7 +67,7 @@ namespace Map
             }
             if (FindObjectOfType<Test.WormCollider>())
             {
-                initCheckpointEvent += Test.WormCollider.Instance.onInitCheckpointList;
+                initCheckpointEvent += FindObjectOfType<Test.WormCollider>().onInitCheckpointList;
             }
         }
     }

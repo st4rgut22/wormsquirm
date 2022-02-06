@@ -215,8 +215,10 @@ namespace Worm
 
         private void OnDisable()
         {
-            FindObjectOfType<Map.MapLandmarks>().initLandmarksEvent -= onInitLandmarks;
-
+            if (FindObjectOfType<Map.MapLandmarks>())
+            {
+                FindObjectOfType<Map.MapLandmarks>().initLandmarksEvent -= onInitLandmarks;
+            }
             if (FindObjectOfType<Map.AstarNetwork>())
             {
                 astarPathEvent -= FindObjectOfType<Map.AstarNetwork>().onAstarPath;
