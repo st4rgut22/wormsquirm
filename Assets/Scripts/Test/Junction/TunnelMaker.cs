@@ -2,12 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Test
+namespace Worm
 {
     /**
      * A testing class that confirms orientation of junctions + # of holes is correct 
      */
-    public class TunnelMaker : MonoBehaviour
+    public class TunnelMaker : WormBody
     {
         [SerializeField]
         private Rigidbody head;
@@ -15,13 +15,9 @@ namespace Test
         List<Checkpoint> checkpointList;
         int checkPointIdx;
 
-        string wormId = "fakeId";
         private const float INSTANT_TURN = 1.0f;
         private int tunnelSegmentCounter;
         Checkpoint currentCheckpoint;
-
-        public delegate void ChangeDirection(DirectionPair directionPair);
-        public event ChangeDirection ChangeDirectionEvent;
 
         public delegate void InitDecision(Direction direction, string wormId, Vector3Int initialCell);
         public event InitDecision InitDecisionEvent;
@@ -38,20 +34,21 @@ namespace Test
         {
             tunnelSegmentCounter = 1; // maintains count of added segments onBlockInterval event to decide when to turn
             checkPointIdx = 0; // does not include the initial tunnel
-            Worm.InputProcessor.INPUT_SPEED = INSTANT_TURN; // turn instantly on one player input
+            InputProcessor.INPUT_SPEED = INSTANT_TURN; // turn instantly on one player input
             isReadyToTurn = false;
             currentTunnelName = "";
         }
 
         private void OnEnable()
         {
-            if (FindObjectOfType<Worm.InputProcessor>())
+            if (FindObjectOfType<InputProcessor>())
             {
-                PlayerInputEvent += FindObjectOfType<Worm.InputProcessor>().onPlayerInput;
+                PlayerInputEvent += FindObjectOfType<InputProcessor>().onPlayerInput;
             }
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
-            InitDecisionEvent += FindObjectOfType<Worm.Turn>().onInitDecision;
-            FindObjectOfType<Worm.Turn>().ReachWaypointEvent += onReachWaypoint;
+            InitDecisionEvent += FindObjectOfType<Turn>().onInitDecision;
+            FindObjectOfType<Turn>().ReachWaypointEvent += onReachWaypoint;
+            ObjectiveReachedEvent += GameManager.Instance.onObjectiveReached;
         }
 
         /**
@@ -119,6 +116,12 @@ namespace Test
                 PlayerInputEvent(currentCheckpoint.direction); // go in new direction, but corner block wont be created until straight block has reached an interval length
                 print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
             }
+            else
+            {
+                RaiseObjectiveReachedEvent(); // reached the goal
+                RaiseRemoveSelfEvent();
+                RaiseSpawnEvent();
+            }
         }
 
         /**
@@ -144,18 +147,17 @@ namespace Test
         // Start is called before the first frame update
         private void OnDisable()
         {
-            if (FindObjectOfType<Worm.InputProcessor>())
+            InitDecisionEvent -= Tunnel.CollisionManager.Instance.onInitDecision;
+            ObjectiveReachedEvent -= GameManager.Instance.onObjectiveReached;
+
+            if (FindObjectOfType<InputProcessor>())
             {
-                PlayerInputEvent -= FindObjectOfType<Worm.InputProcessor>().onPlayerInput;
-            }
-            if (FindObjectOfType<Tunnel.Map>())
+                PlayerInputEvent -= FindObjectOfType<InputProcessor>().onPlayerInput;
+            }            
+            if (FindObjectOfType<Turn>())
             {
-                InitDecisionEvent -= Tunnel.CollisionManager.Instance.onInitDecision;
-            }
-            if (FindObjectOfType<Worm.Turn>())
-            {
-                InitDecisionEvent -= FindObjectOfType<Worm.Turn>().onInitDecision;
-                FindObjectOfType<Worm.Turn>().ReachWaypointEvent -= onReachWaypoint;
+                InitDecisionEvent -= FindObjectOfType<Turn>().onInitDecision;
+                FindObjectOfType<Turn>().ReachWaypointEvent -= onReachWaypoint;
             }
         }
     }

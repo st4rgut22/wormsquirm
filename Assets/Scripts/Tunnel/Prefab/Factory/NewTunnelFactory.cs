@@ -8,6 +8,21 @@ namespace Tunnel
         public static int straightCount;
         public static int cornerCount;
 
+        public static NewTunnelFactory instance;
+
+        private void Awake()
+        {
+            if (instance == null)
+            {
+                instance = this;
+                DontDestroyOnLoad(instance);
+            }
+            else if (instance != this)
+            {
+                Destroy(gameObject);
+            }
+        }
+
         /** 
          * Receives create tunnel events including replacing tunnels
          * 

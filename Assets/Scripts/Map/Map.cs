@@ -27,7 +27,7 @@ namespace Tunnel
 
         private void OnEnable()
         {
-            if (FindObjectOfType<CollisionManager>())
+            if (FindObjectOfType<CollisionManager>()) // only sub once to this singleton, (not on scene reload)
             {
                 CollideEvent += FindObjectOfType<CollisionManager>().onCollide;
             }            
@@ -48,6 +48,15 @@ namespace Tunnel
         public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
         {
             isTurnDecision = true;
+        }
+
+        /**
+         * When tunnel network is reset clear the map
+         */
+        public void onResetTunnelNetwork()
+        {
+            TunnelMapDict.Clear();
+            cellList.Clear();
         }
 
         /**

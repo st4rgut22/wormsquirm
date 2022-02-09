@@ -24,12 +24,12 @@ namespace Test
                 Vector3 prevGridCellPos = MapUtility.getCellPos(prevGridCell);
                 if (i > 0)
                 {
-                    Debug.DrawLine(prevGridCellPos, cellPos, Color.green, 60);
+                    Debug.DrawLine(prevGridCellPos, cellPos, Color.green, 20);
                 }
             }
         }
 
-        public void onAstarPath(List<Vector3Int>gridCellPathList)
+        public void onAstarPath(List<Vector3Int> gridCellPathList, Worm.TunnelMaker tunnelMaker)
         {
             visualizePath(gridCellPathList);
         }

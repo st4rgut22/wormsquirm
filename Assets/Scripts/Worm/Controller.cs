@@ -20,11 +20,8 @@ namespace Worm
         private void OnEnable()
         {
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
-            InitDecisionEvent += FindObjectOfType<Turn>().onInitDecision;
-            if (FindObjectOfType<InputProcessor>())
-            {
-                PlayerInputEvent += FindObjectOfType<InputProcessor>().onPlayerInput;
-            }
+            InitDecisionEvent += GetComponent<Turn>().onInitDecision;
+            PlayerInputEvent += GetComponent<InputProcessor>().onPlayerInput;
         }
 
         // Start is called before the first frame update
@@ -76,14 +73,9 @@ namespace Worm
 
         private void OnDisable()
         {
-            if (FindObjectOfType<Movement>())
-            {
-                PlayerInputEvent -= FindObjectOfType<InputProcessor>().onPlayerInput;
-            }
-            if (FindObjectOfType<Turn>())
-            {
-                InitDecisionEvent += FindObjectOfType<Turn>().onInitDecision;
-            }
+            InitDecisionEvent -= Tunnel.CollisionManager.Instance.onInitDecision;
+            InitDecisionEvent -= GetComponent<Turn>().onInitDecision;
+            PlayerInputEvent -= GetComponent<InputProcessor>().onPlayerInput;
         }
     }
 

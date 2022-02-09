@@ -38,9 +38,7 @@ namespace Worm
 
         private new void OnEnable()
         {
-            base.OnEnable();
-            ChangeDirectionEvent += Tunnel.CollisionManager.Instance.onChangeDirection;
-            FollowWaypointEvent += FindObjectOfType<Movement>().onFollowWaypoint;
+            FollowWaypointEvent += GetComponent<Movement>().onFollowWaypoint;
             ReachWaypointEvent += GetComponent<Movement>().onReachWaypoint;
             TorqueEvent += GetComponent<Force>().onTorque;
         }
@@ -60,11 +58,11 @@ namespace Worm
                 isWaypointReached = isNegativeDir ? ringAxisPosition <= waypointAxisPosition : ringAxisPosition >= waypointAxisPosition;
                 if (isWaypointReached)
                 {
-                    if (!wormDir.isStraight) // apply torque if not going in a straight direction to exit waypoint
+                    if (!wormBase.isStraight) // apply torque if not going in a straight direction to exit waypoint
                     {
                         TorqueEvent(directionPair, destinationWaypoint);
                     }
-                    print("waypoint is reached for " + destinationWaypoint.move);
+                    print("waypoint is reached for " + destinationWaypoint.move + " position is " + destinationWaypoint.position);
                     ReachWaypointEvent(destinationWaypoint);
                 }
             }
@@ -101,7 +99,7 @@ namespace Worm
         private void turn(Tunnel.Tunnel tunnel)
         {
             isDecision = false;
-            wormDir.isStraight = false;
+            wormBase.isStraight = false;
             RaiseChangeDirectionEvent(directionPair, wormId); // rotate tunnel in the direction
             Vector3 egressPosition = Tunnel.Tunnel.getEgressPosition(directionPair.prevDir, tunnel.center);
             initializeTurnWaypointList(directionPair, egressPosition);          
@@ -114,13 +112,13 @@ namespace Worm
          */
         public void onExitTurn(Direction direction)
         {
-            wormDir.isStraight = true;
+            wormBase.isStraight = true;
             DirectionPair straightDirectionPair = new DirectionPair(direction, direction);
             RaiseChangeDirectionEvent(straightDirectionPair, wormId);
-            Vector3 offsetHeadWaypoint = getOffsetPosition(ring.position, direction, Tunnel.TunnelManager.Instance.START_TUNNEL_RING_OFFSET);
-            Waypoint offsetWP = new Waypoint(offsetHeadWaypoint, MoveType.OFFSET, direction);
-            List<Waypoint> offsetWaypointList = new List<Waypoint>() { offsetWP };
-            FollowWaypointEvent(offsetWaypointList, straightDirectionPair);
+            //Vector3 offsetHeadWaypoint = getOffsetPosition(ring.position, direction, Tunnel.TunnelManager.Instance.START_TUNNEL_RING_OFFSET);
+            //Waypoint offsetWP = new Waypoint(offsetHeadWaypoint, MoveType.OFFSET, direction);
+            //List<Waypoint> offsetWaypointList = new List<Waypoint>() { offsetWP };
+            //FollowWaypointEvent(offsetWaypointList, straightDirectionPair);
         }
 
         /**
@@ -143,7 +141,7 @@ namespace Worm
             isDecision = true;
             directionPair.prevDir = directionPair.curDir;
             directionPair.curDir = direction;
-            print("decide to go in curDirection " + direction);
+            print("decide to go in curDirection " + direction + " is straight tunnel " + isStraightTunnel + " tunnel name is " + tunnel.name);
             if (!isStraightTunnel) // turn immediately (dont wait for block interval event) if in junction or corner
             {
                 turn(tunnel); 
@@ -198,14 +196,9 @@ namespace Worm
 
         private new void OnDisable()
         {
-            base.OnDisable();
-            if (Tunnel.CollisionManager.Instance != null)
-            {
-                ChangeDirectionEvent -= Tunnel.CollisionManager.Instance.onChangeDirection;
-            }
             if (FindObjectOfType<Movement>())
             {
-                FollowWaypointEvent -= FindObjectOfType<Movement>().onFollowWaypoint;
+                FollowWaypointEvent -= GetComponent<Movement>().onFollowWaypoint;
                 ReachWaypointEvent -= GetComponent<Movement>().onReachWaypoint;
                 TorqueEvent -= GetComponent<Force>().onTorque;
             }

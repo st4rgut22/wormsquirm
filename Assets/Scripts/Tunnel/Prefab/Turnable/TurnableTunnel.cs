@@ -37,7 +37,7 @@ namespace Tunnel
         /**
          * When turn is completed, remove the dead-end cap to the tunnel
          */
-        public void onCompleteTurn(Direction direction)
+        public void onCompleteTurn(string wormId, Direction direction)
         {
             print("destroy deadEnd " + DeadEndInstance.name);
             Destroy(DeadEndInstance);

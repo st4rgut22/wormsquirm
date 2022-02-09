@@ -4,10 +4,13 @@ using UnityEngine;
 
 namespace Map
 {
-    public class MapLandmarks : GenericSingletonClass<MapLandmarks>
+    public class MapLandmarks : MonoBehaviour
     {
         [SerializeField]
-        private bool enableLandmarks;
+        private bool isLandmarksEnabled;
+
+        [SerializeField]
+        private bool isResetLandmarks;
 
         [SerializeField]
         private GameObject Goal;
@@ -24,7 +27,7 @@ namespace Map
         [SerializeField]
         private int obstacleCount; // originally 1500
 
-        private GameObject GoalInstance;
+        public static GameObject GoalInstance;
 
         public delegate void initLandmarks(Dictionary<Vector3Int, GameObject> obstacleDict, Vector3Int goalLocation);
         public initLandmarks initLandmarksEvent;
@@ -33,49 +36,47 @@ namespace Map
 
         Vector3Int defaultGoal = Vector3Int.zero;
 
-        Dictionary<Vector3Int, GameObject> obstacleDict; // cells the worm is not allowed to enter
+        public Dictionary<Vector3Int, GameObject> obstacleDict; // cells the worm is not allowed to enter
 
-        /**
-         * Initialize landmarks in map
-         */
-        public override void Awake()
+        private void Awake()
         {
-            base.Awake();
-            //goal = defaultGoal;
+            obstacleDict = new Dictionary<Vector3Int, GameObject>();
         }
 
-
-        /**
-         * Create the landmarks for a worm to navigate around
-         */
-        public void onInitiateLandmarks()
+        private void OnEnable()
         {
-            if (!goal.Equals(defaultGoal) || (obstacleDict != null && obstacleDict.Count > 0))
+            initLandmarksEvent += FindObjectOfType<Astar>().onInitLandmark;
+        }
+
+        private void Start()
+        {
+            if (isLandmarksEnabled)
             {
-                resetLandmarks();
+                initializeLandmarks();
             }
-            obstacleDict = new Dictionary<Vector3Int, GameObject>();
-            initializeLandmarks(); // populate obstacle dictionary
-            GoalInstance = Goal.instantiate(goal, ObstacleNetwork);
+
             initLandmarksEvent(obstacleDict, goal);
         }
 
         /**
-         * If landmarks already exist destroy themm before recreating them
+         * One scene re-load it is possible to re-initialize the goal and obstacles to generate a new path for worms
          */
-        private void resetLandmarks()
+        public void onResetTunnelNetwork()
         {
-            if (GoalInstance)
+            if (isLandmarksEnabled)
             {
-                Destroy(GoalInstance);
-            }
-            if (obstacleDict != null && obstacleDict.Count > 0)
-            {
-                foreach(KeyValuePair<Vector3Int, GameObject> obstacleEntry in obstacleDict) // destroy all pre-existing obstacle gameobjects
+                if (isResetLandmarks)
                 {
-                    Destroy(obstacleEntry.Value);
+                    Destroy(GoalInstance);
+
+                    foreach (KeyValuePair<Vector3Int, GameObject> obstacleEntry in obstacleDict) // destroy all pre-existing obstacle gameobjects
+                    {
+                        Destroy(obstacleEntry.Value);
+                    }
+                    initializeLandmarks();
                 }
             }
+            initLandmarksEvent(obstacleDict, goal);
         }
 
         /**
@@ -102,13 +103,13 @@ namespace Map
             return randCell;
         }
 
-
-
         /**
          * Randomly generate landmarks within the confines of the map
          */
         private void initializeLandmarks()
         {
+            obstacleDict = new Dictionary<Vector3Int, GameObject>();
+
             for (int i = 0; i < obstacleCount; i++)
             {
                 Vector3Int randObstaclePosition = getRandomCell();
@@ -121,6 +122,8 @@ namespace Map
                     obstacleDict[randObstaclePosition] = obstacleGO;
                 }
             }
+
+            GoalInstance = Goal.instantiate(goal, ObstacleNetwork);
         }
 
         /**
@@ -137,6 +140,14 @@ namespace Map
                 }
             }
             Goal.instantiate(goal, ObstacleNetwork);
+        }
+
+        private void OnDisable()
+        {
+            if (FindObjectOfType<Astar>())
+            {
+                initLandmarksEvent -= FindObjectOfType<Astar>().onInitLandmark;
+            }            
         }
     }
 }

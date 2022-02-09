@@ -22,9 +22,9 @@ namespace Tunnel
             BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
 
-            if (FindObjectOfType<Test.TunnelMaker>())
+            if (FindObjectOfType<Worm.TunnelMaker>())
             {
-                BlockIntervalEvent += FindObjectOfType<Test.TunnelMaker>().onBlockInterval;
+                BlockIntervalEvent += FindObjectOfType<Worm.TunnelMaker>().onBlockInterval;
             }
         }
 
@@ -187,17 +187,18 @@ namespace Tunnel
 
         void OnDisable()
         {
-            if (FindObjectOfType<Map>())
+            if (!isStopped)
             {
                 BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval;
             }
+
             if (FindObjectOfType<Worm.Movement>())
             {
                 BlockIntervalEvent -= FindObjectOfType<Worm.Turn>().onBlockInterval;
             }
-            if (FindObjectOfType<Test.TunnelMaker>())
+            if (FindObjectOfType<Worm.TunnelMaker>())
             {
-                BlockIntervalEvent -= FindObjectOfType<Test.TunnelMaker>().onBlockInterval;
+                BlockIntervalEvent -= FindObjectOfType<Worm.TunnelMaker>().onBlockInterval;
             }
         }
 

@@ -12,6 +12,21 @@ namespace Tunnel
         private static int junctionCount = 0;
         protected Tunnel collidedTunnel;
 
+        public static ModTunnelFactory instance;
+
+        private void Awake()
+        {
+            if (instance == null)
+            {
+                instance = this;
+                DontDestroyOnLoad(instance);
+            }
+            else if (instance != this)
+            {
+                Destroy(gameObject);
+            }
+        }
+
         /**
          * Fill the void left by the intersection of two tunnels
          * 

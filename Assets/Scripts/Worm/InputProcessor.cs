@@ -22,6 +22,7 @@ namespace Worm
         private void OnEnable()
         {
             DecisionEvent += FindObjectOfType<Turn>().onDecision;
+
             DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
 
             FindObjectOfType<Tunnel.NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
@@ -41,6 +42,10 @@ namespace Worm
             if (wormId == this.wormId)
             {
                 currentTunnel = tunnel;
+            }
+            else
+            {
+                throw new System.Exception("during testing there should only be one worm id " + wormId + " and " + this.wormId + " dont match");
             }
         }
 
@@ -89,14 +94,13 @@ namespace Worm
 
         private void OnDisable()
         {
-            if (FindObjectOfType<Turn>())
-            {
-                DecisionEvent -= FindObjectOfType<Turn>().onDecision;
-
-            }
             if (FindObjectOfType<Tunnel.Map>())
             {
                 DecisionEvent -= FindObjectOfType<Tunnel.Map>().onDecision;
+            }
+            if (FindObjectOfType<Turn>())
+            {
+                DecisionEvent -= FindObjectOfType<Turn>().onDecision;
             }
             if (FindObjectOfType<Tunnel.NewTunnelFactory>())
             {

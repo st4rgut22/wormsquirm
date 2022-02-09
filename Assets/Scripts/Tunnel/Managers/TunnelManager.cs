@@ -29,13 +29,18 @@ namespace Tunnel
         }
 
         /**
-         * Reset the tunnel network state by stopping all growing tunnels and clearing lists
+         * Reset the tunnel network state by stopping all growing tunnels and clearing tunnel network
          */
         public void onResetTunnelNetwork()
         {
             GrowingTunnelList.ForEach((Straight tunnel) =>
             {
                 stopTunnel(tunnel);
+            });
+
+            TunnelList.ForEach((Tunnel tunnel) =>
+            {
+                Destroy(tunnel.gameObject);
             });
 
             GrowingTunnelList.Clear();

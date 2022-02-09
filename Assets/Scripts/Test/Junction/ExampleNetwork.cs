@@ -5,12 +5,47 @@ namespace Test
 {
     public class ExampleNetwork : MonoBehaviour
     {
-        public delegate void initCheckpoint(List<Checkpoint> checkpointList);
-        public event initCheckpoint initCheckpointEvent;
+        [SerializeField]
+        private Network tunnelNetwork;
 
-        private void OnEnable()
+        public enum Network
         {
-            initCheckpointEvent += FindObjectOfType<TunnelMaker>().onInitCheckpointList;
+            initThreeIntersectLoop,
+            initZigzag,
+            initConsecutiveTurns,
+            initFirstSegmentLengthOne,
+            initZigZagPerpendicular,
+            initImmediateTurn,
+            initSimpleTurn,
+            debugTurn
+        }
+
+        /**
+         * Get the selected tunnel network for the worm to generate
+         */
+        public List<Checkpoint> getNetwork()
+        {
+            switch(tunnelNetwork)
+            {
+                case Network.initThreeIntersectLoop:
+                    return initThreeIntersectLoop();
+                case Network.initZigzag:
+                    return initZigzag();
+                case Network.initConsecutiveTurns:
+                    return initConsecutiveTurns();
+                case Network.initFirstSegmentLengthOne:
+                    return initFirstSegmentLengthOne();
+                case Network.initZigZagPerpendicular:
+                    return initZigZagPerpendicular();
+                case Network.initImmediateTurn:
+                    return initImmediateTurn();
+                case Network.initSimpleTurn:
+                    return initSimpleTurn();
+                case Network.debugTurn:
+                    return debugTurn();
+                default:
+                    throw new System.Exception(tunnelNetwork + " is not a valid tunnel network");
+            }
         }
 
         private List<Checkpoint> initThreeIntersectLoop()
@@ -92,22 +127,24 @@ namespace Test
             return immediateTurn;
         }
 
-        // Start is called before the first frame update
-        void Start()
+        private List<Checkpoint> initSimpleTurn()
         {
-            //List<Checkpoint> checkpointList = initZigZagPerpendicular();
-            List<Checkpoint> checkpointList = initConsecutiveTurns();
-            initCheckpointEvent(checkpointList);
+            Checkpoint cp0 = new Checkpoint(Direction.Up, 5);
+            Checkpoint cp1 = new Checkpoint(Direction.Forward, 5);
+            List<Checkpoint> problemTurn = new List<Checkpoint>() { cp0, cp1 };
+            return problemTurn;
         }
 
-
-        private void OnDisable()
+        private List<Checkpoint> debugTurn()
         {
-            if (FindObjectOfType<TunnelMaker>())
-            {
-                initCheckpointEvent -= FindObjectOfType<TunnelMaker>().onInitCheckpointList;
-            }
+            Checkpoint cp0 = new Checkpoint(Direction.Up, 3);
+            Checkpoint cp1 = new Checkpoint(Direction.Forward, 0);
+            Checkpoint cp2 = new Checkpoint(Direction.Right,3);
+            //Checkpoint cp3 = new Checkpoint(Direction.Right, 1);
+            //Checkpoint cp4 = new Checkpoint(Direction.Up, 0);
+            //Checkpoint cp5 = new Checkpoint(Direction.Forward, 5);
+            List<Checkpoint> problemTurn = new List<Checkpoint>() { cp0, cp1, cp2 }; //, cp3, cp4, cp5 };
+            return problemTurn;
         }
     }
-
 }

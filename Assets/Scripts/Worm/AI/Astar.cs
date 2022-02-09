@@ -3,10 +3,15 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-namespace Worm
+namespace Map
 {
-    public class Astar : WormBody
+    public class Astar : MonoBehaviour
     {
+        public delegate void astarPath(List<Vector3Int> gridCellPathList, Worm.TunnelMaker tunnelMaker);
+        public event astarPath astarPathEvent;
+
+        private bool isDestinationReceived; // flag set when landmark info is received, which is required for pathplanning
+
         const int MAP_LENGTH = 10; // distance from origin to one edge of the map
         Vector3Int mapOffset;
 
@@ -16,10 +21,10 @@ namespace Worm
 
         Item[,,] CostMap = new Item[DIMENSION_LEN, DIMENSION_LEN, DIMENSION_LEN];
 
+        Dictionary<Vector3Int, GameObject> obstacleDict;
         Vector3Int goalLocation;
 
-        public delegate void astarPath(List<Vector3Int> gridCellPathList);
-        public event astarPath astarPathEvent;
+        Worm.TunnelMaker currentTunnelMaker;
 
         public class Item
         {
@@ -51,11 +56,8 @@ namespace Worm
 
         private void OnEnable()
         {
-            FindObjectOfType<Map.MapLandmarks>().initLandmarksEvent += onInitLandmarks;
-            if (FindObjectOfType<Map.AstarNetwork>())
-            {
-                astarPathEvent += FindObjectOfType<Map.AstarNetwork>().onAstarPath;
-            }
+            astarPathEvent += FindObjectOfType<AstarNetwork>().onAstarPath;
+
             if (FindObjectOfType<Test.AstarVisualizer>())
             {
                 astarPathEvent += FindObjectOfType<Test.AstarVisualizer>().onAstarPath;
@@ -64,21 +66,34 @@ namespace Worm
 
         private void Awake()
         {
+            isDestinationReceived = false;
             mapOffset = new Vector3Int(MAP_LENGTH, MAP_LENGTH, MAP_LENGTH); // offset to convert a cell position to a array position
         }
 
-        public void onInitLandmarks(Dictionary<Vector3Int, GameObject> obstacleDict, Vector3Int goalLocation)
+        public void onInitLandmark(Dictionary<Vector3Int, GameObject> obstacleDict, Vector3Int goalLocation)
         {
+            this.obstacleDict = obstacleDict;
             this.goalLocation = goalLocation;
-            astar(obstacleDict);
+            isDestinationReceived = true;
+        }
+
+        public void onFollowPath(Worm.TunnelMaker tunnelMaker)
+        {            
+            currentTunnelMaker = tunnelMaker;
+            StartCoroutine(astar());
         }
 
         // Start is called before the first frame update
-        void astar(Dictionary<Vector3Int, GameObject> obstacleDict)
+        private IEnumerator astar()
         {
+            while (!isDestinationReceived) // wait for destination before starting path planning
+            {
+                yield return null;
+            }
+
             initializeCostMap();
 
-            Item startItem = new Item(0, initialCell, goalLocation);
+            Item startItem = new Item(0, Worm.WormBody.initialCell, goalLocation);
             HashSet<Item> unknownPathSet = new HashSet<Item>();
 
             unknownPathSet.Add(startItem);
@@ -95,13 +110,13 @@ namespace Worm
 
             Vector3Int goalArrayPos = goalLocation + mapOffset;
             Item item = CostMap[goalArrayPos.x, goalArrayPos.y, goalArrayPos.z];
-            while (!item.cell.Equals(initialCell))
+            while (!item.cell.Equals(Worm.WormBody.initialCell))
             {
                 print("shortest path to goalLocation " + item.cell);
                 shortestPath.Insert(0, item.cell);
                 item = item.cameFrom;
             }
-            shortestPath.Insert(0, initialCell);
+            shortestPath.Insert(0, Worm.WormBody.initialCell);
 
             return shortestPath;
         }
@@ -116,7 +131,7 @@ namespace Worm
                 {
                     print("shortest distance is " + item.totalCost);
                     List<Vector3Int> shortestPath = getShortestPath();
-                    astarPathEvent(shortestPath);
+                    astarPathEvent(shortestPath, currentTunnelMaker);
                     return;
                 }
 
@@ -215,10 +230,6 @@ namespace Worm
 
         private void OnDisable()
         {
-            if (FindObjectOfType<Map.MapLandmarks>())
-            {
-                FindObjectOfType<Map.MapLandmarks>().initLandmarksEvent -= onInitLandmarks;
-            }
             if (FindObjectOfType<Map.AstarNetwork>())
             {
                 astarPathEvent -= FindObjectOfType<Map.AstarNetwork>().onAstarPath;

@@ -10,12 +10,6 @@ namespace Map
 
         const int TURN_STEP = 1;
 
-        private void OnEnable()
-        {
-            initCheckpointEvent += FindObjectOfType<Test.TunnelMaker>().onInitCheckpointList;
-            initCheckpointEvent += FindObjectOfType<Test.WormCollider>().onInitCheckpointList;
-        }
-
         /**
          * Convert the list of cell positions to a list of directions for TunnelMaker to process
          * 
@@ -53,23 +47,12 @@ namespace Map
             return astarCheckpointList;
         }
 
-        public void onAstarPath(List<Vector3Int> gridCellPathList)
+        public void onAstarPath(List<Vector3Int> gridCellPathList, Worm.TunnelMaker tunnelMaker)
         {
             List<Checkpoint> checkpointList = getCheckpointListFromPath(gridCellPathList);
+            initCheckpointEvent += tunnelMaker.onInitCheckpointList;
             initCheckpointEvent(checkpointList);
-        }
-
-        private void OnDisable()
-        {
-            if (FindObjectOfType<Test.TunnelMaker>())
-            {
-                initCheckpointEvent -= FindObjectOfType<Test.TunnelMaker>().onInitCheckpointList;
-            }
-            if (FindObjectOfType<Test.WormCollider>())
-            {
-                initCheckpointEvent += FindObjectOfType<Test.WormCollider>().onInitCheckpointList;
-            }
+            initCheckpointEvent -= tunnelMaker.onInitCheckpointList;
         }
     }
-
 }
