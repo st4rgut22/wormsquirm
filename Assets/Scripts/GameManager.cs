@@ -15,7 +15,7 @@ public class GameManager : GenericSingletonClass<GameManager>
 
     private void Awake()
     {
-        gameMode = GameMode.TestFixedPath;        
+        gameMode = GameMode.GamePlay;        
     }
 
     private void OnEnable()
@@ -33,7 +33,14 @@ public class GameManager : GenericSingletonClass<GameManager>
 
     private void Start()
     {
-        CreateWormEvent(Worm.WormManager.WORM_AI_TAG);
+        if (gameMode == GameMode.GamePlay)
+        {
+            CreateWormEvent(Worm.WormManager.WORM_PLAYER_TAG);
+        }
+        else
+        {
+            CreateWormEvent(Worm.WormManager.WORM_AI_TAG);
+        }
     }
 
     private void OnDisable()

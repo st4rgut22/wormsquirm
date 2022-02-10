@@ -31,6 +31,8 @@ namespace Worm
                 {
                     Destroy(gameObject);
                 }
+
+                turnSpeed = 1000f; // instantaneous turn
             }
 
             private void OnEnable()
@@ -65,7 +67,7 @@ namespace Worm
 
             public override void onSpawn(string wormId)
             {
-                wormGO = WormAI.instantiate(wormId, WormContainer);
+                wormGO = WormAI.instantiate(wormId, WormContainer, turnSpeed);
                 initializeWormPath(wormGO);
             }
 

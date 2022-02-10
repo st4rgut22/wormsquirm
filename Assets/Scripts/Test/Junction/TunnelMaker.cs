@@ -34,7 +34,6 @@ namespace Worm
         {
             tunnelSegmentCounter = 1; // maintains count of added segments onBlockInterval event to decide when to turn
             checkPointIdx = 0; // does not include the initial tunnel
-            InputProcessor.INPUT_SPEED = INSTANT_TURN; // turn instantly on one player input
             isReadyToTurn = false;
             currentTunnelName = "";
         }
@@ -75,7 +74,7 @@ namespace Worm
         /**
          * Flag set when the worm enters a turn and reaches a point in the turn where it is ready to receive another changeDirection event
          */
-        public void onDecisionProcessing(bool isDecisionProcessing)
+        public void onDecisionProcessing(bool isDecisionProcessing, Waypoint waypoint)
         {
             print("set decision processing to " + isDecisionProcessing);
             isReadyToTurn = !isDecisionProcessing;

@@ -6,16 +6,17 @@ namespace Worm
 {
     public static class WormExtension
     {
-        public static GameObject instantiate(this GameObject thisObj, string wormId, Transform wormContainer)
+        public static GameObject instantiate(this GameObject thisObj, string wormId, Transform wormContainer, float turnSpeed)
         {
             GameObject wormGO = GameObject.Instantiate(thisObj, wormContainer);
             WormBody[] wormBodies = wormGO.GetComponents<WormBody>();
 
-            // initialize worm id for all components that use it
+            // initialize worm properties for all components that use them
             for (int i=0;i<wormBodies.Length;i++)
             {
                 WormBody wormBody = wormBodies[i];
                 wormBody.wormId = wormId;
+                wormBody.turnSpeed = turnSpeed;
             }
 
             return wormGO;

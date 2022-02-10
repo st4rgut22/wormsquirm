@@ -19,6 +19,7 @@ namespace Tunnel
         public const float SCALED_GROWTH_RATE = GROWTH_RATE * SCALE_TO_LENGTH;
 
         public static float CENTER_OFFSET = BLOCK_SIZE / 2.0f;
+        public static float INNER_WALL_OFFSET = .25f;
 
         public bool isStopped;
         protected bool isTurning;

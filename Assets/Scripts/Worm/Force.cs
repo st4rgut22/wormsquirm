@@ -31,20 +31,6 @@ namespace Worm
             base.Awake();
         }
 
-        private void addForce(Vector3 forceVector, Rigidbody rigidbody)
-        {
-            float maxSpeed = rigidbody.velocity.getMaxValue();
-            if (maxSpeed < maxVelocity)
-            {
-                print("adding force forceVector is " + forceVector + " force magnitude is " + forceMagnitude + " product is " + (forceMagnitude * forceVector));
-                rigidbody.AddForce(forceVector * forceMagnitude);
-            }
-            else
-            {
-                print("braking too fast!");
-            }
-        }
-
         /**
          * Applies a force on the Worm's' head.
          * 
@@ -53,7 +39,29 @@ namespace Worm
          */
         public void onForce(Rigidbody rigidbody, Vector3 forceVector)
         {
-            addForce(forceVector, rigidbody);
+            print("applying force in direction " + forceVector);
+
+            float maxSpeed = rigidbody.velocity.getMaxValue();
+            if (maxSpeed < maxVelocity)
+            {
+                print("adding force forceVector is " + forceVector + " force magnitude is " + forceMagnitude + " product is " + (forceMagnitude * forceVector));
+                rigidbody.AddForce(forceVector * forceMagnitude);
+            }
+            else
+            {
+                print("braking too fast!"); // prevents the worm from exceeding its straight line velocity
+            }
+        }
+
+        /**
+         * Applies a force from user input to the Worm's head.
+         * Similar to onTorque
+         */
+        public void onInputTorque(DirectionPair dirPair, float torqueMagnitude)
+        {
+            Vector3 torqueUnitVector = Dir.DirectionForce.getTorqueVectorFromDirection(dirPair);
+            Vector3 torque = torqueMagnitude * torqueUnitVector;
+            torqueBody.AddTorque(torque);
         }
 
         /**

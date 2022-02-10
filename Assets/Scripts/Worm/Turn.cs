@@ -50,7 +50,7 @@ namespace Worm
         {
             if (!isWaypointReached)
             {
-                Direction passWaypointDirection = destinationWaypoint.direction;
+                Direction passWaypointDirection = destinationWaypoint.dirPair.prevDir;
                 bool isNegativeDir = Dir.Base.isDirectionNegative(passWaypointDirection);
                 float waypointAxisPosition = Dir.Vector.getAxisScaleFromDirection(passWaypointDirection, destinationWaypoint.position);
                 float ringAxisPosition = Dir.Vector.getAxisPositionFromDirection(passWaypointDirection, ring.position);
@@ -85,9 +85,9 @@ namespace Worm
             Vector3 centerWaypointPosition = getOffsetPosition(startWaypointPosition, directionPair.prevDir, Tunnel.Tunnel.CENTER_OFFSET);
             Vector3 exitWaypointPosition = getOffsetPosition(centerWaypointPosition, directionPair.curDir, Tunnel.Tunnel.CENTER_OFFSET);
 
-            Waypoint startWP = new Waypoint(startWaypointPosition, MoveType.ENTRANCE, directionPair.prevDir);
-            Waypoint cellWP = new Waypoint(centerWaypointPosition, MoveType.CENTER, directionPair.prevDir);
-            Waypoint exitWP = new Waypoint(exitWaypointPosition, MoveType.EXIT, directionPair.prevDir);
+            Waypoint startWP = new Waypoint(startWaypointPosition, MoveType.ENTRANCE, directionPair);
+            Waypoint cellWP = new Waypoint(centerWaypointPosition, MoveType.CENTER, directionPair);
+            Waypoint exitWP = new Waypoint(exitWaypointPosition, MoveType.EXIT, directionPair);
 
             waypointList = new List<Waypoint> { startWP, cellWP, exitWP };
             FollowWaypointEvent(waypointList, directionPair);
@@ -106,7 +106,7 @@ namespace Worm
         }
 
         /**
-         * Once the worm has finished navigating out of a turn
+         * Once the worm has finished navigating out of a turn, append a straight tunnel to the corner
          * 
          * @direction is the exit direction
          */

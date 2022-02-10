@@ -19,7 +19,11 @@ namespace Worm
 
         protected WormBase wormBase; // stores shared variables across worm prefab classes
 
+        public static float WORM_BODY_THICKNESS = 0.1f;
+
         public static Vector3Int initialCell = Vector3Int.zero;
+
+        public float turnSpeed;
 
         public delegate void ChangeDirection(DirectionPair directionPair, string wormId);
         public event ChangeDirection ChangeDirectionEvent;

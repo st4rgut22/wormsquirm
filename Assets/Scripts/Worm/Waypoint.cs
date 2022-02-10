@@ -17,13 +17,13 @@ namespace Worm
     {
         public Vector3 position { get; private set; }
         public MoveType move { get; private set; }
-        public Direction direction { get; private set; } // direction of movement to pass the waypoint
+        public DirectionPair dirPair { get; private set; } // direction of movement to pass the waypoint
 
-        public Waypoint(Vector3 position, MoveType move, Direction direction)
+        public Waypoint(Vector3 position, MoveType move, DirectionPair dirPair)
         {
             this.position = position;
             this.move = move;
-            this.direction = direction;
+            this.dirPair = dirPair;
         }
     }
 

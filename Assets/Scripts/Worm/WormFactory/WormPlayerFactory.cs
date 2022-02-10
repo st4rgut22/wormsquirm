@@ -24,11 +24,13 @@ namespace Worm
                 {
                     Destroy(gameObject);
                 }
+
+                turnSpeed = 100f;
             }
 
             public override void onSpawn(string wormId)
             {
-                wormGO = WormPlayer.instantiate(wormId, WormContainer);
+                wormGO = WormPlayer.instantiate(wormId, WormContainer, turnSpeed);
             }
         }
     }

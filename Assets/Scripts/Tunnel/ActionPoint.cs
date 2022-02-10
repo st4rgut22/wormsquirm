@@ -21,25 +21,37 @@ namespace Tunnel
 
         /**
          * Decide if player movement should trigger changes to the tunnel network such as tunnel creation
+         * 
+         * @returns the direction in which decision is made
          */
-        public bool isDecisionBoundaryCrossed(Tunnel tunnel, Vector3 position, Direction direction)
+        public Direction getDirectionDecisionBoundaryCrossed(Tunnel tunnel, Vector3 position, Direction curDir)
         {
-            Vector3 directionVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
-
+            Direction oppDir = Dir.Base.getOppositeDirection(curDir);
             decisionPointBoundary = new Dictionary<Direction, float>();
             setBoundaryPoints(tunnel.center);
+            Direction decisionDirection = Direction.None;
 
+            Dir.Base.directionList.ForEach((Direction direction) =>
+            {
+                bool isDecision = isDecisionBoundaryCrossed(position, direction);
+                bool isAlongDecisionAxis = direction != curDir && direction != oppDir;
+
+                if (isDecision && isAlongDecisionAxis)
+                {
+                    if (decisionDirection != Direction.None)
+                    {
+                        throw new Exception("Decision direction is ambiguous. Worm wants to go in direction " + decisionDirection + " and " + direction);
+                    }
+                    decisionDirection = direction;
+                }
+            });
+            return decisionDirection;
+        }
+
+        private bool isDecisionBoundaryCrossed(Vector3 position, Direction direction)
+        {
             float axisPosition = Dir.Vector.getAxisPositionFromDirection(direction, position);
-
-            if (isTriggerDecision(axisPosition, direction))
-            {
-                print("decision is triggered");
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return isTriggerDecision(axisPosition, direction);
         }
 
         /**
@@ -54,7 +66,10 @@ namespace Tunnel
             }
             else
             {
-                if (direction != ((Straight)tunnel).growthDirection) // check for movement perpendicular to  growth axis in a straight tunnel.
+                Direction growthDir = ((Straight)tunnel).growthDirection;
+                Direction growthOppDir = Dir.Base.getOppositeDirection(growthDir);
+
+                if (direction != growthDir && direction != growthOppDir) // check for movement perpendicular to  growth axis in a straight tunnel.
                 {
                     return true;
                 }
@@ -96,7 +111,8 @@ namespace Tunnel
          */
         private float getDecisionBoundary(Direction direction, Vector3 tunnelCenter)
         {
-            Vector3 centerOffset = Dir.CellDirection.getUnitVectorFromDirection(direction) * Tunnel.CENTER_OFFSET;
+            float offset = Tunnel.INNER_WALL_OFFSET - Worm.WormBody.WORM_BODY_THICKNESS;
+            Vector3 centerOffset = Dir.CellDirection.getUnitVectorFromDirection(direction) * offset;
 
             float offsetAlongAxis = Dir.Vector.getAxisPositionFromDirection(direction, centerOffset);
             float positionAlongAxis = Dir.Vector.getAxisPositionFromDirection(direction, tunnelCenter);

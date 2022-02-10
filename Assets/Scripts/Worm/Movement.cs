@@ -27,7 +27,7 @@ namespace Worm
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
 
-        public delegate void DecisionProcessing(bool isDecisionProcessing);
+        public delegate void DecisionProcessing(bool isDecisionProcessing, Waypoint waypoint);
         public event DecisionProcessing DecisionProcessingEvent;
 
         public delegate void AddForce(Rigidbody rigidbody, Vector3 forceVector);
@@ -88,7 +88,8 @@ namespace Worm
         {
             Vector3 egressPosition = Tunnel.Tunnel.getEgressPosition(wormBase.direction, tunnel.center);
             print("egress position of straight junction is " + egressPosition);
-            Waypoint exitWP = new Waypoint(egressPosition, MoveType.EXIT, wormBase.direction);
+            DirectionPair straightDirPair = new DirectionPair(wormBase.direction, wormBase.direction);
+            Waypoint exitWP = new Waypoint(egressPosition, MoveType.EXIT, straightDirPair);
             List<Waypoint> waypointList = new List<Waypoint>() { exitWP };
             DirectionPair dirPair = new DirectionPair(wormBase.direction, wormBase.direction);
             onFollowWaypoint(waypointList, dirPair);
@@ -134,7 +135,7 @@ namespace Worm
                 {
                     throw new System.Exception("not a turning tunnel, wrong tunnel selected");
                 }
-                wormBase.direction = egressWaypointDirection; 
+                //wormBase.direction = egressWaypointDirection; // <-- redundant, we will do this when worm reaches CENTER waypoint
                 ExitTurnEvent(egressWaypointDirection);
             }
             CompleteTurnEvent += ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
@@ -149,12 +150,12 @@ namespace Worm
         {
             if (waypoint.move == MoveType.ENTRANCE)
             {
-                DecisionProcessingEvent(true); // no turns allowed when entering a turn (from current position to center of the turn tunnel segment)
+                DecisionProcessingEvent(true, waypoint); // no turns allowed when entering a turn (from current position to center of the turn tunnel segment)
             }
             else if (waypoint.move == MoveType.CENTER)
             {
                 print("apply up force to the ring rgbdy");
-                DecisionProcessingEvent(false); // allow decisions to be made again when center of tunnel is reached (eg a consecutive turn)
+                DecisionProcessingEvent(false, waypoint); // allow decisions to be made again when center of tunnel is reached (eg a consecutive turn)
             }
             else if (waypoint.move == MoveType.EXIT)
             {

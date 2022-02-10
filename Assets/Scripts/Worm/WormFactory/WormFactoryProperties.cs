@@ -19,6 +19,8 @@ namespace Worm
 
             protected string wormTag;
 
+            protected float turnSpeed;
+
         }
     }
 
