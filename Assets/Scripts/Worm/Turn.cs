@@ -41,6 +41,7 @@ namespace Worm
             FollowWaypointEvent += GetComponent<Movement>().onFollowWaypoint;
             ReachWaypointEvent += GetComponent<Movement>().onReachWaypoint;
             TorqueEvent += GetComponent<Force>().onTorque;
+            TorqueEvent += GetComponent<InputProcessor>().onTorque;
         }
 
         /**
@@ -201,6 +202,7 @@ namespace Worm
                 FollowWaypointEvent -= GetComponent<Movement>().onFollowWaypoint;
                 ReachWaypointEvent -= GetComponent<Movement>().onReachWaypoint;
                 TorqueEvent -= GetComponent<Force>().onTorque;
+                TorqueEvent -= GetComponent<InputProcessor>().onTorque;
             }
         }
     }

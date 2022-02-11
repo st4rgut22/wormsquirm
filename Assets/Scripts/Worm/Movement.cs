@@ -70,7 +70,7 @@ namespace Worm
 
         public void onInitWormPosition(Vector3 initPos, Direction direction)
         {
-            wormBase.direction = direction;
+            wormBase.setDirection(direction);
             float offset = Tunnel.TunnelManager.Instance.START_TUNNEL_RING_OFFSET;
             Vector3 offsetVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
             ring.position = initPos + offset * offsetVector;

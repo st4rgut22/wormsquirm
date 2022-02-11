@@ -6,9 +6,7 @@ using UnityEngine;
 namespace Worm
 {
     public class Controller : WormBody
-    {
-        private Direction direction;
-        
+    {      
         public delegate void PlayerInput(Direction direction);
         public event PlayerInput PlayerInputEvent;
 
@@ -25,29 +23,23 @@ namespace Worm
         }
 
         // Start is called before the first frame update
-        void Awake()
+        new void Awake()
         {
+            base.Awake();
             isGameStart = true;
-            direction = Direction.None;
-        }
-
-        public void onCompleteTurn(Direction direction)
-        {
-            this.direction = direction;
         }
 
         private Direction getDirection(InputKeyPair inputKeyPair)
         {            
             InputKey pressedKey = inputKeyPair.getPressedInputKey();
 
-            if (direction == Direction.None)
+            if (wormBase.direction == Direction.None)
             {
-                direction = pressedKey.initDirection;
-                return direction;
+                return pressedKey.initDirection;
             }
             else
             {
-                return Dir.Input.getChangedDirection(direction, pressedKey);
+                return Dir.Input.getChangedDirection(wormBase.direction, pressedKey);
             }
         }
 

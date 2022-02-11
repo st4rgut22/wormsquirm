@@ -19,6 +19,8 @@ namespace Worm
         public delegate void InputTorque(DirectionPair dirPair, float torqueMagnitude);
         public event InputTorque InputTorqueEvent;
 
+        private bool isLastTorqueEventInput = true; // a flag for the type of torque event used to determine whether user should turn. If it is from input (and not from waypoints) then should change direction
+
         private void OnEnable()
         {
             DecisionEvent += FindObjectOfType<Turn>().onDecision;
@@ -42,16 +44,23 @@ namespace Worm
         {
             if (!isDecisionProcessing && currentTunnel != null)
             {
-                Direction decisionDirection = Tunnel.ActionPoint.instance.getDirectionDecisionBoundaryCrossed(currentTunnel, head.position, wormBase.direction);
-                if (decisionDirection != Direction.None)
+                if (isLastTorqueEventInput)
                 {
-                    print("processing decision in direction " + decisionDirection);
-                    bool isStraightTunnel = currentTunnel.type == Tunnel.Type.Name.STRAIGHT; // if this is the first tunnel it should be straight type
-                    isDecisionProcessing = true;
+                    Direction decisionDirection = Tunnel.ActionPoint.instance.getDirectionDecisionBoundaryCrossed(currentTunnel, head.position, wormBase.direction);
+                    if (decisionDirection != Direction.None)
+                    {
+                        print("processing decision in direction " + decisionDirection);
+                        bool isStraightTunnel = currentTunnel.type == Tunnel.Type.Name.STRAIGHT; // if this is the first tunnel it should be straight type
+                        isDecisionProcessing = true;
 
-                    DecisionEvent += currentTunnel.onDecision;
-                    DecisionEvent(isStraightTunnel, decisionDirection, currentTunnel);
-                    DecisionEvent -= currentTunnel.onDecision;
+                        DecisionEvent += currentTunnel.onDecision;
+                        DecisionEvent(isStraightTunnel, decisionDirection, currentTunnel);
+                        DecisionEvent -= currentTunnel.onDecision;
+                    }
+                }
+                else
+                {
+                    print("last torque event is not input, dont change direction");
                 }
             }
         }
@@ -76,8 +85,16 @@ namespace Worm
             this.isDecisionProcessing = isDecisionProcessing;
             if (!isDecisionProcessing) // set new direction of worm once worm is available to make new turns
             {
-                wormBase.direction = waypoint.dirPair.curDir; // set the worm direction as the direction coming out of a turn
+                wormBase.setDirection(waypoint.dirPair.curDir); // set the worm direction as the direction coming out of a turn
             }
+        }
+
+        /**
+         * Torque received while turning through a corner (as opposed to straight travel)
+         */
+        public void onTorque(DirectionPair dirPair, Waypoint waypoint)
+        {
+            isLastTorqueEventInput = false;
         }
 
         /**
@@ -88,11 +105,13 @@ namespace Worm
             if (!isDecisionProcessing)
             {
                 bool isSameDirection = Tunnel.ActionPoint.instance.isDirectionAlongDecisionAxis(currentTunnel, direction);
-                if (isSameDirection)
+                if (!isSameDirection)
                 {
-                    DirectionPair dirPair = new DirectionPair(wormBase.direction, direction);
-                    InputTorqueEvent(dirPair, turnSpeed);
+                    throw new System.Exception("Input should result in a direction that is not in the same direction (or opposite direction) of travel " + direction);
                 }
+                DirectionPair dirPair = new DirectionPair(wormBase.direction, direction);
+                InputTorqueEvent(dirPair, turnSpeed);
+                isLastTorqueEventInput = true;
             }
         }
 
