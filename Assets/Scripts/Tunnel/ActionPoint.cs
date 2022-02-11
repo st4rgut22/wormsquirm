@@ -48,7 +48,7 @@ namespace Tunnel
             return decisionDirection;
         }
 
-        private bool isDecisionBoundaryCrossed(Vector3 position, Direction direction)
+        public bool isDecisionBoundaryCrossed(Vector3 position, Direction direction)
         {
             float axisPosition = Dir.Vector.getAxisPositionFromDirection(direction, position);
             return isTriggerDecision(axisPosition, direction);

@@ -15,7 +15,7 @@ public class GameManager : GenericSingletonClass<GameManager>
 
     private void Awake()
     {
-        gameMode = GameMode.GamePlay;        
+        gameMode = GameMode.TestAutoPath;        
     }
 
     private void OnEnable()
@@ -45,9 +45,21 @@ public class GameManager : GenericSingletonClass<GameManager>
 
     private void OnDisable()
     {
-        CreateWormEvent -= FindObjectOfType<Worm.Factory.WormFactory>().onCreateWorm;
-        ResetTunnelNetworkEvent -= FindObjectOfType<Tunnel.Map>().onResetTunnelNetwork;
-        ResetTunnelNetworkEvent -= FindObjectOfType<Map.MapLandmarks>().onResetTunnelNetwork;
-        ResetTunnelNetworkEvent -= Tunnel.TunnelManager.Instance.onResetTunnelNetwork;
+        if (FindObjectOfType<Worm.Factory.WormFactory>())
+        {
+            CreateWormEvent -= FindObjectOfType<Worm.Factory.WormFactory>().onCreateWorm;
+        }
+        if (FindObjectOfType<Tunnel.Map>())
+        {
+            ResetTunnelNetworkEvent -= FindObjectOfType<Tunnel.Map>().onResetTunnelNetwork;
+        }
+        if (FindObjectOfType<Map.MapLandmarks>())
+        {
+            ResetTunnelNetworkEvent -= FindObjectOfType<Map.MapLandmarks>().onResetTunnelNetwork;
+        }
+        if (Tunnel.TunnelManager.Instance)
+        {
+            ResetTunnelNetworkEvent -= Tunnel.TunnelManager.Instance.onResetTunnelNetwork;
+        }
     }
 }

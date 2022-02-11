@@ -19,7 +19,7 @@ namespace Worm
         {
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
             InitDecisionEvent += GetComponent<Turn>().onInitDecision;
-            PlayerInputEvent += GetComponent<InputProcessor>().onPlayerInput;
+            PlayerInputEvent += GetComponent<HumanInputProcessor>().onPlayerInput;
         }
 
         // Start is called before the first frame update
