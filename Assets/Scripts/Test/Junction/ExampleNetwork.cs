@@ -11,6 +11,7 @@ namespace Test
         public enum Network
         {
             initThreeIntersectLoop,
+            initThreeLoopCorner,
             initZigzag,
             initConsecutiveTurns,
             initFirstSegmentLengthOne,
@@ -56,21 +57,10 @@ namespace Test
             Checkpoint cp3 = new Checkpoint(Direction.Left, 11);
             Checkpoint cp4 = new Checkpoint(Direction.Down, 5);
             Checkpoint cp5 = new Checkpoint(Direction.Right, 5);
-            List<Checkpoint> threeIntersectLoopStraight = new List<Checkpoint>() { cp0, cp1, cp2, cp3, cp4, cp5 };
+            Checkpoint cp6 = new Checkpoint(Direction.Up, 11);
+            List<Checkpoint> threeIntersectLoopStraight = new List<Checkpoint>() { cp0, cp1, cp2, cp3, cp4, cp5, cp6 };
 
-            List<Checkpoint> checkpointList = initThreeIntersectLoopCorner(threeIntersectLoopStraight);
-            return checkpointList;
-        }
-
-        private List<Checkpoint> initThreeIntersectLoopCorner(List<Checkpoint> threeIntersectLoopStraight)
-        {
-            List<Checkpoint> threeIntersectLoopCorner = new List<Checkpoint>(threeIntersectLoopStraight);
-            threeIntersectLoopCorner.RemoveAt(threeIntersectLoopCorner.Count - 1);
-            Checkpoint cp = new Checkpoint(Direction.Right, 6);
-            Checkpoint cpTurn = new Checkpoint(Direction.Up, 1);
-            threeIntersectLoopCorner.Add(cp);
-            threeIntersectLoopCorner.Add(cpTurn);
-            return threeIntersectLoopCorner;
+            return threeIntersectLoopStraight;
         }
 
         private List<Checkpoint> initZigzag()

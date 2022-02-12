@@ -40,7 +40,10 @@ namespace Tunnel
 
             TunnelList.ForEach((Tunnel tunnel) =>
             {
-                Destroy(tunnel.gameObject);
+                if (tunnel != null) // check if tunnel hasn't been already destroyed
+                {
+                    Destroy(tunnel.gameObject);
+                }
             });
 
             GrowingTunnelList.Clear();
@@ -54,12 +57,9 @@ namespace Tunnel
         {
             if (GrowingTunnelList.Contains(straightTunnel))
             {
+                print("removing " + straightTunnel.name + " from growing list");
                 GrowingTunnelList.Remove(straightTunnel);
                 stopTunnel(straightTunnel);
-            }
-            else
-            {
-                throw new System.Exception("Cannot find tunnel " + straightTunnel.gameObject.name + " to stop");
             }
         }
 
@@ -76,6 +76,7 @@ namespace Tunnel
 
             if (tunnel.type == Type.Name.STRAIGHT)
             {
+                print("adding tunnel " + tunnel.name + " to growing tunnel listT");
                 GrowingTunnelList.Add((Straight) tunnel);
             }
         }

@@ -14,7 +14,7 @@ namespace Worm
 
         private List<Waypoint> waypointList;
         private List<Waypoint> nextWaypointList; // queued up waypoint list if turning while navigating a corner
-
+    
         public delegate void CompleteTurn(string wormId, Direction direction); // when turn is completed notify Turn so we can proceed straight
         public event CompleteTurn CompleteTurnEvent;
 
@@ -36,6 +36,9 @@ namespace Worm
         public delegate void ReachJunctionExit();
         public event ReachJunctionExit ReachJunctionExitEvent;
 
+        public delegate void Telemetry(Vector3 position, Quaternion quaternion);
+        public event Telemetry TelemetryEvent;
+
         private new void Awake()
         {
             base.Awake();
@@ -52,10 +55,17 @@ namespace Worm
             ExitTurnEvent += GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent += GetComponent<Turn>().onMoveToWaypoint;
             DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
+            TelemetryEvent += FindObjectOfType<CameraController>().onTelemetry;
             if (FindObjectOfType<TunnelMaker>()) // applies to AI
             {
                 DecisionProcessingEvent += FindObjectOfType<TunnelMaker>().onDecisionProcessing;
             }
+        }
+
+        private void Update()
+        {
+            print("transform rotation is " + transform.rotation + " local rotation is " + transform.localRotation);
+            TelemetryEvent(ring.position, transform.localRotation);
         }
 
         private void FixedUpdate()
@@ -122,6 +132,10 @@ namespace Worm
 
             Tunnel.Tunnel tunnel = Tunnel.Map.getCurrentTunnel(clit.position);
 
+            if (tunnel == null)
+            {
+                throw new System.Exception("Tunnel does not exist at clit position " + clit.position);
+            }
             if (nextWaypointList.Count > 0) // additional turns
             {
                 waypointList = new List<Waypoint>(nextWaypointList);
@@ -133,7 +147,7 @@ namespace Worm
 
                 if (tunnel.type == Tunnel.Type.Name.STRAIGHT)
                 {
-                    throw new System.Exception("not a turning tunnel, wrong tunnel selected");
+                    throw new System.Exception("not a turning tunnel. it is " + tunnel.name);
                 }
                 //wormBase.direction = egressWaypointDirection; // <-- redundant, we will do this when worm reaches CENTER waypoint
                 ExitTurnEvent(egressWaypointDirection);
@@ -219,6 +233,11 @@ namespace Worm
             MoveToWaypointEvent -= GetComponent<Turn>().onMoveToWaypoint;
 
             DecisionProcessingEvent -= GetComponent<InputProcessor>().onDecisionProcessing;
+
+            if (FindObjectOfType<CameraController>())
+            {
+                TelemetryEvent -= FindObjectOfType<CameraController>().onTelemetry;
+            }
 
             if (GetComponent<TunnelMaker>()) // applies to AI
             {

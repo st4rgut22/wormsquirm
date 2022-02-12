@@ -20,8 +20,8 @@ namespace Dir
             {
                 Direction.Back, new Dictionary<Direction, Vector3>()
                 {
-                    { Direction.Up, Vector3.left },
-                    { Direction.Down, Vector3.right },
+                    { Direction.Up, Vector3.right },
+                    { Direction.Down, Vector3.left },
                     { Direction.Left, Vector3.up },
                     { Direction.Right, Vector3.down }
                 }
@@ -38,8 +38,8 @@ namespace Dir
             {
                 Direction.Down, new Dictionary<Direction, Vector3>()
                 {
-                    { Direction.Forward, Vector3.right },
-                    { Direction.Back, Vector3.left },
+                    { Direction.Forward, Vector3.left }, // update
+                    { Direction.Back, Vector3.right }, // update
                     { Direction.Left, Vector3.back },
                     { Direction.Right, Vector3.forward }
                 }

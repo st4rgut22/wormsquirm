@@ -16,12 +16,16 @@ namespace Tunnel
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
 
+        public delegate void Dig(Vector3 digLocation, Direction digDirection);
+        public event Dig DigEvent;
+
         // Start is called before the first frame update
         void OnEnable()
         {
             BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
             BlockIntervalEvent += FindObjectOfType<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
 
+            DigEvent += DirtManager.Instance.onDig;
             if (FindObjectOfType<Worm.TunnelMaker>())
             {
                 BlockIntervalEvent += FindObjectOfType<Worm.TunnelMaker>().onBlockInterval;
@@ -94,6 +98,7 @@ namespace Tunnel
         {
             if (!isStopped && DeadEndInstance != null)
             {
+                DigEvent(DeadEndInstance.transform.position, growthDirection);
                 setTunnelScale(position); // set tunnel scale using worm's position
                 
                 float length = getLength(); // get length of tunnel
@@ -199,6 +204,10 @@ namespace Tunnel
             if (FindObjectOfType<Worm.TunnelMaker>())
             {
                 BlockIntervalEvent -= FindObjectOfType<Worm.TunnelMaker>().onBlockInterval;
+            }
+            if (DirtManager.Instance)
+            {
+                DigEvent -= DirtManager.Instance.onDig;
             }
         }
 

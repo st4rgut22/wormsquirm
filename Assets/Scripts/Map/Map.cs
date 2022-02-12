@@ -27,10 +27,7 @@ namespace Tunnel
 
         private void OnEnable()
         {
-            if (FindObjectOfType<CollisionManager>()) // only sub once to this singleton, (not on scene reload)
-            {
-                CollideEvent += FindObjectOfType<CollisionManager>().onCollide;
-            }            
+            CollideEvent += CollisionManager.Instance.onCollide;
         }
 
         /**

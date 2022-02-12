@@ -16,7 +16,7 @@ namespace Worm
         /**
          * Torque received while turning through a corner (as opposed to straight travel)
          */
-        public virtual void onTorque(DirectionPair dirPair, Waypoint waypoint)
+        public override void onTorque(DirectionPair dirPair, Waypoint waypoint)
         {
             isLastTorqueEventInput = false;
         }
