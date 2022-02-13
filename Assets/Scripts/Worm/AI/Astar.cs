@@ -25,6 +25,7 @@ namespace Map
         Vector3Int goalLocation;
 
         Worm.TunnelMaker currentTunnelMaker;
+        private Vector3Int initialCell;
 
         public class Item
         {
@@ -80,6 +81,7 @@ namespace Map
         public void onFollowPath(Worm.TunnelMaker tunnelMaker)
         {            
             currentTunnelMaker = tunnelMaker;
+            initialCell = currentTunnelMaker.getInitialCell();
             StartCoroutine(astar());
         }
 
@@ -93,7 +95,7 @@ namespace Map
 
             initializeCostMap();
 
-            Item startItem = new Item(0, Worm.WormBody.initialCell, goalLocation);
+            Item startItem = new Item(0, initialCell, goalLocation);
             HashSet<Item> unknownPathSet = new HashSet<Item>();
 
             unknownPathSet.Add(startItem);
@@ -110,13 +112,13 @@ namespace Map
 
             Vector3Int goalArrayPos = goalLocation + mapOffset;
             Item item = CostMap[goalArrayPos.x, goalArrayPos.y, goalArrayPos.z];
-            while (!item.cell.Equals(Worm.WormBody.initialCell))
+            while (!item.cell.Equals(initialCell))
             {
                 print("shortest path to goalLocation " + item.cell);
                 shortestPath.Insert(0, item.cell);
                 item = item.cameFrom;
             }
-            shortestPath.Insert(0, Worm.WormBody.initialCell);
+            shortestPath.Insert(0, initialCell);
 
             return shortestPath;
         }

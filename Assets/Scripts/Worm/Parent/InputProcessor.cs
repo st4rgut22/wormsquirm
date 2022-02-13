@@ -42,9 +42,12 @@ namespace Worm
 
         protected void RaiseDecisionEvent(bool isStraightTunnel, Direction decisionDirection)
         {
-            DecisionEvent += currentTunnel.onDecision;
-            DecisionEvent(isStraightTunnel, decisionDirection, currentTunnel);
-            DecisionEvent -= currentTunnel.onDecision;
+            if (wormBase.isInitialized)
+            {
+                DecisionEvent += currentTunnel.onDecision;
+                DecisionEvent(isStraightTunnel, decisionDirection, currentTunnel);
+                DecisionEvent -= currentTunnel.onDecision;
+            }
         }
 
         public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)

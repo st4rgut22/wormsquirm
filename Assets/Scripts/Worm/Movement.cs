@@ -44,7 +44,7 @@ namespace Worm
             base.Awake();
             waypointList = new List<Waypoint>();
             nextWaypointList = new List<Waypoint>();
-            transform.position = initialCell;
+            transform.position = wormBase.initialCell;
         }
 
         private new void OnEnable() 
@@ -55,17 +55,10 @@ namespace Worm
             ExitTurnEvent += GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent += GetComponent<Turn>().onMoveToWaypoint;
             DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
-            TelemetryEvent += FindObjectOfType<CameraController>().onTelemetry;
             if (FindObjectOfType<TunnelMaker>()) // applies to AI
             {
                 DecisionProcessingEvent += FindObjectOfType<TunnelMaker>().onDecisionProcessing;
             }
-        }
-
-        private void Update()
-        {
-            print("transform rotation is " + transform.rotation + " local rotation is " + transform.localRotation);
-            TelemetryEvent(ring.position, transform.localRotation);
         }
 
         private void FixedUpdate()
@@ -81,9 +74,9 @@ namespace Worm
         public void onInitWormPosition(Vector3 initPos, Direction direction)
         {
             wormBase.setDirection(direction);
-            float offset = Tunnel.TunnelManager.Instance.START_TUNNEL_RING_OFFSET;
+            float offset = Tunnel.TunnelManager.Instance.TUNNEL_OFFSET;
             Vector3 offsetVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
-            ring.position = initPos + offset * offsetVector;
+            transform.position = initPos + offset * offsetVector;
         }
 
         private void clearWaypoints(List<Waypoint> waypoints)
@@ -233,11 +226,6 @@ namespace Worm
             MoveToWaypointEvent -= GetComponent<Turn>().onMoveToWaypoint;
 
             DecisionProcessingEvent -= GetComponent<InputProcessor>().onDecisionProcessing;
-
-            if (FindObjectOfType<CameraController>())
-            {
-                TelemetryEvent -= FindObjectOfType<CameraController>().onTelemetry;
-            }
 
             if (GetComponent<TunnelMaker>()) // applies to AI
             {

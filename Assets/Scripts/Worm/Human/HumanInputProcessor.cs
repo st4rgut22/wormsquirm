@@ -5,7 +5,13 @@ namespace Worm
         public delegate void InputTorque(DirectionPair dirPair, float torqueMagnitude);
         public event InputTorque InputTorqueEvent;
 
-        private bool isLastTorqueEventInput = true;
+        private bool isLastTorqueEventInput;
+
+        private new void Awake()
+        {
+            base.Awake();
+            isLastTorqueEventInput = true;
+        }
 
         private new void OnEnable()
         {
@@ -24,17 +30,27 @@ namespace Worm
         // / set the flag for input torque event (and not from waypoints). Indicates that we should change direction
         public override void onPlayerInput(Direction direction)
         {
-            if (!isDecisionProcessing)
+            if (!isDecisionProcessing && wormBase.isInitialized)
             {
                 bool isSameDirection = Tunnel.ActionPoint.instance.isDirectionAlongDecisionAxis(currentTunnel, direction);
                 if (!isSameDirection)
                 {
                     throw new System.Exception("Input should result in a direction that is not in the same direction (or opposite direction) of travel " + direction);
                 }
-                DirectionPair dirPair = new DirectionPair(wormBase.direction, direction);
-                isLastTorqueEventInput = true;
-                InputTorqueEvent(dirPair, turnSpeed);
+                applyTorque(direction);
             }
+        }
+
+        /**
+         * Apply torque to make the transition from current direction to the final direction
+         * 
+         * @direction final direction
+         */
+        private void applyTorque(Direction direction)
+        {
+            DirectionPair dirPair = new DirectionPair(wormBase.direction, direction);
+            isLastTorqueEventInput = true;
+            InputTorqueEvent(dirPair, turnSpeed);
         }
 
         void Update()

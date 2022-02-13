@@ -42,6 +42,38 @@ namespace Dir
             return true;
         }
 
+        /**
+         * Get the four directions that are perpendicular to a direction
+         */
+        public static Direction[] getPerpendicularDirections(Direction direction)
+        {
+            Direction[] perpendicularDirArr;
+            switch (direction)
+            {
+                case Direction.Up:
+                    perpendicularDirArr = new Direction[] { Direction.Right, Direction.Back, Direction.Left, Direction.Forward };
+                    break;
+                case Direction.Right:
+                    perpendicularDirArr = new Direction[] { Direction.Back, Direction.Up, Direction.Forward, Direction.Down };
+                    break;
+                case Direction.Left:
+                    perpendicularDirArr = new Direction[] { Direction.Up, Direction.Back, Direction.Down, Direction.Forward };
+                    break;
+                case Direction.Forward:
+                    perpendicularDirArr = new Direction[] { Direction.Up, Direction.Left, Direction.Down, Direction.Right };
+                    break;
+                case Direction.Back:
+                    perpendicularDirArr = new Direction[] { Direction.Right, Direction.Up, Direction.Left, Direction.Down };
+                    break;
+                case Direction.Down:
+                    perpendicularDirArr = new Direction[] { Direction.Right, Direction.Forward, Direction.Left, Direction.Back };
+                    break;
+                default:
+                    throw new System.Exception("Not a valid direction " + direction);
+            }
+            return perpendicularDirArr;
+        }
+
         public static Direction getOppositeDirection(Direction direction)
         {
             switch (direction)

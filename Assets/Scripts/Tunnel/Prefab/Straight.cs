@@ -174,7 +174,7 @@ namespace Tunnel
             float offsetOriginDist = Dir.Vector.getAxisPositionFromDirection(growthDirection, ingressPosition);
             float dist = Dir.Vector.getAxisScaleFromDirection(growthDirection, position);
             float distToRing = Mathf.Abs(dist - offsetOriginDist); // distance between position of worm (ahead of tunnel) and tunnel
-            float totalDist = distToRing + TunnelManager.Instance.RING_OFFSET;
+            float totalDist = distToRing + TunnelManager.Instance.TUNNEL_OFFSET;
 
             if (roundedLength != 0 && roundedLength > lastBlockLen) // skipped block interval
             {

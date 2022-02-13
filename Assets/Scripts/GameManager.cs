@@ -15,7 +15,7 @@ public class GameManager : GenericSingletonClass<GameManager>
 
     private void Awake()
     {
-        gameMode = GameMode.GamePlay;        
+        gameMode = GameMode.TestFixedPath;        
     }
 
     private void OnEnable()

@@ -4,10 +4,7 @@ using UnityEngine;
 
 namespace Worm
 {
-    /**
-     * A testing class that confirms orientation of junctions + # of holes is correct 
-     */
-    public class TunnelMaker : WormBody
+    public class TunnelMaker : BaseController
     {
         [SerializeField]
         private Rigidbody head;
@@ -15,37 +12,24 @@ namespace Worm
         List<Checkpoint> checkpointList;
         int checkPointIdx;
 
-        private const float INSTANT_TURN = 1.0f;
         private int tunnelSegmentCounter;
         Checkpoint currentCheckpoint;
-
-        public delegate void InitDecision(Direction direction, string wormId, Vector3Int initialCell);
-        public event InitDecision InitDecisionEvent;
-
-        public delegate void PlayerInput(Direction direction);
-        public event PlayerInput PlayerInputEvent;
 
         private bool isReadyToTurn; // used to time changeDirection events when the worm is ready to turn
         private string currentTunnelName;
 
-        Vector3Int initialCell = Vector3Int.zero;
-
-        private void Awake()
+        private new void Awake()
         {
+            base.Awake();
             tunnelSegmentCounter = 1; // maintains count of added segments onBlockInterval event to decide when to turn
             checkPointIdx = 0; // does not include the initial tunnel
             isReadyToTurn = false;
             currentTunnelName = "";
         }
 
-        private void OnEnable()
+        private new void OnEnable()
         {
-            if (FindObjectOfType<InputProcessor>())
-            {
-                PlayerInputEvent += FindObjectOfType<InputProcessor>().onPlayerInput;
-            }
-            InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
-            InitDecisionEvent += FindObjectOfType<Turn>().onInitDecision;
+            base.OnEnable();
             FindObjectOfType<Turn>().ReachWaypointEvent += onReachWaypoint;
             ObjectiveReachedEvent += GameManager.Instance.onObjectiveReached;
         }
@@ -60,12 +44,12 @@ namespace Worm
             this.checkpointList = checkpointList;
             currentCheckpoint = this.checkpointList[0];
             print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
-            InitDecisionEvent(currentCheckpoint.direction, wormId, initialCell);
+            RaiseInitDecisionEvent(currentCheckpoint.direction);
         }
 
-        public void onReachWaypoint(Worm.Waypoint waypoint)
+        public void onReachWaypoint(Waypoint waypoint)
         {
-            if (currentCheckpoint.length == 0 && waypoint.move == Worm.MoveType.CENTER)
+            if (currentCheckpoint.length == 0 && waypoint.move == MoveType.CENTER)
             {
                 StartCoroutine(changeDirectionConsecutively());
             }
@@ -112,7 +96,7 @@ namespace Worm
             {
                 tunnelSegmentCounter = 1;
                 currentCheckpoint = checkpointList[checkPointIdx];
-                PlayerInputEvent(currentCheckpoint.direction); // go in new direction, but corner block wont be created until straight block has reached an interval length
+                RaisePlayerInputEvent(currentCheckpoint.direction);                
                 print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
             }
             else
@@ -144,18 +128,13 @@ namespace Worm
         }
 
         // Start is called before the first frame update
-        private void OnDisable()
+        private new void OnDisable()
         {
-            InitDecisionEvent -= Tunnel.CollisionManager.Instance.onInitDecision;
+            base.OnDisable();
             ObjectiveReachedEvent -= GameManager.Instance.onObjectiveReached;
-
-            if (FindObjectOfType<InputProcessor>())
-            {
-                PlayerInputEvent -= FindObjectOfType<InputProcessor>().onPlayerInput;
-            }            
+       
             if (FindObjectOfType<Turn>())
             {
-                InitDecisionEvent -= FindObjectOfType<Turn>().onInitDecision;
                 FindObjectOfType<Turn>().ReachWaypointEvent -= onReachWaypoint;
             }
         }

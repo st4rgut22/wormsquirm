@@ -14,16 +14,13 @@ namespace Tunnel
         public Vector3Int initialCell = Vector3Int.zero; // initial cell
 
         [SerializeField]
-        public float RING_OFFSET = .5f; 
-
-        public float START_TUNNEL_RING_OFFSET;
+        public float TUNNEL_OFFSET = .5f; 
 
         public Vector3Int startingCell;
 
         private new void Awake()
         {
             base.Awake();
-            START_TUNNEL_RING_OFFSET = 1 - RING_OFFSET; // Distance between start of tunnel and worm ring
             TunnelList = new List<Tunnel>();
             GrowingTunnelList = new List<Straight>();
         }
