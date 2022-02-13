@@ -15,6 +15,8 @@ namespace Worm
         public delegate void Grow(Tunnel.Tunnel tunnel, Vector3 wormPos);
         public event Grow GrowEvent;
 
+        protected bool isReadyForInput; // flag indicating if worm position, movement have been initialized
+
         protected void OnEnable()
         {
             DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
@@ -30,6 +32,7 @@ namespace Worm
             base.Awake();
             currentTunnel = null;
             isDecisionProcessing = false;
+            isReadyForInput = false;
         }
 
         public virtual void onPlayerInput(Direction direction)
@@ -42,18 +45,19 @@ namespace Worm
 
         protected void RaiseDecisionEvent(bool isStraightTunnel, Direction decisionDirection)
         {
-            if (wormBase.isInitialized)
-            {
-                DecisionEvent += currentTunnel.onDecision;
-                DecisionEvent(isStraightTunnel, decisionDirection, currentTunnel);
-                DecisionEvent -= currentTunnel.onDecision;
-            }
+            DecisionEvent += currentTunnel.onDecision;
+            DecisionEvent(isStraightTunnel, decisionDirection, currentTunnel);
+            DecisionEvent -= currentTunnel.onDecision;
         }
 
         public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
         {
             if (wormId == this.wormId)
             {
+                if (tunnel.type == Tunnel.Type.Name.STRAIGHT)
+                {
+                    isReadyForInput = true;
+                }
                 currentTunnel = tunnel;
             }
             else

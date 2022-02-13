@@ -19,6 +19,18 @@ namespace Tunnel
         }
 
         /**
+         * Get the name of the tunnel
+         * 
+         * @tunnelType the tunnel's type eg Corner, Straight
+         * @tunnelCount the number of instances of this tunnel type
+         */
+        protected string getTunnelId(string tunnelType, int tunnelCount)
+        {
+            return tunnelType + " " + tunnelCount;
+
+        }
+
+        /**
          * Adds tunnel to list of tunnels and the map, and subscribes/unsubscribes tunnels from the addTunnel event
          * 
          * @tunnel newly created tunnel

@@ -39,7 +39,7 @@ namespace Rotation
         protected void Awake()
         {
             // Dictionary<ingress hole direction, Dictionary<egress hold direction, rotation>>()            
-            rotationDict = new Dictionary<Direction, Dictionary<List<Direction>, Quaternion>>();
+            rotationDict = new Dictionary<Direction, Dictionary<List<Direction>, Quaternion>>(); 
         }
 
         private void Start()

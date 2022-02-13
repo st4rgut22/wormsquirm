@@ -13,6 +13,7 @@ namespace Tunnel
 
         protected const float MARGIN_OF_ERROR = .07f;
         protected const float WALL_THICKNESS = .25f;
+        public static float TUNNEL_MIDPOINT = .5f; // closest distance from tunnel center to side
 
         public static float BLOCK_SIZE = 1;
         public const float SCALE_TO_LENGTH = 2; // scale of 1 : 2 world units

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Tunnel
@@ -13,8 +14,11 @@ namespace Tunnel
         public delegate void Stop(Straight tunnel);
         public event Stop StopEvent;
 
-        public delegate void CreateJunction(Tunnel collisionTunnel, DirectionPair dirPair, CellMove cellMove, Tunnel currentTunnel);
-        public event CreateJunction CreateJunctionEvent;
+        public delegate void CreateJunctionOnCollision(Tunnel collisionTunnel, DirectionPair dirPair, CellMove cellMove, string wormId);
+        public event CreateJunctionOnCollision CreateJunctionOnCollisionEvent;
+
+        public delegate void CreateJunctionOnInit(DirectionPair dirPair, CellMove cellMove, Direction ingressDirection, List<Direction> allHoleDirections, string wormId);
+        public event CreateJunctionOnInit CreateJunctionOnInitEvent;
 
         public delegate void CreateTunnel(CellMove cellMove, DirectionPair directionPair, Tunnel tunnel, string wormId);
         public event CreateTunnel CreateTunnelEvent;
@@ -26,7 +30,9 @@ namespace Tunnel
 
             SliceTunnelEvent += FindObjectOfType<Intersect.Slicer>().sliceTunnel;
 
-            CreateJunctionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunction;
+            CreateJunctionOnCollisionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnCollision;
+
+            CreateJunctionOnInitEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnInit;
 
             StopEvent += TunnelManager.Instance.onStop;
         }
@@ -60,11 +66,11 @@ namespace Tunnel
             {
                 StopEvent((Straight)curTunnel);
             }
-            CreateJunctionEvent(nextTunnel, directionPair, cellMove, curTunnel);
+            CreateJunctionOnCollisionEvent(nextTunnel, directionPair, cellMove, curTunnel.wormCreatorId);
         }
 
         /**
-         * The first decision made will initialize a tunnel by emitting a Change Direction event
+         * The first decision made will initialize a tunnel of type 6-way junction
          */
         public void onInitDecision(Direction direction, string wormId, Vector3Int initialCell)
         {
@@ -72,7 +78,8 @@ namespace Tunnel
             InitWormPositionEvent(cellMove.startPosition, direction);
 
             DirectionPair sameDirPair = new DirectionPair(direction, direction);
-            CreateTunnelEvent(cellMove, sameDirPair, null, wormId);
+
+            CreateJunctionOnInitEvent(sameDirPair, cellMove, direction, Dir.Base.directionList, wormId);
         }
 
         /**
@@ -111,7 +118,8 @@ namespace Tunnel
             }
             if (FindObjectOfType<ModTunnelFactory>())
             {
-                CreateJunctionEvent -= FindObjectOfType<ModTunnelFactory>().onCreateJunction;
+                CreateJunctionOnCollisionEvent -= FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnCollision;
+                CreateJunctionOnCollisionEvent -= FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnCollision;
             }
             if (FindObjectOfType<Factory>())
             {

@@ -30,7 +30,7 @@ namespace Worm
         // / set the flag for input torque event (and not from waypoints). Indicates that we should change direction
         public override void onPlayerInput(Direction direction)
         {
-            if (!isDecisionProcessing && wormBase.isInitialized)
+            if (!isDecisionProcessing && isReadyForInput)
             {
                 bool isSameDirection = Tunnel.ActionPoint.instance.isDirectionAlongDecisionAxis(currentTunnel, direction);
                 if (!isSameDirection)
@@ -55,7 +55,7 @@ namespace Worm
 
         void Update()
         {
-            if (!isDecisionProcessing && currentTunnel != null)
+            if (!isDecisionProcessing && isReadyForInput)
             {
                 if (isLastTorqueEventInput)
                 {

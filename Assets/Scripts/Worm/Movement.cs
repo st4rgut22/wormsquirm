@@ -109,6 +109,7 @@ namespace Worm
             ReachJunctionExitEvent -= junction.onReachJunctionExit;
             DirectionPair straightDirPair = new DirectionPair(wormBase.direction, wormBase.direction); // create a straight tunnel after navigating through a junction 
             RaiseChangeDirectionEvent(straightDirPair, wormId);
+            waypointList.Clear();
         }
 
         /**
@@ -176,10 +177,6 @@ namespace Worm
                     completeTurn(waypoint); // complete the current turn and determine what next move is (navigating out of turn or turning again)
                 }
             }
-            //else if (waypoint.move == MoveType.OFFSET)
-            //{
-            //    clearWaypoints(waypointList);
-            //}
             else
             {
                 return;

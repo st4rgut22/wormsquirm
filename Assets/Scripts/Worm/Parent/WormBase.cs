@@ -26,7 +26,7 @@ namespace Worm
         {
             base.Awake();
             isInitialized = false;
-            Vector3Int testInitialCell = new Vector3Int(1, 1, 1);
+            Vector3Int testInitialCell = Vector3Int.zero; // new Vector3Int(1, 1, 1);
             setInitialCell(testInitialCell);
 
             setDirection(Direction.None);

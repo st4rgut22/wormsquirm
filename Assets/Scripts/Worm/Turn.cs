@@ -172,15 +172,8 @@ namespace Worm
          */
         public void onMoveToWaypoint(Waypoint waypoint)
         {
-            if (isWaypointReached)
-            {
-                if (waypoint.move == MoveType.OFFSET)
-                {
-                    print("break");
-                }
-                isWaypointReached = false;
-                destinationWaypoint = waypoint;
-            }
+            destinationWaypoint = waypoint;
+            isWaypointReached = false;
         }
 
         /**
