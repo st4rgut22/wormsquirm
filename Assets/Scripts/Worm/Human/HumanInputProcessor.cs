@@ -5,12 +5,12 @@ namespace Worm
         public delegate void InputTorque(DirectionPair dirPair, float torqueMagnitude);
         public event InputTorque InputTorqueEvent;
 
-        private bool isLastTorqueEventInput;
+        private Direction lastTorqueEventDirection; // the direction in which the last torque event happend, None value indicates absence of torque event
 
         private new void Awake()
         {
             base.Awake();
-            isLastTorqueEventInput = true;
+            lastTorqueEventDirection = Direction.None;
         }
 
         private new void OnEnable()
@@ -24,7 +24,7 @@ namespace Worm
          */
         public override void onTorque(DirectionPair dirPair, Waypoint waypoint)
         {
-            isLastTorqueEventInput = false;
+            lastTorqueEventDirection = Direction.None;
         }
 
         // / set the flag for input torque event (and not from waypoints). Indicates that we should change direction
@@ -49,7 +49,8 @@ namespace Worm
         private void applyTorque(Direction direction)
         {
             DirectionPair dirPair = new DirectionPair(wormBase.direction, direction);
-            isLastTorqueEventInput = true;
+            print("apply torque in direction " + direction);
+            lastTorqueEventDirection = direction;
             InputTorqueEvent(dirPair, turnSpeed);
         }
 
@@ -57,9 +58,9 @@ namespace Worm
         {
             if (!isDecisionProcessing && isReadyForInput)
             {
-                if (isLastTorqueEventInput)
+                if (lastTorqueEventDirection != Direction.None)
                 {
-                    Direction decisionDirection = Tunnel.ActionPoint.instance.getDirectionDecisionBoundaryCrossed(currentTunnel, head.position, wormBase.direction);
+                    Direction decisionDirection = Tunnel.ActionPoint.instance.getDirectionDecisionBoundaryCrossed(currentTunnel, head.position, wormBase.direction, lastTorqueEventDirection);
                     if (decisionDirection != Direction.None)
                     {
                         print("processing decision in direction " + decisionDirection);

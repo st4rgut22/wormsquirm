@@ -67,7 +67,7 @@ namespace Test
         }
 
         private List<Checkpoint> initZigzag()
-        {
+        { 
             Checkpoint cp0 = new Checkpoint(Direction.Up, 5);
             Checkpoint cp1 = new Checkpoint(Direction.Right, 1);
             Checkpoint cp2 = new Checkpoint(Direction.Up, 1);

@@ -6,19 +6,35 @@ using UnityEngine;
 namespace Worm
 {
     public class Controller : BaseController
-    {      
+    {
+        InputKey prevPressedKey;
+        Direction prevDirection;
+
+        private new void Awake()
+        {
+            base.Awake();
+            prevPressedKey = null;
+            prevDirection = Direction.None;
+        }
+
         private Direction getDirection(InputKeyPair inputKeyPair)
         {            
             InputKey pressedKey = inputKeyPair.getPressedInputKey();
 
+            Direction direction;
             if (wormBase.direction == Direction.None)
             {
-                return pressedKey.initDirection;
+                direction = pressedKey.initDirection;
             }
             else
             {
-                return Dir.Input.getChangedDirection(wormBase.direction, pressedKey);
+                direction = Dir.Input.getChangedDirection(wormBase.direction, prevDirection, pressedKey, prevPressedKey);
             }
+
+            prevDirection = wormBase.direction;
+            prevPressedKey = pressedKey;
+            
+            return direction;
         }
 
         void Update()

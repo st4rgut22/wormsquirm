@@ -38,11 +38,11 @@ public class DirtManager : GenericSingletonClass<DirtManager>
     {
         Dir.Base.directionList.ForEach((Direction tunnelDirection) =>
         {
-            Direction[] perpendicularDirections = Dir.Base.getPerpendicularDirections(tunnelDirection);
+            List<Direction> perpendicularDirections = Dir.Base.getPerpendicularDirections(tunnelDirection);
             ForceDirectionVectorDictionary[tunnelDirection] = new List<Vector3>();
 
             Direction prevPerpendicularDirection = Direction.None; 
-            for (int i=0;i<perpendicularDirections.Length;i++)
+            for (int i=0;i<perpendicularDirections.Count;i++)
             {
                 Direction prependicularDirection = perpendicularDirections[i];
                 if (prevPerpendicularDirection != Direction.None)
@@ -50,7 +50,7 @@ public class DirtManager : GenericSingletonClass<DirtManager>
                     Vector3 cornerEjectForceUnitVector = calculateDirectionVector(prevPerpendicularDirection, prependicularDirection);
                     ForceDirectionVectorDictionary[tunnelDirection].Add(cornerEjectForceUnitVector);
                 }
-                if (i == perpendicularDirections.Length - 1)
+                if (i == perpendicularDirections.Count - 1)
                 {
                     Vector3 finalCornerEjectForceUnitVector = calculateDirectionVector(prependicularDirection, perpendicularDirections[0]);
                     ForceDirectionVectorDictionary[tunnelDirection].Add(finalCornerEjectForceUnitVector);

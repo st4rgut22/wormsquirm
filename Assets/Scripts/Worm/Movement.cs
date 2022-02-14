@@ -8,8 +8,6 @@ namespace Worm
      */
     public class Movement: WormBody
     {
-        private Direction egressWaypointDirection; // direction exiting a corner, saved on receipt of followWaypoints event
-        
         private int waypointIndex;
 
         private List<Waypoint> waypointList;
@@ -133,7 +131,6 @@ namespace Worm
                 {
                     throw new System.Exception("not a turning tunnel. it is " + tunnel.name);
                 }
-                print("dirdirdir exit turn in direction " + egressWaypointDirection);
                 ExitTurnEvent(wormBase.direction);
             }
         }
@@ -200,7 +197,6 @@ namespace Worm
         public void onFollowWaypoint(List<Waypoint> waypointList, Direction egressDirection)
         {
             print("Egress dir is " + egressDirection);
-            egressWaypointDirection = egressDirection; // save the last egress directionPair
             if (this.waypointList.Count > 0) // queue up waypoint list if currently following one
             {
                 nextWaypointList = waypointList;

@@ -22,29 +22,26 @@ namespace Tunnel
         /**
          * Decide if player movement should trigger changes to the tunnel network such as tunnel creation
          * 
-         * @returns the direction in which decision is made
+         * @tunnel          the current tunnel
+         * @position        the position of the player
+         * @curDir          the current direction of the player
+         * @torqueDirection the direction in which torque event happened
+         * @returns         the direction in which decision is made
          */
-        public Direction getDirectionDecisionBoundaryCrossed(Tunnel tunnel, Vector3 position, Direction curDir)
+        public Direction getDirectionDecisionBoundaryCrossed(Tunnel tunnel, Vector3 position, Direction curDir, Direction torqueDirection)
         {
             Direction oppDir = Dir.Base.getOppositeDirection(curDir);
             decisionPointBoundary = new Dictionary<Direction, float>();
             setBoundaryPoints(tunnel.center);
-            Direction decisionDirection = Direction.None;
 
-            Dir.Base.directionList.ForEach((Direction direction) =>
+            bool isDecision = isDecisionBoundaryCrossed(position, torqueDirection);
+            bool isAlongDecisionAxis = torqueDirection == curDir || torqueDirection == oppDir;
+            if (isAlongDecisionAxis)
             {
-                bool isDecision = isDecisionBoundaryCrossed(position, direction);
-                bool isAlongDecisionAxis = direction != curDir && direction != oppDir;
+                throw new Exception("torque should never occur in same (or opposite) direction as worm which is " + curDir + " and " + oppDir);
+            }
 
-                if (isDecision && isAlongDecisionAxis)
-                {
-                    if (decisionDirection != Direction.None)
-                    {
-                        throw new Exception("Decision direction is ambiguous. Worm wants to go in direction " + decisionDirection + " and " + direction);
-                    }
-                    decisionDirection = direction;
-                }
-            });
+            Direction decisionDirection = isDecision ? torqueDirection : Direction.None;
             return decisionDirection;
         }
 

@@ -74,7 +74,6 @@ namespace Worm
             this.isDecisionProcessing = isDecisionProcessing;
             if (!isDecisionProcessing) // set new direction of worm once worm is available to make new turns
             {
-                print("dirdirdir not processing turn set new direction to " + waypoint.dirPair.curDir);
                 wormBase.setDirection(waypoint.dirPair.curDir); // set the worm direction as the direction coming out of a turn
             }
         }

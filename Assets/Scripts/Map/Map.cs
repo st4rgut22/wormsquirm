@@ -106,6 +106,7 @@ namespace Tunnel
             {
                 position.z -= XZ_INTERVAL_OFFSET;
             }
+            position.y = Mathf.FloorToInt(position.y); // round down y to the closest integer value to ensure consistency between positive and negative positions
             Vector3Int cellPos = Dir.Vector.castToVector3Int(position);
             print("clit position after adjustment " + position + " equals cell position " + cellPos);
             Tunnel tunnel = getTunnelFromDict(cellPos);

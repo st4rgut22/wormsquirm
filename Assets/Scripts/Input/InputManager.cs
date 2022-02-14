@@ -13,12 +13,12 @@ public class InputManager: MonoBehaviour
     {
         instance = this;
 
-        InputKey upKeyXZ = new InputKey(KeyCode.W, Direction.Up);
-        InputKey downKeyXZ = new InputKey(KeyCode.S, Direction.Down);
+        InputKey upKeyXZ = new InputKey(KeyCode.W, Direction.Up, true);
+        InputKey downKeyXZ = new InputKey(KeyCode.S, Direction.Down, false);
         inputKeyPairXZ = new InputKeyPair(upKeyXZ, downKeyXZ); // W,S controls movement along XZ Plane
 
-        InputKey upKeyZY = new InputKey(KeyCode.A, Direction.Forward);
-        InputKey downKeyZY = new InputKey(KeyCode.D, Direction.Back);
+        InputKey upKeyZY = new InputKey(KeyCode.A, Direction.Forward, false);
+        InputKey downKeyZY = new InputKey(KeyCode.D, Direction.Back, true);
         inputKeyPairZY = new InputKeyPair(upKeyZY, downKeyZY); // A,D controls movement along ZY Plane
     }
 
