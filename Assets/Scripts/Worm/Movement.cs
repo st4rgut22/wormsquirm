@@ -9,7 +9,7 @@ namespace Worm
     public class Movement: WormBody
     {
         private Direction egressWaypointDirection; // direction exiting a corner, saved on receipt of followWaypoints event
-
+        
         private int waypointIndex;
 
         private List<Waypoint> waypointList;
@@ -47,10 +47,8 @@ namespace Worm
             transform.position = wormBase.initialCell;
         }
 
-        private new void OnEnable() 
+        private void OnEnable() 
         {
-            Tunnel.CollisionManager.Instance.InitWormPositionEvent += onInitWormPosition;
-
             ForceEvent += GetComponent<Force>().onForce;
             ExitTurnEvent += GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent += GetComponent<Turn>().onMoveToWaypoint;
@@ -71,14 +69,6 @@ namespace Worm
             }
         }
 
-        public void onInitWormPosition(Vector3 initPos, Direction direction)
-        {
-            wormBase.setDirection(direction);
-            float offset = Tunnel.TunnelManager.Instance.TUNNEL_OFFSET;
-            Vector3 offsetVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
-            transform.position = initPos + offset * offsetVector;
-        }
-
         private void clearWaypoints(List<Waypoint> waypoints)
         {
             waypoints.Clear();
@@ -94,8 +84,7 @@ namespace Worm
             DirectionPair straightDirPair = new DirectionPair(wormBase.direction, wormBase.direction);
             Waypoint exitWP = new Waypoint(egressPosition, MoveType.EXIT, straightDirPair);
             List<Waypoint> waypointList = new List<Waypoint>() { exitWP };
-            DirectionPair dirPair = new DirectionPair(wormBase.direction, wormBase.direction);
-            onFollowWaypoint(waypointList, dirPair);
+            onFollowWaypoint(waypointList, wormBase.direction);
         }
 
         /** 
@@ -113,9 +102,10 @@ namespace Worm
         }
 
         /**
-         * Finish a turn and check if any turns are queued up 
+         * Finish a turn and check if any turns are queued up. If so return the first waypoint of the next turn 
          * 
          * @waypoint The waypoint that completes the turnonf
+         * @returns a list of waypoints for the next turn
          */
         private void completeTurn(Waypoint waypoint)
         {
@@ -130,25 +120,26 @@ namespace Worm
             {
                 throw new System.Exception("Tunnel does not exist at clit position " + clit.position);
             }
+
+            CompleteTurnEvent += ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
+            CompleteTurnEvent(wormId, egressWaypointDirection); // set the new direction as the exit direction
+            CompleteTurnEvent -= ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
+
+            clearWaypoints(waypointList);
             if (nextWaypointList.Count > 0) // additional turns
             {
-                waypointList = new List<Waypoint>(nextWaypointList);
+                List<Waypoint> newWaypointList = new List<Waypoint>(nextWaypointList);
                 clearWaypoints(nextWaypointList);
+                onFollowWaypoint(newWaypointList, wormBase.direction); // set this immediate turn waypoint list as the next waypoints to follow
             }
             else // no immediate turn
             {
-                clearWaypoints(waypointList);
-
                 if (tunnel.type == Tunnel.Type.Name.STRAIGHT)
                 {
                     throw new System.Exception("not a turning tunnel. it is " + tunnel.name);
                 }
-                //wormBase.direction = egressWaypointDirection; // <-- redundant, we will do this when worm reaches CENTER waypoint
                 ExitTurnEvent(egressWaypointDirection);
             }
-            CompleteTurnEvent += ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
-            CompleteTurnEvent(wormId, egressWaypointDirection); // set the new direction as the exit direction
-            CompleteTurnEvent -= ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
         }
 
         /**
@@ -156,16 +147,7 @@ namespace Worm
          */
         public void onReachWaypoint(Waypoint waypoint)
         {
-            if (waypoint.move == MoveType.ENTRANCE)
-            {
-                DecisionProcessingEvent(true, waypoint); // no turns allowed when entering a turn (from current position to center of the turn tunnel segment)
-            }
-            else if (waypoint.move == MoveType.CENTER)
-            {
-                print("apply up force to the ring rgbdy");
-                DecisionProcessingEvent(false, waypoint); // allow decisions to be made again when center of tunnel is reached (eg a consecutive turn)
-            }
-            else if (waypoint.move == MoveType.EXIT)
+            if (waypoint.move == MoveType.EXIT)
             {
                 if (wormBase.isStraight)
                 {
@@ -174,21 +156,44 @@ namespace Worm
                 }
                 else
                 {
-                    completeTurn(waypoint); // complete the current turn and determine what next move is (navigating out of turn or turning again)
+                    completeTurn(waypoint); // complete the current turn and determine what next move is (navigating out of turn or turning again) :)
                 }
             }
             else
             {
-                return;
+                if (waypoint.move == MoveType.ENTRANCE)
+                {
+                    DecisionProcessingEvent(true, waypoint); // no turns allowed when entering a turn (from current position to center of the turn tunnel segment)
+                }
+                else if (waypoint.move == MoveType.CENTER)
+                {
+                    print("apply up force to the ring rgbdy");
+                    DecisionProcessingEvent(false, waypoint); // allow decisions to be made again when center of tunnel is reached (eg a consecutive turn)
+                }
+                else
+                {
+                    throw new System.Exception("not a valid waypoint type " + waypoint.move);
+                }
+                moveToNextWaypoint(waypoint);
             }
+        }
 
-            waypointIndex = waypointList.FindIndex(wp => waypoint.position.Equals(wp.position)); // EXIT pos of prevCell equals the ENTER pos of current cell
-            if (waypointIndex < waypointList.Count - 1) // if not the last waypoint in the list
+        /**
+         * Move to the next waypoint if it is not the last waypoint
+         * 
+         * @prevWaypoint the waypoint we have reached
+         */
+        private void moveToNextWaypoint(Waypoint prevWaypoint)
+        {
+            waypointIndex = waypointList.FindIndex(wp => prevWaypoint.Equals(wp)); // EXIT pos of prevCell equals the ENTER pos of current cell
+            print("waypoint index is " + waypointIndex);
+            if (waypointIndex == waypointList.Count - 1)
             {
-                waypointIndex += 1;
-                Waypoint nextWaypoint = waypointList[waypointIndex];
-                MoveToWaypointEvent(nextWaypoint);
-            }
+                throw new System.Exception("last waypoint should not execute moveToNextWaypoint. Last waypoint should be of type EXIT not " + prevWaypoint.move);
+            } 
+            waypointIndex += 1;
+            Waypoint curWaypoint = waypointList[waypointIndex]; // exit waypoint equals center waypoint WHY?
+            MoveToWaypointEvent(curWaypoint);
         }
 
         /**
@@ -196,28 +201,23 @@ namespace Worm
          * 
          * @waypointList a list of coordinates the worm follows to navigate a corner
          */
-        public void onFollowWaypoint(List<Waypoint> waypointList, DirectionPair directionPair)
+        public void onFollowWaypoint(List<Waypoint> waypointList, Direction egressDirection)
         {
-            egressWaypointDirection = directionPair.curDir; // save the last egress directionPair
-            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(egressWaypointDirection);
-
-            if (this.waypointList.Count > 0)
+            egressWaypointDirection = egressDirection; // save the last egress directionPair
+            if (this.waypointList.Count > 0) // queue up waypoint list if currently following one
             {
                 nextWaypointList = waypointList;
             }
-            else
+            else // if not following waypoint list, follow the new waypoint list
             {
                 this.waypointList = waypointList;
+                Waypoint firstWaypoint = this.waypointList[0];
+                MoveToWaypointEvent(firstWaypoint);
             }
-            Waypoint firstWaypoint = this.waypointList[0];
-            MoveToWaypointEvent(firstWaypoint);
         }
 
         private new void OnDisable()
         {
-            Tunnel.CollisionManager.Instance.InitWormPositionEvent -= onInitWormPosition;
-
- 
             ForceEvent -= GetComponent<Force>().onForce;
             ExitTurnEvent -= GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent -= GetComponent<Turn>().onMoveToWaypoint;

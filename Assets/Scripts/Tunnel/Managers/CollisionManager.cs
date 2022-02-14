@@ -70,16 +70,17 @@ namespace Tunnel
         }
 
         /**
-         * The first decision made will initialize a tunnel of type 6-way junction
+         * The first decision made will initialize a tunnel of type 6-way junction (??)
          */
         public void onInitDecision(Direction direction, string wormId, Vector3Int initialCell)
         {
+            print("init decision event in direction " + direction);
             CellMove cellMove = CellMove.getInitialCellMove(direction, initialCell);
             InitWormPositionEvent(cellMove.startPosition, direction);
 
             DirectionPair sameDirPair = new DirectionPair(direction, direction);
-
-            CreateJunctionOnInitEvent(sameDirPair, cellMove, direction, Dir.Base.directionList, wormId);
+            CreateTunnelEvent(cellMove, sameDirPair, null, wormId);
+            //CreateJunctionOnInitEvent(sameDirPair, cellMove, direction, Dir.Base.directionList, wormId);
         }
 
         /**

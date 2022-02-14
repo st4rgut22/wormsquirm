@@ -94,7 +94,7 @@ namespace Tunnel
          * 
          * @position is the point of reference used for scaling the tunnel's head
          */
-        public void onGrow( Vector3 position)
+        public void onGrow(Vector3 position)
         {
             if (!isStopped && DeadEndInstance != null)
             {

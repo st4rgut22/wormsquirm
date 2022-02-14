@@ -148,7 +148,6 @@ namespace Tunnel
             TunnelMapDict[cellLocation] = tunnel;
             cellList.Add(cellLocation);
             print("add cell " + cellLocation + " belonging to " + tunnel.gameObject.name + " to map"); // should not be adding a cell
-
         }
 
         /**

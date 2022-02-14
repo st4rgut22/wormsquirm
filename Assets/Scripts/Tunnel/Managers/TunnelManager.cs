@@ -14,7 +14,7 @@ namespace Tunnel
         public Vector3Int initialCell = Vector3Int.zero; // initial cell
 
         [SerializeField]
-        public float TUNNEL_OFFSET = .5f; 
+        public float TUNNEL_OFFSET = .5f; // offset from the worm position and the tunnel entrance position
 
         public Vector3Int startingCell;
 

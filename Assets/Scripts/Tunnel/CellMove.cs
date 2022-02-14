@@ -47,15 +47,20 @@ namespace Tunnel
 
         /**
          * Initialize tunnel at beginning of game
+         * 
+         * @initialDirection the direction the worm first decides to go in
+         * @cell the cell coordinates of the first tunnel
          */
-        public CellMove(Direction initialDirection, Vector3 center)
+        public CellMove(Direction initialDirection, Vector3Int cell)
         {
-            
-            Vector3 initialCenter = Tunnel.initializeCenter(initialDirection, center);
-            Direction oppDir = Dir.Base.getOppositeDirection(initialDirection);
-            startPosition = Tunnel.getEgressPosition(oppDir, initialCenter);
+            this.cell = cell;
 
-            cell = Dir.Vector.castToVector3Int(initialCenter);
+            Vector3 initialCenter = Tunnel.initializeCenter(cell);
+
+            Direction oppDir = Dir.Base.getOppositeDirection(initialDirection);
+
+            startPosition = Tunnel.getEgressPosition(oppDir, initialCenter); // offset from center in oppDir
+
             nextCell = Dir.Vector.getNextCellFromDirection(cell, initialDirection);
             isInit = true;
         }

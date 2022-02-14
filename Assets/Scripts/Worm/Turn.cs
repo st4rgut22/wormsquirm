@@ -19,7 +19,7 @@ namespace Worm
         public delegate void ReachWaypoint(Waypoint waypoint);
         public ReachWaypoint ReachWaypointEvent;
 
-        public delegate void FollowWaypoint(List<Waypoint> waypointList, DirectionPair directionPair);
+        public delegate void FollowWaypoint(List<Waypoint> waypointList, Direction egressDirection);
         public event FollowWaypoint FollowWaypointEvent;
 
         public delegate void AddTorque(DirectionPair dirPair, Waypoint waypoint);
@@ -63,7 +63,11 @@ namespace Worm
                     {
                         TorqueEvent(directionPair, destinationWaypoint);
                     }
-                    print("waypoint is reached for " + destinationWaypoint.move + " position is " + destinationWaypoint.position);
+                    if (directionPair.prevDir == Direction.Forward && directionPair.curDir == Direction.Right && destinationWaypoint.move == MoveType.CENTER)
+                    {
+                        print("break");
+                    }
+                    print("re: prevDir " + directionPair.prevDir + " curDir " + directionPair.curDir + " waypoint is reached for " + destinationWaypoint.move + " destination position is " + destinationWaypoint.position + " ring position is " + ring.position);
                     ReachWaypointEvent(destinationWaypoint);
                 }
             }
@@ -81,17 +85,17 @@ namespace Worm
          * @directionPair, the ingress and egress direction of the worm
          */
         private void initializeTurnWaypointList(DirectionPair directionPair, Vector3 startWaypointPosition)
-        {
+        {   
             print("init waypoint list prev dir " + directionPair.prevDir + " cur dir " + directionPair.curDir);
             Vector3 centerWaypointPosition = getOffsetPosition(startWaypointPosition, directionPair.prevDir, Tunnel.Tunnel.CENTER_OFFSET);
-            Vector3 exitWaypointPosition = getOffsetPosition(centerWaypointPosition, directionPair.curDir, Tunnel.Tunnel.CENTER_OFFSET);
+            Vector3 exitWaypointPosition = getOffsetPosition(centerWaypointPosition, directionPair.curDir, Tunnel.Tunnel.CENTER_OFFSET); // 2.0, 3.5, ...
 
             Waypoint startWP = new Waypoint(startWaypointPosition, MoveType.ENTRANCE, directionPair);
             Waypoint cellWP = new Waypoint(centerWaypointPosition, MoveType.CENTER, directionPair);
             Waypoint exitWP = new Waypoint(exitWaypointPosition, MoveType.EXIT, directionPair);
 
             waypointList = new List<Waypoint> { startWP, cellWP, exitWP };
-            FollowWaypointEvent(waypointList, directionPair);
+            FollowWaypointEvent(waypointList, directionPair.curDir);
         }
 
         /**

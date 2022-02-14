@@ -107,14 +107,14 @@ namespace Tunnel
         }
 
         /** 
-         * When a tunnel at beginning of game, initialize center
+         * When a tunnel is created at beginning of game, initialize center
          * 
          * @direction worm direction
          */
-        public static Vector3 initializeCenter(Direction direction, Vector3 center)
+        public static Vector3 initializeCenter(Vector3 cellPos)
         {
-            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
-            Vector3 initialCenter = center + unitVector * CENTER_OFFSET;
+            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Up); // center is offset from cell location in up direction
+            Vector3 initialCenter = cellPos + unitVector * CENTER_OFFSET;
             return initialCenter;
         }
 

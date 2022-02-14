@@ -7,11 +7,12 @@ namespace Worm
         public delegate void SaveWorm(string wormId, GameObject wormGO);
         public event SaveWorm SaveWormEvent;
 
+        [SerializeField]
+        public Vector3Int initialCell;
+
         public Direction direction { get; private set; }
 
         public bool isStraight = true;
-
-        public Vector3Int initialCell { get; private set; }
 
         public bool isInitialized { get; private set; }
 
@@ -26,8 +27,7 @@ namespace Worm
         {
             base.Awake();
             isInitialized = false;
-            Vector3Int testInitialCell = Vector3Int.zero; // new Vector3Int(1, 1, 1);
-            setInitialCell(testInitialCell);
+            setInitialCell(initialCell);
 
             setDirection(Direction.None);
         }

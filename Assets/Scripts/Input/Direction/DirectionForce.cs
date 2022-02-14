@@ -14,7 +14,7 @@ namespace Dir
                     { Direction.Up, Vector3.left },
                     { Direction.Down, Vector3.right },
                     { Direction.Left, Vector3.down },
-                    { Direction.Right, Vector3.up }
+                    { Direction.Right, Vector3.up } // changed
                 }
             },
             {
@@ -66,6 +66,7 @@ namespace Dir
 
         public static Vector3 getTorqueVectorFromDirection(DirectionPair directionPair)
         {
+            Debug.Log("direction pair is prev " + directionPair.prevDir + " curdir " + directionPair.curDir);
             return TorqueVectorDictionary[directionPair.prevDir][directionPair.curDir];
         }
     }
