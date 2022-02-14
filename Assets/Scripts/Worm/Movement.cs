@@ -92,7 +92,7 @@ namespace Worm
          */
         private void completeStraight(Waypoint waypoint)
         {
-            Tunnel.Junction junction = (Tunnel.Junction) (Tunnel.Map.getCurrentTunnel(clit.position)); // use the head, because ring will be on border of cell
+            Tunnel.Junction junction = (Tunnel.Junction) (Tunnel.Map.getCurrentTunnel(clit.position));  // use body position to get tunnel, because cannot rely on always being in a growing tunnel where block position is received from tunnel
             ReachJunctionExitEvent += junction.onReachJunctionExit;
             ReachJunctionExitEvent();
             ReachJunctionExitEvent -= junction.onReachJunctionExit;
@@ -116,13 +116,8 @@ namespace Worm
 
             Tunnel.Tunnel tunnel = Tunnel.Map.getCurrentTunnel(clit.position);
 
-            if (tunnel == null)
-            {
-                throw new System.Exception("Tunnel does not exist at clit position " + clit.position);
-            }
-
             CompleteTurnEvent += ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
-            CompleteTurnEvent(wormId, egressWaypointDirection); // set the new direction as the exit direction
+            CompleteTurnEvent(wormId, wormBase.direction); // set the new direction as the exit direction
             CompleteTurnEvent -= ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
 
             clearWaypoints(waypointList);
@@ -138,7 +133,8 @@ namespace Worm
                 {
                     throw new System.Exception("not a turning tunnel. it is " + tunnel.name);
                 }
-                ExitTurnEvent(egressWaypointDirection);
+                print("dirdirdir exit turn in direction " + egressWaypointDirection);
+                ExitTurnEvent(wormBase.direction);
             }
         }
 
@@ -203,6 +199,7 @@ namespace Worm
          */
         public void onFollowWaypoint(List<Waypoint> waypointList, Direction egressDirection)
         {
+            print("Egress dir is " + egressDirection);
             egressWaypointDirection = egressDirection; // save the last egress directionPair
             if (this.waypointList.Count > 0) // queue up waypoint list if currently following one
             {

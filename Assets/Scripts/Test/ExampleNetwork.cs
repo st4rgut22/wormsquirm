@@ -139,13 +139,12 @@ namespace Test
 
         private List<Checkpoint> debugTurn()
         {
-            Checkpoint cp0 = new Checkpoint(Direction.Up, 3);
+            Checkpoint cp0 = new Checkpoint(Direction.Up, 1);
             Checkpoint cp1 = new Checkpoint(Direction.Right, 1);
-            Checkpoint cp2 = new Checkpoint(Direction.Forward,0);
-            Checkpoint cp3 = new Checkpoint(Direction.Right, 0);
-            Checkpoint cp4 = new Checkpoint(Direction.Up, 1);
-            //Checkpoint cp5 = new Checkpoint(Direction.Forward, 5);
-            List<Checkpoint> problemTurn = new List<Checkpoint>() { cp0, cp1, cp2, cp3, cp4 };//, cp5 };
+            Checkpoint cp2 = new Checkpoint(Direction.Up,0);
+            Checkpoint cp3 = new Checkpoint(Direction.Right, 2);
+            //Checkpoint cp4 = new Checkpoint(Direction.Up, 1);
+            List<Checkpoint> problemTurn = new List<Checkpoint>() { cp0, cp1, cp2, cp3 };//, cp4 };
             return problemTurn;
         }
     }

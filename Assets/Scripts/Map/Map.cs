@@ -109,6 +109,10 @@ namespace Tunnel
             Vector3Int cellPos = Dir.Vector.castToVector3Int(position);
             print("clit position after adjustment " + position + " equals cell position " + cellPos);
             Tunnel tunnel = getTunnelFromDict(cellPos);
+            if (tunnel == null)
+            {
+                throw new Exception("Tunnel does not exist at clit position " + position);
+            }
             return tunnel;
         }
 
