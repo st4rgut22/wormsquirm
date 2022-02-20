@@ -62,7 +62,7 @@ namespace Worm
             }
             else
             {
-                throw new System.Exception("during testing there should only be one worm id " + wormId + " and " + this.wormId + " dont match");
+                throw new System.Exception("during testing there should only be one worm id associated with tunnel " + tunnel.name + " worms " + wormId + " and " + this.wormId + " dont match");
             }
         }
 

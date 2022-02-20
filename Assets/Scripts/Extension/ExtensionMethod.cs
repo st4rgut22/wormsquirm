@@ -40,12 +40,14 @@ namespace Tunnel
          * @ingressPosition enter hole position of tunnel
          * @holeDirectionList list of directions of entry for tunnel
          */
-        public static Tunnel instantiateSliced(this GameObject thisObj, Transform tunnelParent, Vector3 ingressPosition, List<Direction> holeDirectionList)
+        public static Straight instantiateSliced(this GameObject thisObj, Transform tunnelParent, Straight tunnel)
         {
             GameObject tunnelCopy = GameObject.Instantiate(thisObj, tunnelParent);
             Straight copiedTunnel = tunnelCopy.GetComponent<Straight>();
-            copiedTunnel.ingressPosition = ingressPosition;
-            copiedTunnel.holeDirectionList = holeDirectionList;
+            copiedTunnel.setIngressPosition(tunnel.ingressPosition);
+            copiedTunnel.holeDirectionList = new List<Direction>(tunnel.holeDirectionList); // copy the elements so modifying a sliced segment wont affect the other slice
+            copiedTunnel.cellPositionList = new List<Vector3Int>(tunnel.cellPositionList);
+            copiedTunnel.growthDirection = tunnel.growthDirection;
             copiedTunnel.setIsSliced(); // tunnel should not be closed off with a deadend
             return copiedTunnel;
         }

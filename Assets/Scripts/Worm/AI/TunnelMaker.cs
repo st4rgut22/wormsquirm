@@ -68,7 +68,7 @@ namespace Worm
         {
             if (isBlockInterval)
             {
-                if (tunnel.containsCell(blockPositionInt))
+                if (tunnel.containsCell(blockPositionInt)) // increment tunnel segment counter if not the last block interval of the segment that is adjacent to the cornerr
                 {
                     tunnelSegmentCounter += 1;
 
@@ -78,7 +78,7 @@ namespace Worm
                     }
                 }
             }
-            else if (currentCheckpoint.length == 1 && tunnel.name != currentTunnelName) // start of next tunnel
+            else if (currentCheckpoint.length == 1 && tunnel.name != currentTunnelName) // immediate turn
             {
                 updateCheckpoint();
             }

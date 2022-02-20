@@ -27,6 +27,27 @@ namespace Dir
             }
         }
 
+        public static Vector3Int getUnitVectorIntFromDirection(Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.Up:
+                    return Vector3Int.up;
+                case Direction.Right:
+                    return Vector3Int.right;
+                case Direction.Left:
+                    return Vector3Int.left;
+                case Direction.Forward:
+                    return Vector3Int.forward;
+                case Direction.Back:
+                    return Vector3Int.back;
+                case Direction.Down:
+                    return Vector3Int.down;
+                default:
+                    throw new System.Exception("Not a valid direction " + direction);
+            }
+        }
+
         public static Direction getDirectionFromUnitVector(Vector3Int unitVector)
         {
             if (unitVector.Equals(Vector3Int.up))

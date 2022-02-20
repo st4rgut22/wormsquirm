@@ -18,7 +18,7 @@ namespace Worm
                 wormBody.wormId = wormId;
                 wormBody.turnSpeed = turnSpeed;
             }
-
+            wormBodies[0].RaiseSaveWormEvent(); // save the worm id to the worm dictionary
             return wormGO;
         }
     }

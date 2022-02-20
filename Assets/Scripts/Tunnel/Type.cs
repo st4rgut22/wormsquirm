@@ -50,6 +50,25 @@ namespace Tunnel
             SIXWAY
         }
 
+        public static bool isTypeCorner(Name name)
+        {
+            return name == Name.CORNER;
+        }
+
+        public static bool isTypeStraight(Name name)
+        {
+            return name == Name.STRAIGHT;
+        }
+
+        /**
+         * Junction consists of multiple names
+         */
+        public static bool isTypeJunction(Name name)
+        {
+            return name == Name.THREEWAY_ADJ || name == Name.THREEWAY_OPP || name == Name.FOURWAY_ADJ || name == Name.FOURWAY_OPP || name == Name.FIVEWAY ||
+                name == Name.SIXWAY;
+        }
+
         private void Awake()
         {
             instance = this;

@@ -19,6 +19,7 @@ namespace Test
             initImmediateTurn,
             initSimpleTurn,
             initDifferentDirection,
+            snakeEatsHead,
             debugTurn
         }
 
@@ -47,6 +48,8 @@ namespace Test
                     return debugTurn();
                 case Network.initDifferentDirection:
                     return initDifferentDirection();
+                case Network.snakeEatsHead:
+                    return snakeEatsHead();
                 default:
                     throw new System.Exception(tunnelNetwork + " is not a valid tunnel network");
             }
@@ -119,6 +122,19 @@ namespace Test
             Checkpoint cp1 = new Checkpoint(Direction.Up, 5);
             List<Checkpoint> differentDirection = new List<Checkpoint>() { cp0, cp1 };
             return differentDirection;
+        }
+
+        // start off going right instead of up
+        private List<Checkpoint> snakeEatsHead()
+        {
+            Checkpoint cp0 = new Checkpoint(Direction.Up, 3);
+            Checkpoint cp1 = new Checkpoint(Direction.Left, 3);
+            Checkpoint cp2 = new Checkpoint(Direction.Down, 1);
+            Checkpoint cp3 = new Checkpoint(Direction.Right, 3);
+            Checkpoint cp4 = new Checkpoint(Direction.Up, 0);
+            Checkpoint cp5 = new Checkpoint(Direction.Right, 5);
+            List<Checkpoint> snakeEatsHeadList = new List<Checkpoint>() { cp0, cp1, cp2, cp3, cp4, cp5 };
+            return snakeEatsHeadList;
         }
 
         private List<Checkpoint> initImmediateTurn()

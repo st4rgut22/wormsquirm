@@ -6,6 +6,9 @@ namespace Worm
 {
     public class WormBody : MonoBehaviour
     {
+        public delegate void SaveWorm(string wormId, GameObject wormGO);
+        public event SaveWorm SaveWormEvent;
+
         [SerializeField]
         protected Rigidbody ring;
 
@@ -23,7 +26,7 @@ namespace Worm
 
         public float turnSpeed;
 
-        public delegate void ChangeDirection(DirectionPair directionPair, string wormId);
+        public delegate void ChangeDirection(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId, Tunnel.CellMove cellMove, bool isCreatingTunnel);
         public event ChangeDirection ChangeDirectionEvent;
 
         public delegate void RemoveSelf(string wormId, GameObject wormGO);
@@ -38,6 +41,16 @@ namespace Worm
         protected void Awake()
         {
             wormBase = GetComponent<WormBase>();
+        }
+
+        /**
+         * Add a worm to the worm manager immediately after creating the worm
+         */
+        public void RaiseSaveWormEvent()
+        {
+            SaveWormEvent += WormManager.Instance.onSave;
+            SaveWormEvent(wormId, gameObject);
+            SaveWormEvent -= WormManager.Instance.onSave;
         }
 
         /**
@@ -70,10 +83,45 @@ namespace Worm
             SpawnEvent -= FindObjectOfType<Factory.WormFactory>().onCreateWorm;
         }
 
-        protected void RaiseChangeDirectionEvent(DirectionPair directionPair, string wormId)
+        /**
+         * Emit change direction event
+         * 
+         * @directionPair       the current and next direction of the player
+         * @tunnel              the current tunnel player is in
+         * @wormId              the id of the player
+         */
+        protected void RaiseChangeDirectionEvent(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId)
         {
+            if (directionPair.isStraight())
+            {
+                wormBase.setChangingDirection(false);
+            }
+            else
+            {
+                wormBase.setChangingDirection(true);
+            }
+
+            Tunnel.CellMove cellMove;
+            if (wormBase.isCreatingTunnel) // if new tunnel use the tunnel's leading cell to get the Cell info
+            {
+                cellMove = Tunnel.CellMove.getCellMove(tunnel, directionPair); // get cell from map, check if cell in the egress direction is already occupied
+            }
+            else // if existing tunnel use the worm position to get the Cell info
+            {
+                if (wormBase.isChangingDirection) // if making a consecutive turn, ring position will be one cell behind the turn we want turn to happen in so use clit position
+                {
+                    Vector3Int curCell = Tunnel.Map.getCellPos(clit.position);
+                    Vector3Int nextCurCell = Dir.Vector.getNextCellFromDirection(curCell, directionPair.prevDir);
+                    cellMove = new Tunnel.CellMove(directionPair.curDir, nextCurCell); 
+                }
+                else
+                {
+                    Vector3Int curCell = Tunnel.Map.getCellPos(ring.position);
+                    cellMove = new Tunnel.CellMove(wormBase.direction, curCell); // if not making a consecutive turn, ring position will be in the same cell as the turn
+                }
+            }
             ChangeDirectionEvent += Tunnel.CollisionManager.Instance.onChangeDirection;
-            ChangeDirectionEvent(directionPair, wormId);
+            ChangeDirectionEvent(directionPair, tunnel, wormId, cellMove, wormBase.isCreatingTunnel);
             ChangeDirectionEvent -= Tunnel.CollisionManager.Instance.onChangeDirection;
         }
     }

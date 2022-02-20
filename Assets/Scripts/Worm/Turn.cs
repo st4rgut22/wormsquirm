@@ -5,9 +5,6 @@ namespace Worm
 {
     public class Turn : WormBody
     {
-        private bool isDecision; // flag to check if a decision has been made
-        private bool isBlockSizeMultiple;
-
         private List<Waypoint> waypointList; // list of points to move to when a corner is created
 
         private Waypoint destinationWaypoint;
@@ -30,10 +27,9 @@ namespace Worm
             base.Awake();
             destinationWaypoint = null;
             isWaypointReached = true;
-            isDecision = false;
-            isBlockSizeMultiple = true; // used to initialize straight tunnel
             directionPair = new DirectionPair(Direction.None, Direction.None);
             waypointList = new List<Waypoint>();
+            wormBase.setDecision(false);
         }
 
         private new void OnEnable()
@@ -51,7 +47,7 @@ namespace Worm
         {
             if (!isWaypointReached)
             {
-                Direction passWaypointDirection = destinationWaypoint.dirPair.prevDir;
+                Direction passWaypointDirection = destinationWaypoint.getPassWaypointDirection();
                 bool isNegativeDir = Dir.Base.isDirectionNegative(passWaypointDirection);
                 float waypointAxisPosition = Dir.Vector.getAxisScaleFromDirection(passWaypointDirection, destinationWaypoint.position);
                 float ringAxisPosition = Dir.Vector.getAxisPositionFromDirection(passWaypointDirection, ring.position);
@@ -100,13 +96,16 @@ namespace Worm
 
         /**
          * Initiate the turn if the tunnel is eligible
+         * 
+         * @tunnel          the tunnel turn is made in
+         * @turnCellCenter  the center of the cell turn will happen in
          */
-        private void turn(Tunnel.Tunnel tunnel)
+        private void turn(Tunnel.Tunnel tunnel, Vector3 turnCellCenter)
         {
-            isDecision = false;
-            wormBase.isStraight = false;
-            RaiseChangeDirectionEvent(directionPair, wormId); // rotate tunnel in the direction
-            Vector3 egressPosition = Tunnel.Tunnel.getEgressPosition(directionPair.prevDir, tunnel.center);
+            wormBase.setDecision(false);
+            wormBase.setStraight(false);
+            RaiseChangeDirectionEvent(directionPair, tunnel, wormId); // rotate tunnel in the direction
+            Vector3 egressPosition = Tunnel.Tunnel.getOffsetPosition(directionPair.prevDir, turnCellCenter);
             initializeTurnWaypointList(directionPair, egressPosition);          
         }
 
@@ -115,15 +114,11 @@ namespace Worm
          * 
          * @direction is the exit direction
          */
-        public void onExitTurn(Direction direction)
+        public void onExitTurn(Direction direction, Tunnel.Tunnel tunnel)
         {
-            wormBase.isStraight = true;
+            wormBase.setStraight(true);
             DirectionPair straightDirectionPair = new DirectionPair(direction, direction);
-            RaiseChangeDirectionEvent(straightDirectionPair, wormId);
-            //Vector3 offsetHeadWaypoint = getOffsetPosition(ring.position, direction, Tunnel.TunnelManager.Instance.START_TUNNEL_RING_OFFSET);
-            //Waypoint offsetWP = new Waypoint(offsetHeadWaypoint, MoveType.OFFSET, direction);
-            //List<Waypoint> offsetWaypointList = new List<Waypoint>() { offsetWP };
-            //FollowWaypointEvent(offsetWaypointList, straightDirectionPair);
+            RaiseChangeDirectionEvent(straightDirectionPair, tunnel, wormId);
         }
 
         /**
@@ -143,29 +138,35 @@ namespace Worm
          */
         public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
         {
-            isDecision = true;
+            wormBase.setDecision(true);
             directionPair.prevDir = directionPair.curDir;
             directionPair.curDir = direction;
             print("decide to go in curDirection " + direction + " is straight tunnel " + isStraightTunnel + " tunnel name is " + tunnel.name);
-            if (!isStraightTunnel) // turn immediately (dont wait for block interval event) if in junction or corner
+            if (!isStraightTunnel) // turn immediately  if in junction or corner (dont wait for block interval event) :)
             {
-                turn(tunnel); 
+                turn(tunnel, tunnel.center); 
             }
         }
 
         /**
-         * Received when the active tunnel is a multiple of block size making it eligible for a direction change
-         * 
-         * @isBlockSizeMultiple did the straight tunnel reach a multiple of block size?
-         * @tunnel The tunnel the decision to change direction is made from
+         * Received when worm moving in an existing tunnel reaches a block interval making it eligible for a direction change
          */
-        public void onBlockInterval(bool isBlockSizeMultiple, Vector3Int blockPosition, Tunnel.Tunnel tunnel)
+        public void onWormTurnInterval(Tunnel.Tunnel tunnel, Vector3 turnCellCenter)
         {
-            this.isBlockSizeMultiple = isBlockSizeMultiple;
+            turn(tunnel, turnCellCenter);
+        }
 
-            if (isTurning()) // initiate turn for straight tunnels
+        /**
+         * Received when the active tunnel grows to a multiple of block size making it eligible for a direction change
+         * 
+         * @isBlockMultiple     did the straight tunnel reach a multiple of block size?
+         * @tunnel              The tunnel the decision to change direction is made from
+         */
+        public void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Tunnel.Tunnel tunnel)
+        {
+            if (isBlockMultiple && wormBase.isDecision) // initiate turn for straight tunnels
             {
-                turn(tunnel);
+                turn(tunnel, tunnel.center);
             }
         }
 
@@ -180,19 +181,7 @@ namespace Worm
             isWaypointReached = false;
         }
 
-        /**
-         * Check if tunnel meets conditions to be eligible for a turn from a straight tunnel
-         */
-        public bool isTurning()
-        {
-            if (isBlockSizeMultiple && isDecision)
-            {
-                return true;
-            }
-            return false;            
-        }
-
-        private new void OnDisable()
+        private void OnDisable()
         {
             if (FindObjectOfType<Movement>())
             {

@@ -10,7 +10,7 @@ namespace Dir
         public static Vector3Int getNextVector3Int(Vector3Int thisObj, Direction direction)
         {
             Vector3 vector = getNextVector(thisObj, direction);
-            Vector3Int cellLoc = castToVector3Int(vector);
+            Vector3Int cellLoc = vector.castToVector3Int();
             return cellLoc;
         }
 
@@ -49,23 +49,13 @@ namespace Dir
         }
 
         /**
-         * Convert position to integer
-         */
-        public static Vector3Int castToVector3Int(Vector3 thisObj)
-        {
-            Vector3Int castedVector = new Vector3Int((int)thisObj.x, (int)thisObj.y, (int)thisObj.z);
-            Debug.Log("cast vector " + thisObj + " is " + castedVector);
-            return castedVector;
-        }
-
-        /**
          * Combine normalized vectors for each direction to get offset
          */
         public static Vector3 getOffsetFromDirections(Direction direction1, Direction direction2)
         {
-            Vector3 unitVector1 = Dir.CellDirection.getUnitVectorFromDirection(direction1);
-            Vector3 unitVector2 = Dir.CellDirection.getUnitVectorFromDirection(direction2);
-            Vector3 offset = (unitVector1 + unitVector2) / 2;
+            Vector3 unitVector1 = CellDirection.getUnitVectorFromDirection(direction1);
+            Vector3 unitVector2 = CellDirection.getUnitVectorFromDirection(direction2);
+            Vector3 offset = (unitVector1 + unitVector2) / 2.0f;
             return offset;
         }
 

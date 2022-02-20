@@ -6,6 +6,7 @@ namespace Tunnel
     {
         public Vector3Int lastCellPosition { get; private set; }
         public Vector3 startPosition { get; private set; }
+        public Vector3 center { get; private set; }
         public Vector3Int cell { get; private set; }
 
         public bool isInit;
@@ -35,31 +36,31 @@ namespace Tunnel
          */
         public CellMove(Tunnel tunnel, Direction curDirection)
         {
+            center = tunnel.center;
             lastCellPosition = tunnel.getLastCellPosition(); // start at the end of prev tunnel
-
-            startPosition = Tunnel.getEgressPosition(curDirection, tunnel.center); // get the correct egress position using the curDirection
+            
+            startPosition = Tunnel.getOffsetPosition(curDirection, tunnel.center); // get the correct egress position using the curDirection
             cell = Dir.Vector.getNextVector3Int(lastCellPosition, curDirection);
 
-            //Debug.Log("last cell position " + lastCellPosition + " start position " + startPosition + " cell " + cell);
             nextCell = Dir.Vector.getNextCellFromDirection(cell, curDirection);
             isInit = false;
         }
 
         /**
-         * Initialize tunnel at beginning of game
+         * Initialize cell using cell coordinate and direction
          * 
-         * @initialDirection the direction the worm first decides to go in
-         * @cell the cell coordinates of the first tunnel
+         * @initialDirection the direction of the worm
+         * @cell the cell coordinates of the new tunnel
          */
         public CellMove(Direction initialDirection, Vector3Int cell)
         {
             this.cell = cell;
 
-            Vector3 initialCenter = Tunnel.initializeCenter(cell);
+            center = Tunnel.initializeCenter(cell);
 
             Direction oppDir = Dir.Base.getOppositeDirection(initialDirection);
 
-            startPosition = Tunnel.getEgressPosition(oppDir, initialCenter); // offset from center in oppDir
+            startPosition = Tunnel.getOffsetPosition(oppDir, center); // offset from center in oppDir
 
             nextCell = Dir.Vector.getNextCellFromDirection(cell, initialDirection);
             isInit = true;

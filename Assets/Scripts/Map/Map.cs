@@ -6,8 +6,8 @@ namespace Tunnel
 {
     public class Map : MonoBehaviour
     {
-        public delegate void Collide(DirectionPair directionPair, Tunnel curTunnel, Tunnel nextTunnel);
-        private event Collide CollideEvent;
+        public delegate void CollideTunnel(DirectionPair directionPair, Tunnel curTunnel, Tunnel nextTunnel, Vector3Int collisionCell, bool isTunnelNew);
+        private event CollideTunnel CollideTunnelEvent;
 
         public static Dictionary<Vector3Int, Tunnel> TunnelMapDict;
         public static List<Vector3Int> cellList;
@@ -27,7 +27,7 @@ namespace Tunnel
 
         private void OnEnable()
         {
-            CollideEvent += CollisionManager.Instance.onCollide;
+            CollideTunnelEvent += CollisionManager.Instance.onCollide;
         }
 
         /**
@@ -69,7 +69,7 @@ namespace Tunnel
                     print("collision occurred with straight tunnel at " + blockPositionInt);
                     Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
                     DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection); // go straight
-                    CollideEvent(dirPair, tunnel, intersectTunnel); // send event when tunnels intersect AND not turning
+                    CollideTunnelEvent(dirPair, tunnel, intersectTunnel, Vector3Int.zero, true); // send event when tunnels intersect AND not turning
                 }
                 else
                 {
@@ -87,7 +87,7 @@ namespace Tunnel
           * 
           * @position clit position
           */
-        public static Tunnel getCurrentTunnel(Vector3 position)
+        public static Vector3Int getCellPos(Vector3 position)
         {
             print("clit position before " + position);
             if (position.x > XZ_INTERVAL_OFFSET)
@@ -107,7 +107,16 @@ namespace Tunnel
                 position.z -= XZ_INTERVAL_OFFSET;
             }
             position.y = Mathf.FloorToInt(position.y); // round down y to the closest integer value to ensure consistency between positive and negative positions
-            Vector3Int cellPos = Dir.Vector.castToVector3Int(position);
+            Vector3Int cellPos = position.castToVector3Int();
+            return cellPos;
+        }
+
+        /**
+         * Get the current tunnel worm is in using its rigidbody position
+         */
+        public static Tunnel getCurrentTunnel(Vector3 position)
+        {
+            Vector3Int cellPos = getCellPos(position);
             print("clit position after adjustment " + position + " equals cell position " + cellPos);
             Tunnel tunnel = getTunnelFromDict(cellPos);
             if (tunnel == null)
@@ -178,7 +187,7 @@ namespace Tunnel
         {
             if (FindObjectOfType<CollisionManager>())
             {
-                CollideEvent -= FindObjectOfType<CollisionManager>().onCollide;
+                CollideTunnelEvent -= FindObjectOfType<CollisionManager>().onCollide;
             }
         }
     }

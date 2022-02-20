@@ -26,7 +26,6 @@ namespace Tunnel
         protected bool isTurning;
 
         public Vector3 ingressPosition { get; set; }
-
         public List<Direction> holeDirectionList;
 
         public Vector3 center { get; private set; }
@@ -41,7 +40,6 @@ namespace Tunnel
         protected bool isCollision;
 
         public abstract void setHoleDirections(DirectionPair dirPair);
-        public abstract Vector3 getContactPosition(DirectionPair dirPair); // get point of contact with the NEXT tunnel
 
         public int holeCount;
 
@@ -54,14 +52,44 @@ namespace Tunnel
             isCollision = false;
         }
 
+        public Vector3 getContactPosition(DirectionPair dirPair) // get point of contact with the NEXT tunnel
+        {
+            return getOffsetPosition(dirPair.prevDir, center);
+        }
+
+        public void setIngressPosition(Vector3 ingressPosition)
+        {
+            this.ingressPosition = ingressPosition;
+        }
+
+        /**
+         * If a player is making a turn or going straight into this tunnel ,check whether the tunnel needs to be modified by seeing if the holes line up with player
+         * 
+         * @directionPair the ingress and egress direction of the worm
+         */
+        public bool isDirectionPairInHoleList(DirectionPair directionPair)
+        {
+            Direction tunnelIngressDir = Dir.Base.getOppositeDirection(directionPair.prevDir); // ingress hole direction from tunnel perspective is opposite that of worm
+            Direction tunnelEgressDir = directionPair.curDir;
+            return holeDirectionList.Contains(tunnelIngressDir) && holeDirectionList.Contains(tunnelEgressDir);
+        }
+
         public void setWormCreatorId(string wormId)
         {
+            print("set worm creator id for tunnel " + gameObject.name + " as id " + wormId);
             wormCreatorId = wormId;
         }
 
-        public bool isTunnelType(Type.Name tunnelType)
+        /**
+         * Get the egress position defined as the side of the last cell facing the player
+         * 
+         * @faceDirection       the side of the cell facing the player
+         */
+        public Vector3 getEgressPosition(Direction faceDirection)
         {
-            return type == tunnelType;
+            Vector3Int lastCellPos = getLastCellPosition();
+            Vector3 centerCellPos = getOffsetPosition(Direction.Up, lastCellPos);
+            return getOffsetPosition(faceDirection, centerCellPos);
         }
 
         /**
@@ -97,15 +125,6 @@ namespace Tunnel
             addCellToList(cell);
         }
 
-        /**
-         * Used by the slicer to chop up a tunnel segment into 2 pieces
-         */
-        public Tunnel copy(Transform tunnelParent)
-        {
-            Tunnel copiedTunnel = gameObject.instantiateSliced(tunnelParent, ingressPosition, holeDirectionList);
-            return copiedTunnel;
-        }
-
         /** 
          * When a tunnel is created at beginning of game, initialize center
          * 
@@ -119,29 +138,16 @@ namespace Tunnel
         }
 
         /**
-         * Get exit position on tunnel using worm's direction
+         * Get offset position on tunnel using worm's direction
          * 
-         * @direction worm direction
-         * @center center of tunnel
+         * @direction   worm direction
+         * @position    position in tunnel to get offset from
          */
-        public static Vector3 getEgressPosition(Direction direction, Vector3 center)
+        public static Vector3 getOffsetPosition(Direction direction, Vector3 position)
         {
             Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
-            Vector3 egressPosition =  center + unitVector * CENTER_OFFSET;
-            return egressPosition;
-        }
-
-        /**
-         * Get exit position on tunnel using worm's direction
-         * 
-         * @direction worm direction
-         * @center center of tunnel
-         */
-        public static Vector3 getIngressPosition(Direction direction, Vector3 center)
-        {
-            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
-            Vector3 egressPosition = center - unitVector * CENTER_OFFSET;
-            return egressPosition;
+            Vector3 offsetPosition = position + unitVector * CENTER_OFFSET;
+            return offsetPosition;
         }
 
         /**

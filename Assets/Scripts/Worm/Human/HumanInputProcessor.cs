@@ -16,6 +16,7 @@ namespace Worm
         private new void OnEnable()
         {
             base.OnEnable();
+            DecisionEvent += GetComponent<Controller>().onDecision;
             InputTorqueEvent += GetComponent<Force>().onInputTorque;            
         }
 
@@ -79,7 +80,10 @@ namespace Worm
         private new void OnDisable()
         {
             base.OnDisable();
-
+            if (FindObjectOfType<Controller>())
+            {
+                DecisionEvent += GetComponent<Controller>().onDecision;
+            }
             if (FindObjectOfType<Force>())
             {
                 InputTorqueEvent -= GetComponent<Force>().onInputTorque;

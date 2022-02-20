@@ -16,7 +16,7 @@ namespace Worm
         public delegate void CompleteTurn(string wormId, Direction direction); // when turn is completed notify Turn so we can proceed straight
         public event CompleteTurn CompleteTurnEvent;
 
-        public delegate void ExitTurn(Direction direction); // exiting a turn into a straight segment
+        public delegate void ExitTurn(Direction direction, Tunnel.Tunnel tunnel); // exiting a turn into a straight segment
         public event ExitTurn ExitTurnEvent;
 
         public delegate void MoveToWaypoint(Waypoint waypoint); // isTurn flag allows us to override straight move
@@ -51,6 +51,7 @@ namespace Worm
             ExitTurnEvent += GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent += GetComponent<Turn>().onMoveToWaypoint;
             DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
+            DecisionProcessingEvent += GetComponent<WormTunnelBroker>().onDecisionProcessing;
             if (FindObjectOfType<TunnelMaker>()) // applies to AI
             {
                 DecisionProcessingEvent += FindObjectOfType<TunnelMaker>().onDecisionProcessing;
@@ -77,7 +78,7 @@ namespace Worm
          */
         public void goStraightThroughJunction(Tunnel.Tunnel tunnel)
         {
-            Vector3 egressPosition = Tunnel.Tunnel.getEgressPosition(wormBase.direction, tunnel.center);
+            Vector3 egressPosition = Tunnel.Tunnel.getOffsetPosition(wormBase.direction, tunnel.center);
             print("egress position of straight junction is " + egressPosition);
             DirectionPair straightDirPair = new DirectionPair(wormBase.direction, wormBase.direction);
             Waypoint exitWP = new Waypoint(egressPosition, MoveType.EXIT, straightDirPair);
@@ -95,7 +96,7 @@ namespace Worm
             ReachJunctionExitEvent();
             ReachJunctionExitEvent -= junction.onReachJunctionExit;
             DirectionPair straightDirPair = new DirectionPair(wormBase.direction, wormBase.direction); // create a straight tunnel after navigating through a junction 
-            RaiseChangeDirectionEvent(straightDirPair, wormId);
+            RaiseChangeDirectionEvent(straightDirPair, junction, wormId);
             waypointList.Clear();
         }
 
@@ -131,7 +132,7 @@ namespace Worm
                 {
                     throw new System.Exception("not a turning tunnel. it is " + tunnel.name);
                 }
-                ExitTurnEvent(wormBase.direction);
+                ExitTurnEvent(wormBase.direction, tunnel);
             }
         }
 
@@ -220,6 +221,10 @@ namespace Worm
             if (GetComponent<TunnelMaker>()) // applies to AI
             {
                 DecisionProcessingEvent -= GetComponent<TunnelMaker>().onDecisionProcessing;
+            }
+            if (GetComponent<WormTunnelBroker>())
+            {
+                DecisionProcessingEvent -= GetComponent<WormTunnelBroker>().onDecisionProcessing;
             }
         }
     }

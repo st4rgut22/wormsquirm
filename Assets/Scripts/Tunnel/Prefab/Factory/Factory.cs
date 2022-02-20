@@ -16,6 +16,7 @@ namespace Tunnel
         {
             AddTunnelEvent += TunnelManager.Instance.onAddTunnel;
             AddTunnelEvent += FindObjectOfType<Map>().onAddTunnel;
+            AddTunnelEvent += Worm.WormManager.Instance.onAddTunnel;
         }
 
         /**
@@ -51,6 +52,10 @@ namespace Tunnel
             if (TunnelManager.Instance)
             {
                 AddTunnelEvent -= TunnelManager.Instance.onAddTunnel;
+            }
+            if (Worm.WormManager.Instance)
+            {
+                AddTunnelEvent -= Worm.WormManager.Instance.onAddTunnel;
             }
         }
     }

@@ -25,6 +25,21 @@ namespace Worm
             this.move = move;
             this.dirPair = dirPair;
         }
+
+        /**
+         * Get the direction the worm is traveling to reach the waypoint
+         */
+        public Direction getPassWaypointDirection()
+        {
+            if (move == MoveType.EXIT)
+            {
+                return dirPair.curDir;
+            }
+            else
+            {
+                return dirPair.prevDir;
+            }
+        }
     }
 
 }

@@ -10,7 +10,7 @@ namespace Tunnel
         public Direction growthDirection;
 
         private bool isSliced;
-
+        
         int lastBlockLen; // last block added used to retroactively add blocks that did not fall on an interval
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel);
@@ -52,6 +52,34 @@ namespace Tunnel
                 DeadEndInstance = Instantiate(DeadEnd, transform.position, deadEndRotation, Type.instance.TunnelNetwork);
                 DeadEndInstance.name = gameObject.name + "DEADEND";
             }
+        }
+
+        /**
+         * Update the cells that are part of the tunnel
+         * 
+         * @newStartCell   the cell that the tunnel starts at
+         * @newEndCell     the cell the tunnel ends at
+         */
+        public void updateCellPositionList(Vector3Int newStartCell, Vector3Int newEndCell)
+        {
+            cellPositionList = new List<Vector3Int>();
+            Vector3Int newCell = newStartCell;
+
+            while (!newCell.Equals(newEndCell))
+            {
+                addCellToList(newCell);
+                Map.addCell(newCell, this); // update the cells in the map
+                newCell = Dir.Vector.getNextCellFromDirection(newCell, growthDirection);
+            }
+        }
+
+        /**
+         * Used by the slicer to chop up a tunnel segment into 2 pieces
+         */
+        public Straight copy(Transform tunnelParent)
+        {
+            Straight copiedTunnel = gameObject.instantiateSliced(tunnelParent, this);
+            return copiedTunnel;
         }
 
         public override void setHoleDirections(DirectionPair dirPair)
@@ -159,6 +187,14 @@ namespace Tunnel
             return length / (BLOCK_SIZE * SCALE_TO_LENGTH); // scale of 1 : 2 meters or 0.5 : 1 meter
         }
 
+        /**
+         * Get the number of cells in the straight tunnel
+         */
+        public int getCellCount()
+        {
+            return cellPositionList.Count;
+        }
+
         private float getLength()
         {
             return (transform.localScale.y * BLOCK_SIZE * SCALE_TO_LENGTH); // scale of 1 : 2 meters or 0.5 : 1 meter
@@ -209,14 +245,6 @@ namespace Tunnel
             {
                 DigEvent -= DirtManager.Instance.onDig;
             }
-        }
-
-        /**
-         * When collide with another tunnel get the point of contact
-         */
-        public override Vector3 getContactPosition(DirectionPair dirPair)
-        {
-            return getEgressPosition(dirPair.prevDir, center);
         }
     }
 

@@ -15,24 +15,42 @@ namespace Intersect
          */
         public void sliceTunnel(Tunnel.Straight collidedTunnel, Direction ingressDirection, Vector3 contactPosition)
         {
-            Tunnel.Tunnel duplicateTunnel = collidedTunnel.copy(Tunnel.Type.instance.TunnelNetwork);
+            Tunnel.Straight duplicateTunnel = collidedTunnel.copy(Tunnel.Type.instance.TunnelNetwork);
 
-            Direction sliceDirection1 = collidedTunnel.growthDirection;
-            Vector3 slicedPosition1 = getSlicedPosition(ingressDirection, sliceDirection1, contactPosition);
-                
-            Direction sliceDirection2 = Dir.Base.getOppositeDirection(sliceDirection1);
-            Vector3 slicedPosition2 = getSlicedPosition(ingressDirection, sliceDirection2, contactPosition);
+            Direction oppGrowthDirection = Dir.Base.getOppositeDirection(collidedTunnel.growthDirection);
+            Vector3 sliceOppGrowthDirFace = getSlicedPosition(ingressDirection, oppGrowthDirection, contactPosition); // position of slice opposite growth direction
+            updateTunnel(collidedTunnel, collidedTunnel.ingressPosition, sliceOppGrowthDirFace);
 
-            Vector3 collidedTunnelEgressPosition = Tunnel.Tunnel.getEgressPosition(collidedTunnel.growthDirection, collidedTunnel.center);
+            Vector3 sliceGrowthDirFace = getSlicedPosition(ingressDirection, duplicateTunnel.growthDirection, contactPosition);  // position of slice in growth direction
+            Vector3 collidedTunnelEgressPosition = duplicateTunnel.getEgressPosition(duplicateTunnel.growthDirection);
+            updateTunnel(duplicateTunnel, sliceGrowthDirFace, collidedTunnelEgressPosition);
+        }
 
-            trimTunnel(collidedTunnel, collidedTunnel.ingressPosition, slicedPosition2);
-            trimTunnel(duplicateTunnel, slicedPosition1, collidedTunnelEgressPosition);
+        /**
+         * Update the tunnel's ingress/egress position
+         */
+        private void updateTunnel(Tunnel.Straight tunnel, Vector3 startSlicePosition, Vector3 endSlicePosition)
+        {
+            if (startSlicePosition.Equals(endSlicePosition) && tunnel.gameObject != null)
+            {
+                Destroy(tunnel.gameObject); // delete the tunnel if the slice results in a tunnel of zero length
+            }
+            else
+            {
+                tunnel.setIngressPosition(startSlicePosition);
+                tunnel.updateCellPositionList(startSlicePosition.castToVector3Int(), endSlicePosition.castToVector3Int()); // updates cell position list and the new egress position
+                trimTunnel(tunnel, startSlicePosition, endSlicePosition);
+            }
         }
 
         /**
          * slice individual tunnel given the start and end positions
+         * 
+         * @tunnel              the tunnel being updated
+         * @startSlicePosition  the start of the sliced tunnel
+         * @endSlicePosition    the end of the sliced tunnel
          */
-        private void trimTunnel(Tunnel.Tunnel tunnel, Vector3 startSlicePosition, Vector3 endSlicePosition)
+        private void trimTunnel(Tunnel.Straight tunnel, Vector3 startSlicePosition, Vector3 endSlicePosition)
         {
             float length = Vector3.Distance(startSlicePosition, endSlicePosition);
             float scaleY = length / (Tunnel.Tunnel.BLOCK_SIZE * Tunnel.Tunnel.SCALE_TO_LENGTH);

@@ -4,9 +4,6 @@ namespace Worm
 {
     public class WormBase : WormBody
     {
-        public delegate void SaveWorm(string wormId, GameObject wormGO);
-        public event SaveWorm SaveWormEvent;
-
         [SerializeField]
         public Vector3Int initialCell;
 
@@ -16,19 +13,17 @@ namespace Worm
 
         public bool isInitialized { get; private set; }
 
+        public bool isCreatingTunnel { get; private set; }
 
+        public bool isDecision { get; private set; } // flag to check if a decision has been made
 
-        private void OnEnable()
-        {
-            SaveWormEvent += WormManager.Instance.onSave;
-        }
+        public bool isChangingDirection { get; private set; } // flag to check if worm is changing direction in a cell
 
         private new void Awake()
         {
             base.Awake();
             isInitialized = false;
             setInitialCell(initialCell);
-
             setDirection(Direction.None);
         }
 
@@ -40,6 +35,37 @@ namespace Worm
             isInitialized = true;
         }
 
+        public void setStraight(bool isStraight)
+        {
+            this.isStraight = isStraight;
+        }
+
+        /**
+         * Set a boolean flag indicating if worm is changing direction
+         */
+        public void setChangingDirection(bool isChangingDirection)
+        {
+            this.isChangingDirection = isChangingDirection;
+        }
+
+        /**
+         * Set a boolean flag indicating if worm is about to turn
+         */
+        public void setDecision(bool isDecision)
+        {
+            this.isDecision = isDecision;
+        }
+
+        /**
+         * Set the boolean flag indicating if worm is creating a tunnel or in an existing tunnel
+         * 
+         * @isCreating      if true means the worm is creating a new tunnel
+         */
+        public void setIsCreatingTunnel(bool isCreating)
+        {
+            isCreatingTunnel = isCreating;
+        }
+
         public void setInitialCell(Vector3Int initialCell)
         {
             this.initialCell = initialCell;
@@ -49,16 +75,6 @@ namespace Worm
         {
             print("direction in WormBase is " + direction);
             this.direction = direction;
-        }
-
-        private void Start()
-        {
-            SaveWormEvent(wormId, gameObject);
-        }
-
-        private void OnDisable()
-        {
-            SaveWormEvent -= WormManager.Instance.onSave;
         }
     }
 }

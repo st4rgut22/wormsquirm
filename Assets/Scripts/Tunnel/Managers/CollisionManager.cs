@@ -38,35 +38,58 @@ namespace Tunnel
         }
 
         /**
-         * Event listener for the tunnel collision. Tunnel.Tunnel name is name of GO that caused collision
-         * 
+         * Event listener for the tunnel collision.
          * On intersect with a tunnel segment, create a junction and slice segment (if necessary)
-         * Notify worm about new tunnel so it can keep track of blockInterval instead of tunnel
+         * 
+         * @directionPair       the current and next direction of the player
+         * @curTunnel           the tunnel the player is currently in   
+         * @nextTunnel          the next tunnel the player is colliding with
+         * @isCreatingTunnel    is the player creating a new tunnel or in existing one
+         * @collisionCell       the cell the collision occured in
+         * @isTunnelNew         if the tunnel is growing or if it already existed
          */
-        public void onCollide(DirectionPair directionPair, Tunnel curTunnel, Tunnel nextTunnel)
+
+        // need to pass in the worm id if in existing tunnel
+        public void onCollide(DirectionPair directionPair, Tunnel curTunnel, Tunnel nextTunnel, Vector3Int collisionCell, bool isTunnelNew)
         {
-            Direction exitDirection = directionPair.curDir;
+            if (!nextTunnel.isDirectionPairInHoleList(directionPair)) // the holes of the collided tunnel dont line up with the worm's path so we need to modify tunnel by creating a junction
+            {
+                CellMove cellMove;
+                if (isTunnelNew) // if new tunnel then curTunnel's curCell is the leading cell that collided with another tunnel
+                {
+                    cellMove = CellMove.getCellMove(curTunnel, directionPair);
+                }
+                else // we dont know where in the curTunnel player is so use collisionCell
+                {
+                    cellMove = new CellMove(directionPair.prevDir, collisionCell);
+                }
 
-            Vector3 contactPosition = curTunnel.getContactPosition(directionPair);
-            CellMove cellMove = CellMove.getCellMove(curTunnel, directionPair);
-            if (!cellMove.startPosition.Equals(contactPosition))
-            {
-                throw new System.Exception("vectors are not equivalent");
-            }
+                if (Type.isTypeStraight(nextTunnel.type))
+                {
+                    Vector3 contactPosition = curTunnel.getContactPosition(directionPair);
+                    //if (!cellMove.startPosition.Equals(contactPosition))
+                    //{
+                    //    throw new System.Exception("vectors are not equivalent");
+                    //}
+                    Direction ingressDirection = directionPair.prevDir;
+                    SliceTunnelEvent((Straight)nextTunnel, ingressDirection, contactPosition);
+                }
+                else
+                {
+                    Destroy(nextTunnel.gameObject);
+                }
 
-            if (nextTunnel.type == Type.Name.STRAIGHT)
-            {
-                SliceTunnelEvent((Straight)nextTunnel, exitDirection, contactPosition);
+                if (isTunnelNew && StopEvent != null && Type.isTypeStraight(curTunnel.type)) // it may be the case where StopEvent is already unsubscribed because tunnel has already been stopped. For example onChangeDirection
+                {
+                    Straight straightTunnel = (Straight)curTunnel;
+                    if (!straightTunnel.isStopped)
+                    {
+                        StopEvent((Straight)curTunnel);
+                    }
+                }
+
+                CreateJunctionOnCollisionEvent(nextTunnel, directionPair, cellMove, curTunnel.wormCreatorId);
             }
-            else
-            {
-                Destroy(nextTunnel.gameObject);
-            }
-            if (StopEvent != null && curTunnel.type == Type.Name.STRAIGHT) // it may be the case where StopEvent is already unsubscribed because tunnel has already been stopped. For example onChangeDirection
-            {
-                StopEvent((Straight)curTunnel);
-            }
-            CreateJunctionOnCollisionEvent(nextTunnel, directionPair, cellMove, curTunnel.wormCreatorId);
         }
 
         /**
@@ -80,7 +103,6 @@ namespace Tunnel
 
             DirectionPair sameDirPair = new DirectionPair(direction, direction);
             CreateTunnelEvent(cellMove, sameDirPair, null, wormId);
-            //CreateJunctionOnInitEvent(sameDirPair, cellMove, direction, Dir.Base.directionList, wormId);
         }
 
         /**
@@ -89,25 +111,29 @@ namespace Tunnel
          * 
          * @directionPair indicates direction of travel and determines type of tunnel to create
          */
-        public void onChangeDirection(DirectionPair directionPair, string wormId)
+        public void onChangeDirection(DirectionPair directionPair, Tunnel prevTunnel, string wormId, CellMove cellMove, bool isCreatingTunnel)
         {
-            Tunnel prevTunnel = TunnelManager.Instance.getLastTunnel();
-            // get cell from map, check if tunnel w/ egress at curDirection already exists
-            CellMove cellMove = CellMove.getCellMove(prevTunnel, directionPair);
-            if (StopEvent != null && prevTunnel.type == Type.Name.STRAIGHT)
-            {
-                StopEvent((Straight)prevTunnel); // Stop the last growing tunnel
-            }
             Tunnel existingTunnel = Map.getTunnelFromDict(cellMove.cell);
 
-            if (existingTunnel == null)
+            if (existingTunnel == null) // if tunnel does not exist at cell then no longer in existing tunnel
             {
                 CreateTunnelEvent(cellMove, directionPair, prevTunnel, wormId);
             }
-            else // tunnel exists where we want to create a corner. 
+            if (isCreatingTunnel)
             {
-                print("collision occurred on turn at " + cellMove.cell);
-                onCollide(directionPair, prevTunnel, existingTunnel);
+                if (StopEvent != null && prevTunnel.type == Type.Name.STRAIGHT)
+                {
+                    StopEvent((Straight)prevTunnel); // Stop the last growing tunnel
+                }
+                if (existingTunnel != null)
+                {
+                    onCollide(directionPair, prevTunnel, existingTunnel, Vector3Int.zero, isCreatingTunnel);
+                }
+            }
+            else if (existingTunnel != null) 
+            {
+                prevTunnel.setWormCreatorId(wormId);
+                onCollide(directionPair, prevTunnel, existingTunnel, cellMove.cell, isCreatingTunnel);
             }
         }
 

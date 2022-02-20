@@ -6,7 +6,6 @@ namespace Player
 {
     public class PlayerManager : GenericSingletonClass<PlayerManager>
     {
-
     }
 
 }

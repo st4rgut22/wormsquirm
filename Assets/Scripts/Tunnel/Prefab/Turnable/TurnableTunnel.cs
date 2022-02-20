@@ -5,12 +5,10 @@ namespace Tunnel
     public abstract class TurnableTunnel : Tunnel
     {
         protected GameObject DeadEndInstance;
-        protected bool isStraight;
 
         private void Awake()
         {
             base.Awake();
-            isStraight = false;
         }
 
         public override void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
@@ -20,13 +18,12 @@ namespace Tunnel
 
             if (directionPair.isStraight())
             {
-                isStraight = true;
-                Vector3 deadEndPosition = getEgressPosition(directionPair.curDir, tunnel.center);
+                Vector3 deadEndPosition = getOffsetPosition(directionPair.curDir, tunnel.center);
                 DeadEndInstance = Instantiate(DeadEnd, deadEndPosition, deadEndRotation, Type.instance.TunnelNetwork);
             }
             else
             {
-                Vector3 egressPosition = getEgressPosition(directionPair.curDir, center);
+                Vector3 egressPosition = getOffsetPosition(directionPair.curDir, center);
                 DeadEndInstance = Instantiate(DeadEnd, egressPosition, deadEndRotation, Type.instance.TunnelNetwork);
             }
 

@@ -101,21 +101,30 @@ namespace Tunnel
         }
 
         /**
-         * Add holes from worm entrance and return a flag indicating if a new hole has been added
+         * Add holes from worm entrance to 
          */
         private bool addHoleDirs(List<Direction> allHoleList, List<Direction>egressHoleList, Direction inDirHole, Direction egressHole)
         {
             bool isNewHolesAdded = false;
-            if (!allHoleList.Contains(inDirHole))
+            if (!allHoleList.Contains(inDirHole)) // add the ingress hole to the list of all holes if not already included
             {
                 isNewHolesAdded = true;
                 allHoleList.Add(inDirHole);
             }
-            if (!allHoleList.Contains(egressHole))
+            if (!allHoleList.Contains(egressHole)) // add the egress hole to the list of all holes if not already included
             {
                 isNewHolesAdded = true;
                 allHoleList.Add(egressHole);
+
+                if (egressHoleList.Contains(egressHole))
+                {
+                    throw new System.Exception("Egress hole list should not include the egress hole " + egressHole);
+                }
                 egressHoleList.Add(egressHole);
+            }
+            if (egressHoleList.Contains(inDirHole)) // exclude the ingress hole from the egress hole list. we will use list to get the correct orientation of junction
+            {
+                egressHoleList.Remove(inDirHole);
             }
             return isNewHolesAdded;
         }
@@ -123,7 +132,7 @@ namespace Tunnel
         /**
          * Instantiate and get the junction
          * 
-         * @allHoleDirections the list of directions where the junction has holes
+         * @allHoleDirections the list of directions where the junction has holes is used to get the type of junction
          * @egressHoleDirections the list of directions in the junction excluding the entrance hole
          * @junctionId the id of the junction
          */
