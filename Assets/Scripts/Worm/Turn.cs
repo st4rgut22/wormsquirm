@@ -97,7 +97,7 @@ namespace Worm
         /**
          * Initiate the turn if the tunnel is eligible
          * 
-         * @tunnel          the tunnel turn is made in
+         * @tunnel          the tunnel turn is initiated in
          * @turnCellCenter  the center of the cell turn will happen in
          */
         private void turn(Tunnel.Tunnel tunnel, Vector3 turnCellCenter)
@@ -105,8 +105,8 @@ namespace Worm
             wormBase.setDecision(false);
             wormBase.setStraight(false);
             RaiseChangeDirectionEvent(directionPair, tunnel, wormId); // rotate tunnel in the direction
-            Vector3 egressPosition = Tunnel.Tunnel.getOffsetPosition(directionPair.prevDir, turnCellCenter);
-            initializeTurnWaypointList(directionPair, egressPosition);          
+            Vector3 turnCellEntrancePosition = Tunnel.Tunnel.getOffsetPosition(directionPair.prevDir, turnCellCenter);   // <-- PROBLEMS HERE!!!
+            initializeTurnWaypointList(directionPair, turnCellEntrancePosition);
         }
 
         /**
@@ -149,24 +149,17 @@ namespace Worm
         }
 
         /**
-         * Received when worm moving in an existing tunnel reaches a block interval making it eligible for a direction change
-         */
-        public void onWormTurnInterval(Tunnel.Tunnel tunnel, Vector3 turnCellCenter)
-        {
-            turn(tunnel, turnCellCenter);
-        }
-
-        /**
          * Received when the active tunnel grows to a multiple of block size making it eligible for a direction change
          * 
          * @isBlockMultiple     did the straight tunnel reach a multiple of block size?
-         * @tunnel              The tunnel the decision to change direction is made from
+         * @prevTunnel              The tunnel PRIOR to the tunnel the decision to change direction will be made from
          */
-        public void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Tunnel.Tunnel tunnel)
+        public void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Tunnel prevTunnel)
         {
             if (isBlockMultiple && wormBase.isDecision) // initiate turn for straight tunnels
             {
-                turn(tunnel, tunnel.center);
+                Vector3 prevCellCenter = Tunnel.Tunnel.getOffsetPosition(Direction.Up, lastBlockPositionInt);
+                turn(prevTunnel, prevCellCenter);          
             }
         }
 

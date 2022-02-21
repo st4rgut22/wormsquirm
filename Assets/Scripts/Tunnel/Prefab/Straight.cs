@@ -13,7 +13,7 @@ namespace Tunnel
         
         int lastBlockLen; // last block added used to retroactively add blocks that did not fall on an interval
 
-        public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel);
+        public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel);
         public event BlockInterval BlockIntervalEvent;
 
         public delegate void Dig(Vector3 digLocation, Direction digDirection);
@@ -155,12 +155,13 @@ namespace Tunnel
                             addCellToList(curCell);
                         }
 
-                        BlockIntervalEvent(isBlockMultiple, curCell, this);
+                        BlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
                     }
                 }
                 else // notify listeners that there is not a block multple
                 {
-                    BlockIntervalEvent(isBlockMultiple, Vector3Int.zero, this);
+                    Vector3Int lastCellPosition = getLastCellPosition();
+                    BlockIntervalEvent(isBlockMultiple, lastCellPosition, lastCellPosition, this);
                 }
             }
         }

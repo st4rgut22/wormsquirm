@@ -50,6 +50,17 @@ namespace Worm
             DecisionEvent -= currentTunnel.onDecision;
         }
 
+        /**
+         * Receive event of new block interval when worm is inside an existing tunnel. Use to update the existing tunnel
+         */
+        public void onWormInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
+        {
+            if (currentTunnel != tunnel)
+            {
+                currentTunnel = tunnel;
+            }
+        }
+
         public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
         {
             if (wormId == this.wormId)

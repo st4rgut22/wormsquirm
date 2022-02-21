@@ -15,8 +15,9 @@ namespace Worm
         private int tunnelSegmentCounter;
         Checkpoint currentCheckpoint;
 
-        private bool isReadyToTurn; // used to time changeDirection events when the worm is ready to turn
-        private string currentTunnelName;
+        private bool isReadyToTurn;             // used to time changeDirection events when the worm is ready to turn
+        private Vector3Int turnOnFirstBlock;    // acts like a boolean flag, stores the last position, and the next new position will execute the turn. 
+        Vector3Int defaultValue;
 
         private new void Awake()
         {
@@ -24,7 +25,8 @@ namespace Worm
             tunnelSegmentCounter = 1; // maintains count of added segments onBlockInterval event to decide when to turn
             checkPointIdx = 0; // does not include the initial tunnel
             isReadyToTurn = false;
-            currentTunnelName = "";
+            defaultValue = new Vector3Int(1000, 1000, 1000); // temporary default values
+            turnOnFirstBlock = defaultValue;
         }
 
         private new void OnEnable()
@@ -64,26 +66,50 @@ namespace Worm
             isReadyToTurn = !isDecisionProcessing;
         }
 
-        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Tunnel.Straight tunnel)
+        /**
+         * Event received from a growing tunnel or a worm in an existing tunnel
+         * 
+         * @isBlockInterval         flag if the tunnel/worm has reached a cell interval
+         * @blockPositionInt        the integer coordinates of a block tunnel segment
+         * @tunnel                  the tunnel being traversed throughs
+         */
+        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
         {
-            if (isBlockInterval)
+            if (Tunnel.Type.isTypeStraight(tunnel.type)) // worm may send interval messages in non-straight tunnels, ignore these message
             {
-                if (tunnel.containsCell(blockPositionInt)) // increment tunnel segment counter if not the last block interval of the segment that is adjacent to the cornerr
+                if (isBlockInterval)
                 {
-                    tunnelSegmentCounter += 1;
-
-                    if (currentCheckpoint.length == tunnelSegmentCounter)
+                    if (!isTurnOnFirstBlock())
                     {
-                        updateCheckpoint();
+                        if (tunnel.containsCell(blockPositionInt)) // this condition excludes the last cell adjacent from the corner as counting as a tunnel segment
+                        {
+                            tunnelSegmentCounter += 1;
+
+                            if (currentCheckpoint.length == tunnelSegmentCounter)
+                            {
+                                updateCheckpoint();
+                            }
+                            if (currentCheckpoint.length == 1) // next checkpoint is of length 1, set a flag
+                            {
+                                turnOnFirstBlock = blockPositionInt;
+                            }
+                        }
                     }
                 }
+                else if (isTurnOnFirstBlock() && !blockPositionInt.Equals(turnOnFirstBlock)) // checkpoint of length 1 is reached, when a new straight tunnel segment is started
+                {
+                    updateCheckpoint();
+                    turnOnFirstBlock = defaultValue; // reset the flag
+                }
             }
-            else if (currentCheckpoint.length == 1 && tunnel.name != currentTunnelName) // immediate turn
-            {
-                updateCheckpoint();
-            }
+        }
 
-            currentTunnelName = tunnel.name;
+        /**
+         * Set true if player will turn on the first block interval of a straight tunnel segment
+         */
+        private bool isTurnOnFirstBlock()
+        {
+            return !turnOnFirstBlock.Equals(defaultValue);
         }
 
         /**
@@ -139,5 +165,4 @@ namespace Worm
             }
         }
     }
-
 }

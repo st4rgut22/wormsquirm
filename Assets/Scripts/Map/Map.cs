@@ -59,7 +59,7 @@ namespace Tunnel
         /**
          * Adds tunnel type to the map at the provided coordinate
          */
-        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Straight tunnel)
+        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel)
         {
             if (isBlockInterval && !isTurnDecision)
             {
