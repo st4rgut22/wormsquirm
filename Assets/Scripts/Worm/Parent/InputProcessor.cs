@@ -19,12 +19,13 @@ namespace Worm
 
         protected void OnEnable()
         {
-            DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
 
             FindObjectOfType<Tunnel.NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
             FindObjectOfType<Tunnel.ModTunnelFactory>().AddTunnelEvent += onAddTunnel;
 
+            DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
             DecisionEvent += GetComponent<Turn>().onDecision;
+            DecisionEvent += GetComponent<Force>().onDecision;
         }
 
         new void Awake()
@@ -98,6 +99,7 @@ namespace Worm
             if (FindObjectOfType<Turn>())
             {
                 DecisionEvent -= GetComponent<Turn>().onDecision;
+                DecisionEvent -= GetComponent<Force>().onDecision;
             }
             if (FindObjectOfType<Tunnel.NewTunnelFactory>())
             {

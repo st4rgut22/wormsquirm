@@ -6,6 +6,7 @@ namespace Worm
 {
     public class TunnelMaker : BaseController
     {
+
         [SerializeField]
         private Rigidbody head;
 
@@ -32,6 +33,7 @@ namespace Worm
         private new void OnEnable()
         {
             base.OnEnable();
+
             FindObjectOfType<Turn>().ReachWaypointEvent += onReachWaypoint;
             ObjectiveReachedEvent += GameManager.Instance.onObjectiveReached;
         }

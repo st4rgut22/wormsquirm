@@ -69,7 +69,7 @@ namespace Tunnel
                     print("collision occurred with straight tunnel at " + blockPositionInt);
                     Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
                     DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection); // go straight
-                    CollideTunnelEvent(dirPair, tunnel, intersectTunnel, Vector3Int.zero, true); // send event when tunnels intersect AND not turning
+                    CollideTunnelEvent(dirPair, tunnel, intersectTunnel, blockPositionInt, true); // send event when tunnels intersect AND not turning
                 }
                 else
                 {
@@ -119,10 +119,6 @@ namespace Tunnel
             Vector3Int cellPos = getCellPos(position);
             print("clit position after adjustment " + position + " equals cell position " + cellPos);
             Tunnel tunnel = getTunnelFromDict(cellPos);
-            if (tunnel == null)
-            {
-                throw new Exception("Tunnel does not exist at clit position " + position);
-            }
             return tunnel;
         }
 

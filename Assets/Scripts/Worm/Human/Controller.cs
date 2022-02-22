@@ -25,8 +25,15 @@ namespace Worm
         public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
         {
             print("on decision prevDirection is " + direction + " prevInputKey is " + pressedKey + " wormbase direction is " + wormBase.direction);
-            prevDirection = wormBase.direction;
-            prevInputKey = pressedKey;
+            if (prevDirection != wormBase.direction) // only save current direction if it has changed (eg dont save it if 
+            {
+                prevDirection = wormBase.direction;
+                prevInputKey = pressedKey;
+            }
+            else
+            {
+                throw new System.Exception("when a decision is made it should be in a different direction but it is still the same: " + wormBase.direction);
+            }
         }
 
         private Direction getDirection(InputKeyPair inputKeyPair)

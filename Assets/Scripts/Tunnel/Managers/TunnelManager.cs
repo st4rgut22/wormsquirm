@@ -71,7 +71,7 @@ namespace Tunnel
         {
             TunnelList.Add(tunnel);
 
-            if (tunnel.type == Type.Name.STRAIGHT)
+            if (tunnel.type == Type.Name.STRAIGHT && !tunnel.isStopped)
             {
                 print("adding tunnel " + tunnel.name + " to growing tunnel listT");
                 GrowingTunnelList.Add((Straight) tunnel);

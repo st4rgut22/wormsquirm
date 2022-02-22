@@ -52,6 +52,7 @@ namespace Worm
             MoveToWaypointEvent += GetComponent<Turn>().onMoveToWaypoint;
             DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
             DecisionProcessingEvent += GetComponent<WormTunnelBroker>().onDecisionProcessing;
+            CompleteTurnEvent += GetComponent<Force>().onCompleteTurn;
             if (FindObjectOfType<TunnelMaker>()) // applies to AI
             {
                 DecisionProcessingEvent += FindObjectOfType<TunnelMaker>().onDecisionProcessing;
@@ -164,10 +165,10 @@ namespace Worm
                     print("apply up force to the ring rgbdy");
                     DecisionProcessingEvent(false, waypoint); // allow decisions to be made again when center of tunnel is reached (eg a consecutive turn)
                 }
-                else
-                {
-                    throw new System.Exception("not a valid waypoint type " + waypoint.move);
-                }
+                //else
+                //{
+                //    throw new System.Exception("not a valid waypoint type " + waypoint.move);
+                //}
                 moveToNextWaypoint(waypoint);
             }
         }
@@ -215,6 +216,7 @@ namespace Worm
             ForceEvent -= GetComponent<Force>().onForce;
             ExitTurnEvent -= GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent -= GetComponent<Turn>().onMoveToWaypoint;
+            CompleteTurnEvent -= GetComponent<Force>().onCompleteTurn;
 
             DecisionProcessingEvent -= GetComponent<InputProcessor>().onDecisionProcessing;
 

@@ -21,6 +21,7 @@ namespace Test
             initDifferentDirection,
             snakeEatsHeadTurn,
             snakeEatsHeadStraight,
+            snakeEatsHeadImmediateTurn,
             snakeEatsHeadCornerTurn,
             debugTurn
         }
@@ -54,6 +55,8 @@ namespace Test
                     return snakeEatsHead();
                 case Network.snakeEatsHeadStraight:
                     return snakeEatsHeadStraight();
+                case Network.snakeEatsHeadImmediateTurn:
+                    return snakeEatsHeadImmediateTurn();
                 case Network.snakeEatsHeadCornerTurn:
                     return snakeEatsHeadCornerJunction();
                 default:
@@ -133,12 +136,12 @@ namespace Test
         // start off going right instead of up
         private List<Checkpoint> snakeEatsHead()
         {
-            Checkpoint cp0 = new Checkpoint(Direction.Up, 3);
+            Checkpoint cp0 = new Checkpoint(Direction.Up, 6);
             Checkpoint cp1 = new Checkpoint(Direction.Left, 3);
-            Checkpoint cp2 = new Checkpoint(Direction.Down, 1);
+            Checkpoint cp2 = new Checkpoint(Direction.Down, 4);
             Checkpoint cp3 = new Checkpoint(Direction.Right, 3);
-            Checkpoint cp4 = new Checkpoint(Direction.Up, 0);
-            Checkpoint cp5 = new Checkpoint(Direction.Right, 5);
+            Checkpoint cp4 = new Checkpoint(Direction.Up, 2);
+            Checkpoint cp5 = new Checkpoint(Direction.Left, 5);
             List<Checkpoint> snakeEatsHeadList = new List<Checkpoint>() { cp0, cp1, cp2, cp3, cp4, cp5 };
             return snakeEatsHeadList;
         }
@@ -155,6 +158,19 @@ namespace Test
             return snakeEatsHeadList;
         }
 
+        // snake immediately turns immediately after entering existing tunnel
+        private List<Checkpoint> snakeEatsHeadImmediateTurn()
+        {
+            Checkpoint cp0 = new Checkpoint(Direction.Up, 3);
+            Checkpoint cp1 = new Checkpoint(Direction.Left, 3);
+            Checkpoint cp2 = new Checkpoint(Direction.Down, 1);
+            Checkpoint cp3 = new Checkpoint(Direction.Right, 3);
+            Checkpoint cp4 = new Checkpoint(Direction.Up, 0);
+            Checkpoint cp5 = new Checkpoint(Direction.Left, 5);
+            List<Checkpoint> snakeEatsHeadList = new List<Checkpoint>() { cp0, cp1, cp2, cp3, cp4, cp5 };
+            return snakeEatsHeadList;
+        }
+        
         // start off going right instead of up
         private List<Checkpoint> snakeEatsHeadCornerJunction()
         {

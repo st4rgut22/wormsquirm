@@ -5,8 +5,6 @@ namespace Worm
 {
     public class Turn : WormBody
     {
-        private List<Waypoint> waypointList; // list of points to move to when a corner is created
-
         private Waypoint destinationWaypoint;
 
         private bool isWaypointReached; // a flag that ensures only do waypoint reached code once
@@ -28,7 +26,6 @@ namespace Worm
             destinationWaypoint = null;
             isWaypointReached = true;
             directionPair = new DirectionPair(Direction.None, Direction.None);
-            waypointList = new List<Waypoint>();
             wormBase.setDecision(false);
         }
 
@@ -36,11 +33,12 @@ namespace Worm
         {
             FollowWaypointEvent += GetComponent<Movement>().onFollowWaypoint;
             ReachWaypointEvent += GetComponent<Movement>().onReachWaypoint;
+            ReachWaypointEvent += GetComponent<WormTunnelBroker>().onReachWaypoint;
             TorqueEvent += GetComponent<Force>().onTorque;
             TorqueEvent += GetComponent<InputProcessor>().onTorque;
-        }
+        } 
 
-        /**
+        /** 
          * Determines if waypoint is reached using rigidbody position
          */
         void Update()
@@ -64,6 +62,10 @@ namespace Worm
                         print("break");
                     }
                     print("re: prevDir " + directionPair.prevDir + " curDir " + directionPair.curDir + " waypoint is reached for " + destinationWaypoint.move + " destination position is " + destinationWaypoint.position + " ring position is " + ring.position);
+                    if (destinationWaypoint.move == MoveType.EXIT)
+                    {
+                        print("dslkjflkds");
+                    }
                     ReachWaypointEvent(destinationWaypoint);
                 }
             }
@@ -89,8 +91,7 @@ namespace Worm
             Waypoint startWP = new Waypoint(startWaypointPosition, MoveType.ENTRANCE, directionPair);
             Waypoint cellWP = new Waypoint(centerWaypointPosition, MoveType.CENTER, directionPair);
             Waypoint exitWP = new Waypoint(exitWaypointPosition, MoveType.EXIT, directionPair);
-
-            waypointList = new List<Waypoint> { startWP, cellWP, exitWP };
+            List<Waypoint> waypointList = new List<Waypoint> { startWP, cellWP, exitWP };
             FollowWaypointEvent(waypointList, directionPair.curDir);
         }
 
@@ -105,7 +106,7 @@ namespace Worm
             wormBase.setDecision(false);
             wormBase.setStraight(false);
             RaiseChangeDirectionEvent(directionPair, tunnel, wormId); // rotate tunnel in the direction
-            Vector3 turnCellEntrancePosition = Tunnel.Tunnel.getOffsetPosition(directionPair.prevDir, turnCellCenter);   // <-- PROBLEMS HERE!!!
+            Vector3 turnCellEntrancePosition = Tunnel.Tunnel.getOffsetPosition(directionPair.prevDir, turnCellCenter);
             initializeTurnWaypointList(directionPair, turnCellEntrancePosition);
         }
 
@@ -180,6 +181,7 @@ namespace Worm
             {
                 FollowWaypointEvent -= GetComponent<Movement>().onFollowWaypoint;
                 ReachWaypointEvent -= GetComponent<Movement>().onReachWaypoint;
+                ReachWaypointEvent -= GetComponent<WormTunnelBroker>().onReachWaypoint;
                 TorqueEvent -= GetComponent<Force>().onTorque;
                 TorqueEvent -= GetComponent<InputProcessor>().onTorque;
             }

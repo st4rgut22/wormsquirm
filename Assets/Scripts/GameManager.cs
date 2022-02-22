@@ -1,6 +1,3 @@
-using UnityEngine.SceneManagement;
-using UnityEngine;
-
 public class GameManager : GenericSingletonClass<GameManager>
 {
     public delegate void CreateWorm(string wormTag);
@@ -15,7 +12,7 @@ public class GameManager : GenericSingletonClass<GameManager>
 
     private void Awake()
     {
-        gameMode = GameMode.TestFixedPath;        
+        gameMode = GameMode.TestFixedPath;
     }
 
     private void OnEnable()

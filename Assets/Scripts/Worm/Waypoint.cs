@@ -23,7 +23,7 @@ namespace Worm
         {
             this.position = position;
             this.move = move;
-            this.dirPair = dirPair;
+            this.dirPair = new DirectionPair(dirPair.prevDir, dirPair.curDir);      // copy the dirPair
         }
 
         /**

@@ -4,6 +4,13 @@ namespace Intersect
 {
     public class Slicer : MonoBehaviour
     {
+        public delegate void AddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId);
+        public event AddTunnel AddTunnelEvent;
+
+        private void OnEnable()
+        {
+            AddTunnelEvent += Tunnel.TunnelManager.Instance.onAddTunnel;
+        }
 
         /**
          * Slice the tunnel that has been hit
@@ -24,6 +31,8 @@ namespace Intersect
             Vector3 sliceGrowthDirFace = getSlicedPosition(ingressDirection, duplicateTunnel.growthDirection, contactPosition);  // position of slice in growth direction
             Vector3 collidedTunnelEgressPosition = duplicateTunnel.getEgressPosition(duplicateTunnel.growthDirection);
             updateTunnel(duplicateTunnel, sliceGrowthDirFace, collidedTunnelEgressPosition);
+
+            AddTunnelEvent(duplicateTunnel, Vector3Int.zero, null, null); // add the duplicated segment to the list of tunnels in the network
         }
 
         /**
@@ -70,6 +79,14 @@ namespace Intersect
         {
             Vector3 offset = Dir.Vector.getOffsetFromDirections(ingressDirection, egressDirection);
             return contactPosition + offset;
+        }
+
+        private void OnDisable()
+        {
+            if(Tunnel.TunnelManager.Instance)
+            {
+                AddTunnelEvent -= Tunnel.TunnelManager.Instance.onAddTunnel;
+            }
         }
 
     }

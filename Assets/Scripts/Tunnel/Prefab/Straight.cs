@@ -172,8 +172,10 @@ namespace Tunnel
         public void onStop()
         {
             isStopped = true;
-            print("destroy deadEnd " + DeadEndInstance.name);
-            destroyDeadEnd();
+            if (DeadEndInstance != null)
+            {
+                destroyDeadEnd();
+            }
             BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
         }
 

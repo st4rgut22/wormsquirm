@@ -59,18 +59,19 @@ namespace Tunnel
                 {
                     cellMove = CellMove.getCellMove(curTunnel, directionPair);
                 }
-                else // we dont know where in the curTunnel player is so use collisionCell
+                else                                                                // we dont know which cell in the existing tunnel player is so use collisionCell
                 {
-                    cellMove = new CellMove(directionPair.prevDir, collisionCell);
+                    cellMove = new CellMove(directionPair.prevDir, collisionCell);  // use cell before collision cell to get the contact position
+
                 }
 
                 if (Type.isTypeStraight(nextTunnel.type))
                 {
-                    Vector3 contactPosition = curTunnel.getContactPosition(directionPair);
-                    //if (!cellMove.startPosition.Equals(contactPosition))
-                    //{
-                    //    throw new System.Exception("vectors are not equivalent");
-                    //}
+                    Direction oppDir = Dir.Base.getOppositeDirection(directionPair.prevDir);
+                    Vector3Int prevCollisionCell = Dir.Vector.getNextCellFromDirection(collisionCell, oppDir);
+                    Vector3 prevCollisionCenter = Tunnel.getOffsetPosition(Direction.Up, prevCollisionCell);
+                    Vector3 contactPosition = Tunnel.getOffsetPosition(directionPair.prevDir, prevCollisionCenter);
+                    print("contact position is " + contactPosition);
                     Direction ingressDirection = directionPair.prevDir;
                     SliceTunnelEvent((Straight)nextTunnel, ingressDirection, contactPosition);
                 }
@@ -125,12 +126,8 @@ namespace Tunnel
                 {
                     StopEvent((Straight)prevTunnel); // Stop the last growing tunnel
                 }
-                if (existingTunnel != null)
-                {
-                    onCollide(directionPair, prevTunnel, existingTunnel, Vector3Int.zero, isCreatingTunnel);
-                }
             }
-            else if (existingTunnel != null) 
+            if (existingTunnel != null) 
             {
                 prevTunnel.setWormCreatorId(wormId);
                 onCollide(directionPair, prevTunnel, existingTunnel, cellMove.cell, isCreatingTunnel);

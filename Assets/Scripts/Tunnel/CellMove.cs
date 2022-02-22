@@ -46,12 +46,6 @@ namespace Tunnel
             isInit = false;
         }
 
-        /**
-         * Initialize cell using cell coordinate and direction
-         * 
-         * @initialDirection the direction of the worm
-         * @cell the cell coordinates of the new tunnel
-         */
         public CellMove(Direction initialDirection, Vector3Int cell)
         {
             this.cell = cell;

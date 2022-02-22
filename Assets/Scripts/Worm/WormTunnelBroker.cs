@@ -19,9 +19,12 @@ namespace Worm
         private Vector3Int cell;                // current cell the worm is in (using clit.position for measurement)
         private Vector3Int enterExistingCell;   // cell that is the entry to the existing tunnel, while worm is in this cell DONT update current tunnel because it will replace junction with previous tunnel
 
+        protected Waypoint lastReachedWaypoint; // the last waypoint the player has reached. It is reset after a check
+
         private bool isDecisionProcessing;
 
         Tunnel.Straight prevStraightTunnel;
+        protected Tunnel.Tunnel prevTunnel;               // the previous tunnel, useful for checking when is the start of a new straight segment
 
         protected void OnEnable()
         {            
@@ -43,6 +46,27 @@ namespace Worm
             isDecisionProcessing = false;
         }
 
+        /**
+         * Event is fired when player has reached a waypoint (usually along path of a turn)
+         * 
+         * @waypoint        the waypoint that was reached
+         */
+        public void onReachWaypoint(Waypoint waypoint)
+        {
+            if (waypoint.move == MoveType.CENTER)       // get the dirPair from the center waypoint to avoid any timing issues at block start
+            {
+                lastReachedWaypoint = waypoint;
+            }
+        }
+
+        /**
+         * Determine whether the current cell should trigger the wormInterval event
+         */
+        protected virtual bool isSendWormIntervalEvent(Vector3Int curCell, Tunnel.Tunnel curTunnel, bool isNewBlock)
+        {
+            return !curCell.Equals(enterExistingCell);
+        }
+
         private void Update()
         {
             if (!wormBase.isCreatingTunnel && !isDecisionProcessing)
@@ -50,37 +74,49 @@ namespace Worm
                 Vector3Int curCell = Tunnel.Map.getCellPos(ring.position);
 
                 Tunnel.Tunnel curTunnel = Tunnel.Map.getCurrentTunnel(ring.position);
+                if (curTunnel == null) // if no tunnel exists at ring position, we are not in an existing tunnel (need to confirm)
+                {
+                    return;
+                }
 
                 bool isNewBlock = !curCell.Equals(cell);
 
-                if (!curCell.Equals(enterExistingCell))
+                if (isNewBlock)
+                {
+                    print("klsdjf");
+                }
+
+                if (isSendWormIntervalEvent(curCell, curTunnel, isNewBlock))    // avoid sending interval event in some scenarios
                 {
                     sendWormIntervalEvent(isNewBlock, curCell, cell, curTunnel); // initialize a turn etc before issuing collision event
                 }
 
-                if (isNewBlock) // entered a new cell, check if new tunnel needs to be modified based off worm direction
+                if (isNewBlock && !wormBase.isChangingDirection) // entered a new cell, check if new tunnel needs to be modified based off worm direction
                 {
-                    print("current cell is " + curCell + " ring position is " + ring.position);
-
-                    if (!wormBase.isChangingDirection) // if no decision to turn is made, then check if the current tunnel aligns with the worm's forward direction
-                    {    // for example if going straight in a corner cell it would not align and a junction must be created
-                        print("no turn decision has been made check if collision is occuring in direction " + wormBase.direction + " of cell " + curCell);
-                        DirectionPair straightDirectionPair = new DirectionPair(wormBase.direction, wormBase.direction);
-                        curTunnel.setWormCreatorId(wormId);
-                        print("collide with tunnel " + curTunnel.name + " at cell " + curCell);
-                        CollideTunnelEvent(straightDirectionPair, curTunnel, curTunnel, curCell, false);
-                    }
-                    else // do not advance to next checkpoint during a turn.  
-                    {
-                        print("what happens?");
-                    }
+                    collideOnStraightDir(curCell, curTunnel);
                 }
                 if (!curTunnel.containsCell(curCell))
                 {
                     throw new System.Exception("current tunnel " + curTunnel.name + " does not contain cell " + curCell + " even though it is part of the tunnel");
                 }
                 cell = curCell;
+                prevTunnel = curTunnel;
             }
+        }
+
+        /**
+         * if no decision to turn is made, then check if the current tunnel aligns with the worm's forward direction
+         * for example if going straight in a corner cell it would not align and a junction must be created
+         * the method does not necessarily mean the player will collide, it is just a check
+         */
+        private void collideOnStraightDir(Vector3Int curCell, Tunnel.Tunnel curTunnel)
+        {
+            print("current cell is " + curCell + " ring position is " + ring.position);
+            print("no turn decision has been made check if collision is occuring in direction " + wormBase.direction + " of cell " + curCell);
+            DirectionPair straightDirectionPair = new DirectionPair(wormBase.direction, wormBase.direction);
+            curTunnel.setWormCreatorId(wormId);
+            print("collide with tunnel " + curTunnel.name + " at cell " + curCell);
+            CollideTunnelEvent(straightDirectionPair, curTunnel, curTunnel, curCell, false);
         }
 
         protected void RaiseWormIntervalEvent(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)

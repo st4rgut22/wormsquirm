@@ -52,11 +52,6 @@ namespace Tunnel
             isCollision = false;
         }
 
-        public Vector3 getContactPosition(DirectionPair dirPair) // get point of contact with the NEXT tunnel
-        {
-            return getOffsetPosition(dirPair.prevDir, center);
-        }
-
         public void setIngressPosition(Vector3 ingressPosition)
         {
             this.ingressPosition = ingressPosition;

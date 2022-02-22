@@ -9,6 +9,9 @@ namespace Worm
         private Rigidbody torqueBody;
 
         [SerializeField]
+        private Rigidbody torqueBody2;
+
+        [SerializeField]
         private float forceMagnitude;
 
         [SerializeField]
@@ -26,6 +29,9 @@ namespace Worm
         [SerializeField]
         private bool isAngularDragSet;
 
+        [SerializeField]
+        private float brakeSpeed;       // how fast the player should decelerate
+
         private new void Awake()
         {
             base.Awake();
@@ -42,6 +48,7 @@ namespace Worm
             print("applying force in direction " + forceVector);
 
             float maxSpeed = rigidbody.velocity.getMaxValue();
+            print("MAX SPEED IS " + maxSpeed);
             if (maxSpeed < maxVelocity)
             {
                 print("adding force forceVector is " + forceVector + " force magnitude is " + forceMagnitude + " product is " + (forceMagnitude * forceVector));
@@ -49,8 +56,25 @@ namespace Worm
             }
             else
             {
-                print("braking too fast!"); // prevents the worm from exceeding its straight line velocity
+                print("going to fast applying brakes");
+                rigidbody.AddForce(-brakeSpeed * forceVector * forceMagnitude); // apply the brakes until velocity is under maxVelocity
             }
+        }
+
+        /**
+         * When player has completed a turn restore the original max velocity
+         */
+        public void onCompleteTurn(string wormId, Direction direction)
+        {
+            //forceFactor = 1.0f;
+        }
+
+        /**
+         * When a player makes a decision slow the max velocity to prevent the player from overshooting any holes they need to turn into
+         */
+        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
+        {
+            //forceFactor = forceFactor;
         }
 
         /**
@@ -69,7 +93,7 @@ namespace Worm
          */
         public void onTorque(DirectionPair dirPair, Waypoint waypoint)
         {
-            if (waypoint.move == MoveType.ENTRANCE || waypoint.move == MoveType.CENTER || waypoint.move == MoveType.EXIT)
+            if (waypoint.move == MoveType.ENTRANCE || waypoint.move == MoveType.CENTER || waypoint.move == MoveType.EXIT) // || waypoint.move == MoveType.MIDPOINT)
             {
                 Vector3 torqueUnitVector = Dir.DirectionForce.getTorqueVectorFromDirection(dirPair);
                 Vector3 torqueVector = torqueUnitVector * torqueMagnitude;
