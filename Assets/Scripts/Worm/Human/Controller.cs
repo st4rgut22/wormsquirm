@@ -25,7 +25,7 @@ namespace Worm
         public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
         {
             print("on decision prevDirection is " + direction + " prevInputKey is " + pressedKey + " wormbase direction is " + wormBase.direction);
-            if (prevDirection != wormBase.direction) // only save current direction if it has changed (eg dont save it if 
+            if (prevDirection != direction) // only save current direction if it has changed (eg dont save it if 
             {
                 prevDirection = wormBase.direction;
                 prevInputKey = pressedKey;
@@ -47,6 +47,7 @@ namespace Worm
             }
             else
             {
+                print("worm dir " + wormBase.direction + " prev direction " + prevDirection + " pressed key " + pressedKey + " prev press key " + prevInputKey);
                 direction = Dir.Input.getChangedDirection(wormBase.direction, prevDirection, pressedKey, prevInputKey);
             }
            
@@ -61,9 +62,8 @@ namespace Worm
             {
                 Direction localDirection = getDirection(inputKeyPair); // direction with respect to tunnel
 
+                print("emit player input event in direction " + localDirection);
                 RaisePlayerInputEvent(localDirection);
-
-                prevDirection = wormBase.direction;
 
                 if (!wormBase.isInitialized) // flag to make sure the initDecision is only  issued once
                 {

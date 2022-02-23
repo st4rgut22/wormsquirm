@@ -6,6 +6,9 @@ namespace Worm
 {
     public class WormManager : GenericSingletonClass<WormManager>
     {
+        public delegate void EnterExistingTunnel();
+        public event EnterExistingTunnel EnterExistingTunnelEvent;
+
         public delegate void AddTunnel(Tunnel.Tunnel tunnel, DirectionPair directionPair);
         public event AddTunnel AddTunnelEvent;
 
@@ -30,6 +33,26 @@ namespace Worm
             {
                 throw new System.Exception("Trying to remove wormId " + wormId + " that does not exist");
             }
+        }
+
+        /**
+         * Signals the tunnel worm is in has collided. Relay the enter existing tunnel message to the affected worm.
+         * 
+         * @wormId      the id of the worm whose tunnel has collided, thus entering an existing tunnel
+         */
+        public void onCollide(string wormId)
+        {
+            GameObject wormGO = wormDictionary[wormId];
+            if (wormGO == null)
+            {
+                throw new System.Exception("Failed to collide. Worm " + wormId + " could not be found in the list of worms");
+            }
+            WormTunnelBroker wormTunnelBroker = wormGO.GetComponent<WormTunnelBroker>();
+
+            EnterExistingTunnelEvent += wormTunnelBroker.onEnterExistingTunnel;
+            EnterExistingTunnelEvent();
+            EnterExistingTunnelEvent -= wormTunnelBroker.onEnterExistingTunnel;
+
         }
 
         /**

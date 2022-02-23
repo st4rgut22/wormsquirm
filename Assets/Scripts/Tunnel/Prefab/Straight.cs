@@ -1,12 +1,10 @@
 using UnityEngine;
-using System;
 using System.Collections.Generic;
 
 namespace Tunnel
 {    
     public class Straight : Tunnel
     {
-        private GameObject DeadEndInstance;
         public Direction growthDirection;
 
         private bool isSliced;

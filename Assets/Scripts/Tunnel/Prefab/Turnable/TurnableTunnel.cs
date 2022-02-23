@@ -4,8 +4,6 @@ namespace Tunnel
 {
     public abstract class TurnableTunnel : Tunnel
     {
-        protected GameObject DeadEndInstance;
-
         private void Awake()
         {
             base.Awake();

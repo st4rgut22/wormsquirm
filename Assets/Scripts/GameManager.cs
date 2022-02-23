@@ -12,7 +12,7 @@ public class GameManager : GenericSingletonClass<GameManager>
 
     private void Awake()
     {
-        gameMode = GameMode.TestFixedPath;
+        gameMode = GameMode.GamePlay;
     }
 
     private void OnEnable()

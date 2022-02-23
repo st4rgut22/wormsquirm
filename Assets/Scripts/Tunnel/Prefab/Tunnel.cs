@@ -9,6 +9,8 @@ namespace Tunnel
         [SerializeField]
         protected GameObject DeadEnd;
 
+        protected GameObject DeadEndInstance;
+
         public const float GROWTH_RATE = .01f; // .02f; // must be a divisor of 1 so tunnel length will be a multiple of BLOCK_SIZE
 
         protected const float MARGIN_OF_ERROR = .07f;
@@ -55,6 +57,14 @@ namespace Tunnel
         public void setIngressPosition(Vector3 ingressPosition)
         {
             this.ingressPosition = ingressPosition;
+        }
+
+        /**
+         * Get the dead end tunnel object associated with this tunnel segment
+         */
+        public GameObject getDeadEnd()
+        {
+            return DeadEndInstance;
         }
 
         /**

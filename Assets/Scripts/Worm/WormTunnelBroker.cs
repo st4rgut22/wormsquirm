@@ -47,7 +47,15 @@ namespace Worm
         }
 
         /**
-         * Event is fired when player has reached a waypoint (usually along path of a turn)
+         * Listener is fired when worm enters an existing tunnel, for example by colliding with another tunnel
+         */
+        public void onEnterExistingTunnel()
+        {
+            wormBase.setIsCreatingTunnel(false);
+        }
+
+        /**
+         * Listener is fired when player has reached a waypoint (usually along path of a turn)
          * 
          * @waypoint        the waypoint that was reached
          */
@@ -177,7 +185,6 @@ namespace Worm
                 {
                     cell = Tunnel.Map.getCellPos(ring.position); // setting the cell position will prevent collision from repeating when entering an existing tunnel
                     enterExistingCell = cell;
-                    wormBase.setIsCreatingTunnel(false); // enter a pre-existing tunnel
                 }
             }
             else

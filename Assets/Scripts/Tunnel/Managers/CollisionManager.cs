@@ -5,6 +5,9 @@ namespace Tunnel
 {
     public class CollisionManager : GenericSingletonClass<CollisionManager>
     {
+        public delegate void CollideTunnel(string wormId);
+        private event CollideTunnel CollideTunnelEvent;
+
         public delegate void SliceTunnel(Straight collidedTunnel, Direction ingressDirection, Vector3 contactPosition);
         private event SliceTunnel SliceTunnelEvent; // fired when current tunnel intersects another tunnel
 
@@ -26,6 +29,8 @@ namespace Tunnel
         // Start is called before the first frame update
         protected void OnEnable()
         {
+            CollideTunnelEvent += Worm.WormManager.Instance.onCollide;
+
             CreateTunnelEvent += FindObjectOfType<NewTunnelFactory>().onCreateTunnel;
 
             SliceTunnelEvent += FindObjectOfType<Intersect.Slicer>().sliceTunnel;
@@ -130,12 +135,17 @@ namespace Tunnel
             if (existingTunnel != null) 
             {
                 prevTunnel.setWormCreatorId(wormId);
+                CollideTunnelEvent(wormId);
                 onCollide(directionPair, prevTunnel, existingTunnel, cellMove.cell, isCreatingTunnel);
             }
         }
 
         private void OnDisable()
         {
+            if (Worm.WormManager.Instance)
+            {
+                CollideTunnelEvent -= Worm.WormManager.Instance.onCollide;
+            }
             if (FindObjectOfType<Intersect.Slicer>())
             {
                 SliceTunnelEvent -= FindObjectOfType<Intersect.Slicer>().sliceTunnel;

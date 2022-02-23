@@ -39,6 +39,11 @@ namespace Tunnel
             {
                 if (tunnel != null) // check if tunnel hasn't been already destroyed
                 {
+                    GameObject deadEndGO = tunnel.getDeadEnd();
+                    if (deadEndGO != null)
+                    {
+                        Destroy(deadEndGO);
+                    }
                     Destroy(tunnel.gameObject);
                 }
             });
