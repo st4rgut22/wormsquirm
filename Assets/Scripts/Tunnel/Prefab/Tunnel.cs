@@ -125,9 +125,9 @@ namespace Tunnel
         /**
          * When the tunnel is initialized, add it to the cellPosList because the first couple blocks won't trigger blockIntervalEvent 
          */
-        public virtual void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        public virtual void onAddTunnel(Tunnel tunnel, CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            addCellToList(cell);
+            addCellToList(cellMove.cell);
         }
 
         /** 

@@ -14,25 +14,10 @@ namespace Worm
 
         public Dictionary<string, GameObject> wormDictionary; // <wormId, worm GO>
 
-        public static string WORM_AI_TAG = "AI";
-        public static string WORM_PLAYER_TAG = "Human";
-
         private new void Awake()
         {
             base.Awake();
             wormDictionary = new Dictionary<string, GameObject>();
-        }
-
-        public void onRemoveWorm(string wormId, GameObject wormGO)
-        {
-            if (wormDictionary.ContainsKey(wormId))
-            {
-                Destroy(wormDictionary[wormId]);
-            }
-            else
-            {
-                throw new System.Exception("Trying to remove wormId " + wormId + " that does not exist");
-            }
         }
 
         /**
@@ -40,19 +25,16 @@ namespace Worm
          * 
          * @wormId      the id of the worm whose tunnel has collided, thus entering an existing tunnel
          */
-        public void onCollide(string wormId)
+        public void onCollide(Vector3Int cell)
         {
-            GameObject wormGO = wormDictionary[wormId];
-            if (wormGO == null)
-            {
-                throw new System.Exception("Failed to collide. Worm " + wormId + " could not be found in the list of worms");
-            }
-            WormTunnelBroker wormTunnelBroker = wormGO.GetComponent<WormTunnelBroker>();
+            Obstacle WormObstacle = Map.SpawnGenerator.WormObstacleDict[cell]; // TODO: check whether this cell (cellMove's lastCellPosition) contains worm
+            GameObject wormGO = WormObstacle.obstacleObject;
+
+            WormTunnelBroker wormTunnelBroker = wormGO.GetComponent<WormTunnelBroker>(); 
 
             EnterExistingTunnelEvent += wormTunnelBroker.onEnterExistingTunnel;
             EnterExistingTunnelEvent();
             EnterExistingTunnelEvent -= wormTunnelBroker.onEnterExistingTunnel;
-
         }
 
         /**
@@ -60,9 +42,11 @@ namespace Worm
          * 
          * @wormId      the id of the worm responsible for the collision
          */
-        public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        public void onAddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            GameObject wormGO = wormDictionary[wormId];
+            Vector3Int cell = cellMove.cell; // use last cell position because worm is not in the newest cell when it is first created
+            Obstacle WormObstacle = Map.SpawnGenerator.WormObstacleDict[cell]; // TODO: check whether this cell (cellMove's lastCellPosition) contains worm
+            GameObject wormGO = WormObstacle.obstacleObject;
             if (wormGO == null)
             {
                 throw new System.Exception("Failed to create junction. Worm " + wormId + " could not be found in the list of worms");
@@ -73,11 +57,5 @@ namespace Worm
             AddTunnelEvent(tunnel, directionPair);
             AddTunnelEvent -= wormTunnelBroker.onAddTunnel;
         }
-
-        public void onSave(string wormId, GameObject wormGO)
-        {
-            wormDictionary[wormId] = wormGO;
-        }
     }
-
 }

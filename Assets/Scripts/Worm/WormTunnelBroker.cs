@@ -26,8 +26,9 @@ namespace Worm
         Tunnel.Straight prevStraightTunnel;
         protected Tunnel.Tunnel prevTunnel;               // the previous tunnel, useful for checking when is the start of a new straight segment
 
-        protected void OnEnable()
-        {            
+        protected new void OnEnable()
+        {
+            base.OnEnable();
             CollideTunnelEvent += Tunnel.CollisionManager.Instance.onCollide;
             WormIntervalEvent += GetComponent<InputProcessor>().onWormInterval;
             WormIntervalEvent += GetComponent<Turn>().onBlockInterval;
@@ -68,6 +69,14 @@ namespace Worm
         }
 
         /**
+         * A tunnel interval event will trigger the worm to send its updated position to the map of worm locations
+         */
+        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
+        {
+
+        }
+
+        /**
          * Determine whether the current cell should trigger the wormInterval event
          */
         protected virtual bool isSendWormIntervalEvent(Vector3Int curCell, Tunnel.Tunnel curTunnel, bool isNewBlock)
@@ -75,13 +84,24 @@ namespace Worm
             return !curCell.Equals(enterExistingCell);
         }
 
+        /**
+         * Get the current cell of the worm
+         * 
+         * @position    worm's position
+         */
+        public static Vector3Int getCurrentCell(Vector3 position)
+        {
+            return Tunnel.TunnelMap.getCellPos(position);
+        }
+
         private void Update()
         {
             if (!wormBase.isCreatingTunnel && !isDecisionProcessing)
             {
-                Vector3Int curCell = Tunnel.Map.getCellPos(ring.position);
+                Vector3Int curCell = getCurrentCell(ring.position);
+                wormBase.setCurCell(curCell);
 
-                Tunnel.Tunnel curTunnel = Tunnel.Map.getCurrentTunnel(ring.position);
+                Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position);
                 if (curTunnel == null) // if no tunnel exists at ring position, we are not in an existing tunnel (need to confirm)
                 {
                     return;
@@ -89,14 +109,9 @@ namespace Worm
 
                 bool isNewBlock = !curCell.Equals(cell);
 
-                if (isNewBlock)
-                {
-                    print("klsdjf");
-                }
-
                 if (isSendWormIntervalEvent(curCell, curTunnel, isNewBlock))    // avoid sending interval event in some scenarios
                 {
-                    sendWormIntervalEvent(isNewBlock, curCell, cell, curTunnel); // initialize a turn etc before issuing collision event
+                    WormIntervalEvent(isNewBlock, curCell, cell, curTunnel); // initialize a turn etc before issuing collision event
                 }
 
                 if (isNewBlock && !wormBase.isChangingDirection) // entered a new cell, check if new tunnel needs to be modified based off worm direction
@@ -125,18 +140,6 @@ namespace Worm
             curTunnel.setWormCreatorId(wormId);
             print("collide with tunnel " + curTunnel.name + " at cell " + curCell);
             CollideTunnelEvent(straightDirectionPair, curTunnel, curTunnel, curCell, false);
-        }
-
-        protected void RaiseWormIntervalEvent(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
-        {
-            WormIntervalEvent(isBlockInterval, blockPositionInt, lastBlockPositionInt, tunnel); // dont raise this event if block interval is the last 
-        }
-
-        /* Like tunnel's blockInterval event, worm should also signal when it has reached a block so other components can keep track of its position
-        * in an existing tunnel.The event emitted differs between human-controlled and AI-controlled worms so it is marked virtual
-        */
-        protected virtual void sendWormIntervalEvent(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
-        {
         }
 
         /**
@@ -183,8 +186,9 @@ namespace Worm
                 }
                 if (wormBase.isCreatingTunnel) // worm enters pre-existing tunnel from a new tunnel
                 {
-                    cell = Tunnel.Map.getCellPos(ring.position); // setting the cell position will prevent collision from repeating when entering an existing tunnel
+                    cell = Tunnel.TunnelMap.getCellPos(ring.position); // setting the cell position will prevent collision from repeating when entering an existing tunnel
                     enterExistingCell = cell;
+                    wormBase.setCurCell(cell);
                 }
             }
             else
@@ -198,8 +202,9 @@ namespace Worm
             }
         }
 
-        protected void OnDisable()
+        protected new void OnDisable()
         {
+            base.OnDisable();
             if (prevStraightTunnel != null)
             {
                 GrowEvent -= prevStraightTunnel.onGrow;

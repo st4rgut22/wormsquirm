@@ -5,7 +5,7 @@ namespace Tunnel
 {
     public class CollisionManager : GenericSingletonClass<CollisionManager>
     {
-        public delegate void CollideTunnel(string wormId);
+        public delegate void CollideTunnel(Vector3Int cell);
         private event CollideTunnel CollideTunnelEvent;
 
         public delegate void SliceTunnel(Straight collidedTunnel, Direction ingressDirection, Vector3 contactPosition);
@@ -67,7 +67,6 @@ namespace Tunnel
                 else                                                                // we dont know which cell in the existing tunnel player is so use collisionCell
                 {
                     cellMove = new CellMove(directionPair.prevDir, collisionCell);  // use cell before collision cell to get the contact position
-
                 }
 
                 if (Type.isTypeStraight(nextTunnel.type))
@@ -119,8 +118,8 @@ namespace Tunnel
          */
         public void onChangeDirection(DirectionPair directionPair, Tunnel prevTunnel, string wormId, CellMove cellMove, bool isCreatingTunnel)
         {
-            Tunnel existingTunnel = Map.getTunnelFromDict(cellMove.cell);
-
+            Tunnel existingTunnel = TunnelMap.getTunnelFromDict(cellMove.cell);
+            
             if (existingTunnel == null) // if tunnel does not exist at cell then no longer in existing tunnel
             {
                 CreateTunnelEvent(cellMove, directionPair, prevTunnel, wormId);
@@ -135,7 +134,7 @@ namespace Tunnel
             if (existingTunnel != null) 
             {
                 prevTunnel.setWormCreatorId(wormId);
-                CollideTunnelEvent(wormId);
+                CollideTunnelEvent(cellMove.lastCellPosition);
                 onCollide(directionPair, prevTunnel, existingTunnel, cellMove.cell, isCreatingTunnel);
             }
         }

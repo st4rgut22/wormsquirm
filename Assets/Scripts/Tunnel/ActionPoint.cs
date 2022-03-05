@@ -12,7 +12,9 @@ namespace Tunnel
     {
         public static ActionPoint instance;
 
-        private static Dictionary<Direction, float> decisionPointBoundary;
+        private static Dictionary<Direction, float> innerWallBoundary;
+
+        private const float DECISION_BOUNDARY_TOLERANCE = 0.1f; // the distance from inner wall (aka decision boundary) that a turn will be triggered. The bigger it is, the more likely to turn
 
         private void Awake()
         {
@@ -31,10 +33,11 @@ namespace Tunnel
         public Direction getDirectionDecisionBoundaryCrossed(Tunnel tunnel, Vector3 position, Direction curDir, Direction torqueDirection)
         {
             Direction oppDir = Dir.Base.getOppositeDirection(curDir);
-            decisionPointBoundary = new Dictionary<Direction, float>();
+            innerWallBoundary = new Dictionary<Direction, float>();
             setBoundaryPoints(tunnel.center);
 
-            bool isDecision = isDecisionBoundaryCrossed(position, torqueDirection);
+            bool isDecision = isInnerWallBoundaryCrossed(position, torqueDirection);
+            print("decision boundary crossed? " + isDecision);
             bool isAlongDecisionAxis = torqueDirection == curDir || torqueDirection == oppDir;
             if (isAlongDecisionAxis)
             {
@@ -45,12 +48,12 @@ namespace Tunnel
             return decisionDirection;
         }
 
-        private bool isDecisionBoundaryCrossed(Vector3 position, Direction direction)
+        private bool isInnerWallBoundaryCrossed(Vector3 position, Direction direction)
         {
             print("position of ring is is " + position);
             float axisPosition = Dir.Vector.getAxisPositionFromDirection(direction, position);
             return isTriggerDecision(axisPosition, direction);
-        }
+        }  
 
         /**
          * Decisions involve creating tunnel pieces and only apply to non-straight tunnels that cannot scale.
@@ -83,21 +86,13 @@ namespace Tunnel
          */
         private bool isTriggerDecision(float position, Direction direction)
         {
-            float decisionBoundary = decisionPointBoundary[direction];
+            float decisionBoundary = innerWallBoundary[direction];
+            float distanceFromDecisionBoundary = Mathf.Abs(position - decisionBoundary);
 
-            if (Dir.Base.isDirectionNegative(direction))
+            print("distance from decision boundary is " + distanceFromDecisionBoundary + " position is " + position + " decision boundary is " + decisionBoundary + " in direction " + direction);
+            if (distanceFromDecisionBoundary < DECISION_BOUNDARY_TOLERANCE)
             {
-                if (position <= decisionBoundary)
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                if (position >= decisionBoundary)
-                {
-                    return true;
-                }
+                return true;
             }
             return false;
         }
@@ -107,26 +102,28 @@ namespace Tunnel
          * @direction: direction from center of tunnel
          * @tunnel: tunnel getting distance along axis
          */
-        private float getDecisionBoundary(Direction direction, Vector3 tunnelCenter)
+        private float getInnerWallDecisionBoundary(Direction direction, Vector3 tunnelCenter)
         {
-            float offset = Tunnel.INNER_WALL_OFFSET - Worm.WormBody.WORM_BODY_THICKNESS;
+            float offset = Tunnel.INNER_WALL_OFFSET;
             Vector3 centerOffset = Dir.CellDirection.getUnitVectorFromDirection(direction) * offset;
 
-            float offsetAlongAxis = Dir.Vector.getAxisPositionFromDirection(direction, centerOffset);
+            float offsetAlongAxis = Dir.Vector.getAxisPositionFromDirection(direction, centerOffset);   // same value regardless of direction
             float positionAlongAxis = Dir.Vector.getAxisPositionFromDirection(direction, tunnelCenter);
-            float decisionBoundary = offsetAlongAxis + positionAlongAxis;
+            float innerWallBoundary = offsetAlongAxis + positionAlongAxis; // add the offset to the center of tunnel along same axis
 
-            return decisionBoundary;
+            return innerWallBoundary;
         }
 
         /**
-         * Set the boundaries lines that will trigger a tunnel action. 
+         * Set the boundaries lines that will trigger a tunnel action.
+         * 
+         * @tunnelCenter        the center of the tunnel
          */
         private void setBoundaryPoints(Vector3 tunnelCenter)
         {
             Dir.Base.directionList.ForEach((Direction direction) =>
             {
-                decisionPointBoundary[direction] = getDecisionBoundary(direction, tunnelCenter);
+                innerWallBoundary[direction] = getInnerWallDecisionBoundary(direction, tunnelCenter);
             });
         }
     }

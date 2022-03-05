@@ -17,13 +17,13 @@ namespace Worm
 
         protected bool isReadyForInput; // flag indicating if worm position, movement have been initialized
 
-        protected void OnEnable()
+        protected new void OnEnable()
         {
-
+            base.OnEnable();
             FindObjectOfType<Tunnel.NewTunnelFactory>().AddTunnelEvent += onAddTunnel;
             FindObjectOfType<Tunnel.ModTunnelFactory>().AddTunnelEvent += onAddTunnel;
 
-            DecisionEvent += FindObjectOfType<Tunnel.Map>().onDecision;
+            DecisionEvent += FindObjectOfType<Tunnel.TunnelMap>().onDecision;
             DecisionEvent += GetComponent<Turn>().onDecision;
             DecisionEvent += GetComponent<Force>().onDecision;
         }
@@ -62,7 +62,7 @@ namespace Worm
             }
         }
 
-        public void onAddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        public void onAddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId)
         {
             if (wormId == this.wormId)
             {
@@ -90,11 +90,12 @@ namespace Worm
             }
         }
 
-        protected void OnDisable()
+        protected new void OnDisable()
         {
-            if (FindObjectOfType<Tunnel.Map>())
+            base.OnDisable();
+            if (FindObjectOfType<Tunnel.TunnelMap>())
             {
-                DecisionEvent -= FindObjectOfType<Tunnel.Map>().onDecision;
+                DecisionEvent -= FindObjectOfType<Tunnel.TunnelMap>().onDecision;
             }
             if (FindObjectOfType<Turn>())
             {

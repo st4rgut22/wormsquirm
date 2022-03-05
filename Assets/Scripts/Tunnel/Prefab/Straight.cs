@@ -11,7 +11,7 @@ namespace Tunnel
         
         int lastBlockLen; // last block added used to retroactively add blocks that did not fall on an interval
 
-        public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel);
+        public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isCellSameTunnel);
         public event BlockInterval BlockIntervalEvent;
 
         public delegate void Dig(Vector3 digLocation, Direction digDirection);
@@ -20,14 +20,10 @@ namespace Tunnel
         // Start is called before the first frame update
         void OnEnable()
         {
-            BlockIntervalEvent += FindObjectOfType<Map>().onBlockInterval; // subscribe dig manager to the BlockSize event
-            BlockIntervalEvent += FindObjectOfType<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
+            BlockIntervalEvent += FindObjectOfType<Map.SpawnGenerator>().onBlockInterval;
+            BlockIntervalEvent += FindObjectOfType<TunnelMap>().onBlockInterval; // subscribe dig manager to the BlockSize event
 
             DigEvent += DirtManager.Instance.onDig;
-            if (FindObjectOfType<Worm.TunnelMaker>())
-            {
-                BlockIntervalEvent += FindObjectOfType<Worm.TunnelMaker>().onBlockInterval;
-            }
         }
 
         new private void Awake()
@@ -42,7 +38,7 @@ namespace Tunnel
 
         private void Start()
         {
-            if (!isSliced)
+            if (!isSliced) // if the straight tunnel is not the result of slicing a longer straight tunnel
             {
                 growthDirection = holeDirectionList[0];
 
@@ -66,7 +62,7 @@ namespace Tunnel
             while (!newCell.Equals(newEndCell))
             {
                 addCellToList(newCell);
-                Map.addCell(newCell, this); // update the cells in the map
+                TunnelMap.addCell(newCell, this); // update the cells in the map
                 newCell = Dir.Vector.getNextCellFromDirection(newCell, growthDirection);
             }
         }
@@ -101,9 +97,9 @@ namespace Tunnel
         /** 
          * Unsubscribe tunnel from addTunnelEvent after being added
          */
-        public override void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        public override void onAddTunnel(Tunnel tunnel, CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            base.onAddTunnel(tunnel, cell, directionPair, wormId);
+            base.onAddTunnel(tunnel, cellMove, directionPair, wormId);
             FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
         }
 
@@ -131,7 +127,7 @@ namespace Tunnel
                 Vector3 deadEndPosition = getExitPosition(length);
                 DeadEndInstance.transform.position = deadEndPosition;
 
-                bool isBlockMultiple = Map.isDistanceMultiple(length);
+                bool isBlockMultiple = TunnelMap.isDistanceMultiple(length);
                 Vector3 unitVectorInDir = Dir.CellDirection.getUnitVectorFromDirection(growthDirection);
                 int curBlockLen = (int)length;
 
@@ -146,20 +142,20 @@ namespace Tunnel
                         Vector3Int lastCellPosition = getLastCellPosition();
                         Vector3Int curCell = Dir.Vector.getNextVector3Int(lastCellPosition, growthDirection);
 
-                        bool isCollision = Map.getTunnelFromDict(curCell) != null;
-
-                        if (!isTurning && !isCollision)
+                        bool isCollision = TunnelMap.getTunnelFromDict(curCell) != null;
+                        bool isCellSameTunnel = !isTurning && !isCollision;
+                        if (isCellSameTunnel) // if turn will be made or there is a collision, the cell should not be added to the tunnell's list of cells
                         {
                             addCellToList(curCell);
                         }
 
-                        BlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
+                        BlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this, isCellSameTunnel);
                     }
                 }
                 else // notify listeners that there is not a block multple
                 {
                     Vector3Int lastCellPosition = getLastCellPosition();
-                    BlockIntervalEvent(isBlockMultiple, lastCellPosition, lastCellPosition, this);
+                    BlockIntervalEvent(isBlockMultiple, lastCellPosition, lastCellPosition, this, true);
                 }
             }
         }
@@ -174,7 +170,7 @@ namespace Tunnel
             {
                 destroyDeadEnd();
             }
-            BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval; // unsubscribe map manager to the BlockSize event
+            BlockIntervalEvent -= FindObjectOfType<TunnelMap>().onBlockInterval; // unsubscribe map manager to the BlockSize event
         }
 
         private void destroyDeadEnd()
@@ -231,16 +227,7 @@ namespace Tunnel
         {
             if (!isStopped)
             {
-                BlockIntervalEvent -= FindObjectOfType<Map>().onBlockInterval;
-            }
-
-            if (FindObjectOfType<Worm.Movement>())
-            {
-                BlockIntervalEvent -= FindObjectOfType<Worm.Turn>().onBlockInterval;
-            }
-            if (FindObjectOfType<Worm.TunnelMaker>())
-            {
-                BlockIntervalEvent -= FindObjectOfType<Worm.TunnelMaker>().onBlockInterval;
+                BlockIntervalEvent -= FindObjectOfType<TunnelMap>().onBlockInterval;
             }
             if (DirtManager.Instance)
             {
@@ -248,5 +235,4 @@ namespace Tunnel
             }
         }
     }
-
 }

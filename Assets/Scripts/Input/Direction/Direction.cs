@@ -62,7 +62,7 @@ namespace Dir
 
         public static Vector3Int getNextCellFromDirection(Vector3Int cellPosition, Direction direction)
         {
-            Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
+            Vector3 unitVector = CellDirection.getUnitVectorFromDirection(direction);
             Vector3Int unitVectorInt = new Vector3Int((int)unitVector.x, (int)unitVector.y, (int)unitVector.z);
             return cellPosition + unitVectorInt;
         }

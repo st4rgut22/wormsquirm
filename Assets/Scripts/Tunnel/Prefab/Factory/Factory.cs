@@ -4,7 +4,7 @@ namespace Tunnel
 {
     public abstract class Factory : MonoBehaviour
     {
-        public delegate void AddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId); // wormId is the id of the worm that created the tunnel
+        public delegate void AddTunnel(Tunnel tunnel, CellMove cellMove, DirectionPair directionPair, string wormId); // wormId is the id of the worm that created the tunnel
         public event AddTunnel AddTunnelEvent;
 
         protected CellMove cellMove;
@@ -14,8 +14,9 @@ namespace Tunnel
 
         protected void OnEnable()
         {
+            AddTunnelEvent += FindObjectOfType<Map.SpawnGenerator>().onAddTunnel;
             AddTunnelEvent += TunnelManager.Instance.onAddTunnel;
-            AddTunnelEvent += FindObjectOfType<Map>().onAddTunnel;
+            AddTunnelEvent += FindObjectOfType<TunnelMap>().onAddTunnel;
             AddTunnelEvent += Worm.WormManager.Instance.onAddTunnel;
         }
 
@@ -39,15 +40,15 @@ namespace Tunnel
         protected void addTunnel(Tunnel tunnel, string wormId)
         {
             AddTunnelEvent += tunnel.onAddTunnel;
-            AddTunnelEvent(tunnel, cellMove.cell, directionPair, wormId);
+            AddTunnelEvent(tunnel, cellMove, directionPair, wormId);
             AddTunnelEvent -= tunnel.onAddTunnel;
         }
 
         protected void OnDisable()
         {
-            if (FindObjectOfType<Map>())
+            if (FindObjectOfType<TunnelMap>())
             {
-                AddTunnelEvent -= FindObjectOfType<Map>().onAddTunnel;
+                AddTunnelEvent -= FindObjectOfType<TunnelMap>().onAddTunnel;
             }
             if (TunnelManager.Instance)
             {
@@ -56,6 +57,10 @@ namespace Tunnel
             if (Worm.WormManager.Instance)
             {
                 AddTunnelEvent -= Worm.WormManager.Instance.onAddTunnel;
+            }
+            if (FindObjectOfType<Map.SpawnGenerator>())
+            {
+                AddTunnelEvent -= FindObjectOfType<Map.SpawnGenerator>().onAddTunnel;
             }
         }
     }

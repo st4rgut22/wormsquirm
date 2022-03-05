@@ -28,7 +28,7 @@ namespace Tunnel
         /**
          * Reset the tunnel network state by stopping all growing tunnels and clearing tunnel network
          */
-        public void onResetTunnelNetwork()
+        public void onDestroyGame()
         {
             GrowingTunnelList.ForEach((Straight tunnel) =>
             {
@@ -72,7 +72,7 @@ namespace Tunnel
             StopEvent -= tunnel.onStop;
         }
 
-        public void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        public void onAddTunnel(Tunnel tunnel, CellMove cellMove, DirectionPair directionPair, string wormId)
         {
             TunnelList.Add(tunnel);
 

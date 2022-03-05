@@ -45,8 +45,9 @@ namespace Worm
             transform.position = wormBase.initialCell;
         }
 
-        private void OnEnable() 
+        private new void OnEnable() 
         {
+            base.OnEnable();
             ForceEvent += GetComponent<Force>().onForce;
             ExitTurnEvent += GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent += GetComponent<Turn>().onMoveToWaypoint;
@@ -92,7 +93,7 @@ namespace Worm
          */
         private void completeStraight(Waypoint waypoint)
         {
-            Tunnel.Junction junction = (Tunnel.Junction) (Tunnel.Map.getCurrentTunnel(clit.position));  // use body position to get tunnel, because cannot rely on always being in a growing tunnel where block position is received from tunnel
+            Tunnel.Junction junction = (Tunnel.Junction) (Tunnel.TunnelMap.getCurrentTunnel(clit.position));  // use body position to get tunnel, because cannot rely on always being in a growing tunnel where block position is received from tunnel
             ReachJunctionExitEvent += junction.onReachJunctionExit;
             ReachJunctionExitEvent();
             ReachJunctionExitEvent -= junction.onReachJunctionExit;
@@ -114,7 +115,7 @@ namespace Worm
                 throw new System.Exception("completing turn should be the last action in waypoint list");
             }
 
-            Tunnel.Tunnel tunnel = Tunnel.Map.getCurrentTunnel(clit.position);
+            Tunnel.Tunnel tunnel = Tunnel.TunnelMap.getCurrentTunnel(clit.position);
 
             CompleteTurnEvent += ((Tunnel.TurnableTunnel)tunnel).onCompleteTurn;
             CompleteTurnEvent(wormId, wormBase.direction); // set the new direction as the exit direction
@@ -213,6 +214,7 @@ namespace Worm
 
         private new void OnDisable()
         {
+            base.OnDisable();
             ForceEvent -= GetComponent<Force>().onForce;
             ExitTurnEvent -= GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent -= GetComponent<Turn>().onMoveToWaypoint;

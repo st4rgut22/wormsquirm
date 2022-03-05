@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Tunnel
 {
-    public class Map : MonoBehaviour
+    public class TunnelMap : MonoBehaviour
     {
         public delegate void CollideTunnel(DirectionPair directionPair, Tunnel curTunnel, Tunnel nextTunnel, Vector3Int collisionCell, bool isTunnelNew);
         private event CollideTunnel CollideTunnelEvent;
@@ -50,7 +50,7 @@ namespace Tunnel
         /**
          * When tunnel network is reset clear the map
          */
-        public void onResetTunnelNetwork()
+        public void onDestroyGame()
         {
             TunnelMapDict.Clear();
             cellList.Clear();
@@ -59,7 +59,7 @@ namespace Tunnel
         /**
          * Adds tunnel type to the map at the provided coordinate
          */
-        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel)
+        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isCellSameTunnel)
         {
             if (isBlockInterval && !isTurnDecision)
             {
@@ -140,9 +140,13 @@ namespace Tunnel
             return (roundedDistance % 1) == 0;
         }
 
-        public void onAddTunnel(Tunnel tunnel, Vector3Int cellLocation, DirectionPair directionPair, string wormId)
+        /**
+         * When a new corner tunnel is added, the cell is assigned when the worm enters the tunnel, not on the next block interval as with straight segments
+         */
+        public void onAddTunnel(Tunnel tunnel, CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            addCell(cellLocation, tunnel);
+            Vector3Int cell = cellMove.cell; // use THIS block interval's cell position
+            addCell(cell, tunnel);
         }
 
         public static bool containsCell(Vector3Int cell)

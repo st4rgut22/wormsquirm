@@ -17,8 +17,9 @@ namespace Worm
 
             }; 
 
-        private void OnEnable()
+        private new void OnEnable()
         {
+            base.OnEnable();
             Tunnel.CollisionManager.Instance.InitWormPositionEvent += onInitWormPosition;
         }
 
@@ -29,8 +30,9 @@ namespace Worm
             transform.rotation = initWormRotateDict[direction];
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
+            base.OnDisable();
             Tunnel.CollisionManager.Instance.InitWormPositionEvent -= onInitWormPosition;
         }
     }

@@ -44,11 +44,13 @@ namespace Tunnel
 
             nextCell = Dir.Vector.getNextCellFromDirection(cell, curDirection);
             isInit = false;
+            Debug.Log("add cell " + cell + " for tunnel " + tunnel.gameObject.name);
         }
 
         public CellMove(Direction initialDirection, Vector3Int cell)
         {
             this.cell = cell;
+            lastCellPosition = cell;
 
             center = Tunnel.initializeCenter(cell);
 

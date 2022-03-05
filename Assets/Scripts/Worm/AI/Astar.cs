@@ -21,8 +21,7 @@ namespace Map
 
         Item[,,] CostMap = new Item[DIMENSION_LEN, DIMENSION_LEN, DIMENSION_LEN];
 
-        Dictionary<Vector3Int, GameObject> obstacleDict;
-        Vector3Int goalLocation;
+        Vector3Int objectiveLocation;
 
         Worm.TunnelMaker currentTunnelMaker;
         private Vector3Int initialCell;
@@ -71,10 +70,15 @@ namespace Map
             mapOffset = new Vector3Int(MAP_LENGTH, MAP_LENGTH, MAP_LENGTH); // offset to convert a cell position to a array position
         }
 
-        public void onInitLandmark(Dictionary<Vector3Int, GameObject> obstacleDict, Vector3Int goalLocation)
+        /**
+         * Initialize objective location in the map
+         * 
+         * @goalLocation        the cell containing the objective (game termination condition), 
+         *                      which  we use to generate a attack path to player or path to reward
+         */
+        public void onInitObjective(Vector3Int objectiveLocation)
         {
-            this.obstacleDict = obstacleDict;
-            this.goalLocation = goalLocation;
+            this.objectiveLocation = objectiveLocation;
             isDestinationReceived = true;
         }
 
@@ -95,12 +99,12 @@ namespace Map
 
             initializeCostMap();
 
-            Item startItem = new Item(0, initialCell, goalLocation);
+            Item startItem = new Item(0, initialCell, objectiveLocation);
             HashSet<Item> unknownPathSet = new HashSet<Item>();
 
             unknownPathSet.Add(startItem);
             List<Item> unknownPathList = new List<Item>() { startItem };
-            findShortestPath(obstacleDict, unknownPathList, unknownPathSet);
+            findShortestPath(unknownPathList, unknownPathSet);
         }
 
         /**
@@ -110,7 +114,7 @@ namespace Map
         {
             List<Vector3Int> shortestPath = new List<Vector3Int>();
 
-            Vector3Int goalArrayPos = goalLocation + mapOffset;
+            Vector3Int goalArrayPos = objectiveLocation + mapOffset;
             Item item = CostMap[goalArrayPos.x, goalArrayPos.y, goalArrayPos.z];
             while (!item.cell.Equals(initialCell))
             {
@@ -123,13 +127,13 @@ namespace Map
             return shortestPath;
         }
 
-        void findShortestPath(Dictionary<Vector3Int, GameObject> obstacleDict, List<Item> unknownPathList, HashSet<Item> unknownPathSet)
+        void findShortestPath(List<Item> unknownPathList, HashSet<Item> unknownPathSet)
         {
             while (unknownPathList.Count > 0)
             {
                 Item item = findClosestItem(unknownPathList);
 
-                if (item.cell.Equals(goalLocation))
+                if (item.cell.Equals(objectiveLocation))
                 {
                     print("shortest distance is " + item.totalCost);
                     List<Vector3Int> shortestPath = getShortestPath();
@@ -144,7 +148,7 @@ namespace Map
                 {
                     if (isCellWithinBoundaries(neighbor))
                     {
-                        if (!obstacleDict.ContainsKey(neighbor))
+                        if (!ObstacleGenerator.obstacleDict.ContainsKey(neighbor))
                         {
                             Vector3Int pos = neighbor + mapOffset;
                             Item neighborItem = CostMap[pos.x, pos.y, pos.z];
@@ -224,7 +228,7 @@ namespace Map
                     {
                         Vector3Int arrayPos = new Vector3Int(i, j, k);
                         Vector3Int cellPos = arrayPos - mapOffset;
-                        CostMap[i, j, k] = new Item(MAX_LENGTH, cellPos, goalLocation);
+                        CostMap[i, j, k] = new Item(MAX_LENGTH, cellPos, objectiveLocation);
                     }
                 }
             }

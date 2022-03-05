@@ -9,12 +9,13 @@ namespace Tunnel
             base.Awake();
         }
 
-        public override void onAddTunnel(Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId)
+        public override void onAddTunnel(Tunnel tunnel, CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            base.onAddTunnel(tunnel, cell, directionPair, wormId);
+            Vector3Int lastCellPosition = cellMove.cell;
+            base.onAddTunnel(tunnel, cellMove, directionPair, wormId);
             Quaternion deadEndRotation = Rotation.DeadEndRot.getRotationFromDirection(directionPair.curDir);
-            Vector3Int deadEndCellPosition = Dir.Vector.getNextCellFromDirection(cell, directionPair.curDir);
-            Tunnel nextTunnel = Map.getTunnelFromDict(deadEndCellPosition);
+            Vector3Int deadEndCellPosition = Dir.Vector.getNextCellFromDirection(lastCellPosition, directionPair.curDir);
+            Tunnel nextTunnel = TunnelMap.getTunnelFromDict(deadEndCellPosition);
 
             if (nextTunnel == null)// check if tunnel already exists where dead end should be placed 
             {

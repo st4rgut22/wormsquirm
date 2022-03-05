@@ -4,7 +4,7 @@ namespace Intersect
 {
     public class Slicer : MonoBehaviour
     {
-        public delegate void AddTunnel(Tunnel.Tunnel tunnel, Vector3Int cell, DirectionPair directionPair, string wormId);
+        public delegate void AddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId);
         public event AddTunnel AddTunnelEvent;
 
         private void OnEnable()
@@ -32,7 +32,7 @@ namespace Intersect
             Vector3 collidedTunnelEgressPosition = duplicateTunnel.getEgressPosition(duplicateTunnel.growthDirection);
             updateTunnel(duplicateTunnel, sliceGrowthDirFace, collidedTunnelEgressPosition);
 
-            AddTunnelEvent(duplicateTunnel, Vector3Int.zero, null, null); // add the duplicated segment to the list of tunnels in the network
+            AddTunnelEvent(duplicateTunnel, null, null, null); // add the duplicated segment to the list of tunnels in the network
         }
 
         /**

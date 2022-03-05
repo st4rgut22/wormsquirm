@@ -7,6 +7,8 @@ namespace Worm
         [SerializeField]
         public Vector3Int initialCell;
 
+        public Vector3Int curCell { get; private set; } // the current cell worm is in using ring position as reference
+
         public Direction direction { get; private set; }
 
         public bool isStraight = true;
@@ -19,12 +21,22 @@ namespace Worm
 
         public bool isChangingDirection { get; private set; } // flag to check if worm is changing direction in a cell
 
+        public Worm WormDescription { get; private set; }
+
         private new void Awake()
         {
             base.Awake();
             isInitialized = false;
             setInitialCell(initialCell);
             setDirection(Direction.None);
+        }
+
+        /**
+         * Call the OnEnable method fo parent ONCE to set up delegates that can be called by all subclasses
+         */
+        private new void OnEnable()
+        {
+            base.OnEnable();
         }
 
         /**
@@ -38,6 +50,22 @@ namespace Worm
         public void setStraight(bool isStraight)
         {
             this.isStraight = isStraight;
+        }
+
+        /**
+         * Set the attributes of worm, which includes type of worm
+         */
+        public new void setWormDescription(Worm WormDescription)
+        {
+            this.WormDescription = WormDescription;
+        }
+
+        /**
+         * Set the current cell of the worm
+         */
+        public void setCurCell(Vector3Int curCell)
+        {
+            this.curCell = curCell;
         }
 
         /**
@@ -75,6 +103,11 @@ namespace Worm
         {
             print("direction in WormBase is " + direction);
             this.direction = direction;
+        }
+
+        private new void OnDisable()
+        {
+            base.OnDisable();
         }
     }
 }

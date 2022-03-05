@@ -6,21 +6,39 @@ namespace Worm
 {
     namespace Factory
     {
+        // tracks the worms in the scene, and cleans up event handlers when the worms are destroyed
         public abstract class WormFactoryProperties : MonoBehaviour
         {
-            // tracks the worms in the scene, and cleans up event handlers when the worms are destroyed
+            public delegate void InitWorm(Worm worm, Map.Astar wormAstar, string wormId);
+            public event InitWorm InitWormEvent;
 
             [SerializeField]
             protected Transform WormContainer;
 
             protected GameObject wormGO;
 
-            public abstract void onSpawn(string wormId);
-
             protected string wormTag;
 
             protected float turnSpeed;
 
+            protected void OnEnable()
+            {
+                InitWormEvent += FindObjectOfType<Map.SpawnGenerator>().onInitWorm;
+            }
+
+            protected void RaiseInitWormEvent(GameObject wormGO, Map.Astar wormAstar, string wormId)
+            {
+                Worm worm = wormGO.GetComponent<Worm>();
+                InitWormEvent(worm, wormAstar, wormId);
+            }
+
+            protected void OnDisable()
+            {
+                if (GetComponent<Map.SpawnGenerator>())
+                {
+                    InitWormEvent -= FindObjectOfType<Map.SpawnGenerator>().onInitWorm;
+                }
+            }
         }
     }
 

@@ -6,6 +6,8 @@ namespace Worm
 {
     public class TunnelMaker : BaseController
     {
+        public delegate void Respawn(Vector3Int currentCell);
+        public event Respawn RespawnEvent;
 
         [SerializeField]
         private Rigidbody head;
@@ -33,9 +35,8 @@ namespace Worm
         private new void OnEnable()
         {
             base.OnEnable();
-
+            RespawnEvent += FindObjectOfType<Map.SpawnGenerator>().onRespawn;
             FindObjectOfType<Turn>().ReachWaypointEvent += onReachWaypoint;
-            ObjectiveReachedEvent += GameManager.Instance.onObjectiveReached;
         }
 
         /**
@@ -129,9 +130,25 @@ namespace Worm
             }
             else
             {
-                RaiseObjectiveReachedEvent(); // reached the goal
+                ResetObjective();
                 RaiseRemoveSelfEvent();
                 RaiseSpawnEvent();
+            }
+        }
+
+        /**
+         * After an AI has reached its objective (which depends on type of AI), it needs to decide a new course of action
+         */
+        private void ResetObjective()
+        {
+            switch (wormBase.WormDescription.wormType)
+            {
+                case ObstacleType.AIWorm: // while testing the AI worm will initially reset when reaching its destination
+                    Vector3Int curCell = WormTunnelBroker.getCurrentCell(ring.position);
+                    RespawnEvent(curCell);
+                    break;
+                default:
+                    throw new System.Exception("The AI of type " + wormBase.WormDescription.wormType + " has not been implemented yet");
             }
         }
 
@@ -159,8 +176,11 @@ namespace Worm
         private new void OnDisable()
         {
             base.OnDisable();
-            ObjectiveReachedEvent -= GameManager.Instance.onObjectiveReached;
-       
+
+            if (FindObjectOfType<Map.SpawnGenerator>())
+            {
+                RespawnEvent -= FindObjectOfType<Map.SpawnGenerator>().onRespawn;
+            }
             if (FindObjectOfType<Turn>())
             {
                 FindObjectOfType<Turn>().ReachWaypointEvent -= onReachWaypoint;

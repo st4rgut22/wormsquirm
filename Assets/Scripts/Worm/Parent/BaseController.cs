@@ -18,8 +18,9 @@ namespace Worm
             isGameStart = true;
         }
 
-        protected void OnEnable()
+        protected new void OnEnable()
         {
+            base.OnEnable();
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
             InitDecisionEvent += GetComponent<Turn>().onInitDecision;
             if (GetComponent<InputProcessor>())
@@ -57,8 +58,9 @@ namespace Worm
             wormBase.initializeWorm();
         }
 
-        protected void OnDisable()
+        protected new void OnDisable()
         {
+            base.OnDisable();
             if (Tunnel.CollisionManager.Instance)
             {
                 InitDecisionEvent -= Tunnel.CollisionManager.Instance.onInitDecision;
@@ -70,5 +72,4 @@ namespace Worm
             InitDecisionEvent -= GetComponent<Turn>().onInitDecision;
         }
     }
-
 }

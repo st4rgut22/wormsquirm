@@ -9,7 +9,7 @@ namespace Worm
         public class WormPlayerFactory : WormFactoryProperties
         {
             [SerializeField]
-            private GameObject WormPlayer;
+            private HumanWorm HumanWorm;
 
             private static WormPlayerFactory instance;
 
@@ -28,9 +28,21 @@ namespace Worm
                 turnSpeed = 100f;
             }
 
-            public override void onSpawn(string wormId)
+            private new void OnEnable()
             {
-                wormGO = WormPlayer.instantiate(wormId, WormContainer, turnSpeed);
+                base.OnEnable();
+            }
+
+            public void onSpawn(string wormId)
+            {
+                wormGO = HumanWorm.instantiate(wormId, WormContainer, turnSpeed);
+                Map.Astar wormAstar = wormGO.GetComponent<Map.Astar>();             // generate path using astar
+                RaiseInitWormEvent(wormGO, wormAstar, wormId);
+            }
+
+            private new void OnDisable()
+            {
+                base.OnDisable();
             }
         }
     }

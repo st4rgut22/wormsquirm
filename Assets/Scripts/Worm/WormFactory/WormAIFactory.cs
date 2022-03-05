@@ -9,14 +9,14 @@ namespace Worm
         // setup a AI worm
         public class WormAIFactory : WormFactoryProperties
         {
-            [SerializeField]
-            private GameObject WormAI;
-
             public delegate void FollowPath(TunnelMaker tunnelMaker);
             public event FollowPath FollowPathEvent;
 
             public delegate void InitCheckpoint(List<Checkpoint> checkpointList);
             public event InitCheckpoint InitCheckpointEvent;
+
+            [SerializeField]
+            private AIWorm AiWorm;
 
             private static WormAIFactory instance;
 
@@ -35,18 +35,27 @@ namespace Worm
                 turnSpeed = 1000f; // instantaneous turn
             }
 
-            private void OnEnable()
+            private new void OnEnable()
             {
-                FollowPathEvent += FindObjectOfType<Map.Astar>().onFollowPath;
+                base.OnEnable();
+                InitWormEvent += FindObjectOfType<Map.RewardGenerator>().OnInitWorm;
             }
 
-            private void initializeWormPath(GameObject wormGO)
+            /**
+             * Initialize the path of the AI
+             * 
+             * @wormGO      the gameobject worm to initialize the path of
+             * @wormAstar   the worm's path finder
+             */
+            private void initializeWormPath(Map.Astar wormAstar, GameObject wormGO)
             {
                 TunnelMaker tunnelMaker = wormGO.GetComponent<TunnelMaker>();
                 switch (GameManager.Instance.gameMode)
                 {
                     case GameMode.TestAutoPath:
+                        FollowPathEvent += wormAstar.onFollowPath;
                         FollowPathEvent(tunnelMaker);
+                        FollowPathEvent -= wormAstar.onFollowPath;
                         break;
                     case GameMode.TestFixedPath:
                         followExamplePath(tunnelMaker);
@@ -65,17 +74,20 @@ namespace Worm
                 InitCheckpointEvent -= tunnelMaker.onInitCheckpointList;
             }
 
-            public override void onSpawn(string wormId)
+            public void onSpawn(string wormId)
             {
-                wormGO = WormAI.instantiate(wormId, WormContainer, turnSpeed);
-                initializeWormPath(wormGO);
+                wormGO = AiWorm.instantiate(wormId, WormContainer, turnSpeed);
+                Map.Astar wormAstar = wormGO.GetComponent<Map.Astar>(); // generate path using astar
+                initializeWormPath(wormAstar, wormGO);
+                RaiseInitWormEvent(wormGO, wormAstar, wormId);
             }
 
-            private void OnDisable()
+            private new void OnDisable()
             {
-                if (FindObjectOfType<Map.Astar>())
+                base.OnDisable();
+                if (FindObjectOfType<Map.RewardGenerator>())
                 {
-                    FollowPathEvent -= FindObjectOfType<Map.Astar>().onFollowPath;
+                    InitWormEvent -= FindObjectOfType<Map.RewardGenerator>().OnInitWorm;
                 }
             }
         }

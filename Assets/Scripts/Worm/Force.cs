@@ -86,15 +86,19 @@ namespace Worm
          */
         public void onTorque(DirectionPair dirPair, Waypoint waypoint)
         {
-            torqueBody.angularDrag = angularDrag;   // restore the original angular drag
-
             if (waypoint.move == MoveType.ENTRANCE || waypoint.move == MoveType.CENTER || waypoint.move == MoveType.EXIT)
             {
+                torqueBody.angularDrag = angularDrag;   // restore the original angular drag while going through a turn so player doesnt get stuck on corner
+
                 Vector3 torqueUnitVector = Dir.DirectionForce.getTorqueVectorFromDirection(dirPair);
                 Vector3 torqueVector = torqueUnitVector * torqueMagnitude;
                 print("apply torque vector " + torqueVector + " for dirPair " + dirPair.prevDir + " , " + dirPair.curDir + " on move " + waypoint.move);
                 torqueBody.AddTorque(torqueVector);
             }
-        }   
+            else
+            {
+                torqueBody.angularDrag = slowAngularDrag; // if not going through a turn turn more slowly to avoid immediately triggering turn decision
+            }
+        }
     }
 }

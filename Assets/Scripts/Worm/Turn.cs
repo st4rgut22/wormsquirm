@@ -31,6 +31,7 @@ namespace Worm
 
         private new void OnEnable()
         {
+            base.OnEnable();
             FollowWaypointEvent += GetComponent<Movement>().onFollowWaypoint;
             ReachWaypointEvent += GetComponent<Movement>().onReachWaypoint;
             ReachWaypointEvent += GetComponent<WormTunnelBroker>().onReachWaypoint;
@@ -62,10 +63,6 @@ namespace Worm
                         print("break");
                     }
                     print("re: prevDir " + directionPair.prevDir + " curDir " + directionPair.curDir + " waypoint is reached for " + destinationWaypoint.move + " destination position is " + destinationWaypoint.position + " ring position is " + ring.position);
-                    if (destinationWaypoint.move == MoveType.EXIT)
-                    {
-                        print("dslkjflkds");
-                    }
                     ReachWaypointEvent(destinationWaypoint);
                 }
             }
@@ -157,6 +154,10 @@ namespace Worm
          */
         public void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Tunnel prevTunnel)
         {
+            if (isBlockMultiple)
+            {
+                print("is block multiple block Position is " + blockPosition + " last block position is " + lastBlockPositionInt + " for tunnel " + prevTunnel.name + " is decision " + wormBase.isDecision);
+            }
             if (isBlockMultiple && wormBase.isDecision) // initiate turn for straight tunnels
             {
                 Vector3 prevCellCenter = Tunnel.Tunnel.getOffsetPosition(Direction.Up, lastBlockPositionInt);
@@ -175,8 +176,9 @@ namespace Worm
             isWaypointReached = false;
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
+            base.OnDisable();
             if (FindObjectOfType<Movement>())
             {
                 FollowWaypointEvent -= GetComponent<Movement>().onFollowWaypoint;
