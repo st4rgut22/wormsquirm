@@ -9,9 +9,6 @@ namespace Worm
         public delegate void Respawn(Vector3Int currentCell);
         public event Respawn RespawnEvent;
 
-        [SerializeField]
-        private Rigidbody head;
-
         List<Checkpoint> checkpointList;
         int checkPointIdx;
 
@@ -84,7 +81,7 @@ namespace Worm
                 {
                     if (!isTurnOnFirstBlock())
                     {
-                        if (tunnel.containsCell(blockPositionInt)) // this condition excludes the last cell adjacent from the corner as counting as a tunnel segment
+                        if (tunnel.containsCell(lastBlockPositionInt)) // this condition excludes the last cell adjacent from the corner as counting as a tunnel segment
                         {
                             tunnelSegmentCounter += 1;
 
@@ -96,6 +93,10 @@ namespace Worm
                             {
                                 turnOnFirstBlock = blockPositionInt;
                             }
+                        }
+                        else
+                        {
+                            print("nonono");
                         }
                     }
                 }
@@ -131,8 +132,8 @@ namespace Worm
             else
             {
                 ResetObjective();
-                RaiseRemoveSelfEvent();
-                RaiseSpawnEvent();
+                //RaiseRaiseRemoveSelfEvent();
+                //RaiseSpawnEvent();
             }
         }
 
@@ -144,7 +145,7 @@ namespace Worm
             switch (wormBase.WormDescription.wormType)
             {
                 case ObstacleType.AIWorm: // while testing the AI worm will initially reset when reaching its destination
-                    Vector3Int curCell = WormTunnelBroker.getCurrentCell(ring.position);
+                    Vector3Int curCell = WormTunnelBroker.getCurrentCell(clit.position);
                     RespawnEvent(curCell);
                     break;
                 default:
@@ -157,10 +158,14 @@ namespace Worm
          */
         IEnumerator changeDirectionConsecutively()
         {
-            if (currentCheckpoint.length == 0)
+            if (currentCheckpoint.length == 0) // not the last checkpoint
             {
                 while (true)
                 {
+                    if (checkPointIdx >= checkpointList.Count)
+                    {
+                        print("test");
+                    }
                     if (isReadyToTurn) // break when the decision is done begin processed (eg worm reaches center of turn tunnel)
                     {
                         updateCheckpoint();

@@ -73,9 +73,10 @@ namespace Map
         /**
          * Destroy obstacle at a position and remove references to it in the map
          */
-        protected void destroyObstacle(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int currentPosition)
+        protected void destroyObstacle(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int currentPosition, List<Obstacle> specificObstacleList)
         {
             Obstacle obstacle = obstacleDict[currentPosition];
+            specificObstacleList.Remove(obstacle);
             GameObject obstacleGO = obstacle.obstacleObject;
             obstacleDict.Remove(currentPosition);
             swappedObstacleDict.Remove(obstacle);

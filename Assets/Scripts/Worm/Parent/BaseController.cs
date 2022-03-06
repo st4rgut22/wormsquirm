@@ -48,6 +48,14 @@ namespace Worm
         }
 
         /**
+         * Call remove self event from grandchild of wormBody
+         */
+        protected void RaiseRaiseRemoveSelfEvent()
+        {
+            RaiseRemoveSelfEvent();
+        }
+
+        /**
          * Signal the initial movement made in a specified direction starting at predetermined cell
          * 
          * @localDirection the direction the worm starts traveling

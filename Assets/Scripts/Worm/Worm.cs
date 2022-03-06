@@ -11,7 +11,7 @@ namespace Worm
         public ObstacleType wormType { get; protected set; }
         public string wormId { get; protected set; }
 
-        private new void Awake()
+        protected new void Awake()
         {
             base.Awake();
             setWormDescription(this);

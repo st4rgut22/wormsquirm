@@ -58,7 +58,7 @@ namespace Worm
          */
         protected void RaiseRemoveSelfEvent()
         {
-            Vector3Int currentCell = WormTunnelBroker.getCurrentCell(ring.position);
+            Vector3Int currentCell = WormTunnelBroker.getCurrentCell(clit.position);
             RemoveSelfEvent(currentCell);
         }
 

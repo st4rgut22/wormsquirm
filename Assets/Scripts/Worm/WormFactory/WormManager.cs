@@ -27,7 +27,7 @@ namespace Worm
          */
         public void onCollide(Vector3Int cell)
         {
-            Obstacle WormObstacle = Map.SpawnGenerator.WormObstacleDict[cell]; // TODO: check whether this cell (cellMove's lastCellPosition) contains worm
+            Obstacle WormObstacle = Map.SpawnGenerator.WormObstacleDict[cell];
             GameObject wormGO = WormObstacle.obstacleObject;
 
             WormTunnelBroker wormTunnelBroker = wormGO.GetComponent<WormTunnelBroker>(); 
@@ -44,8 +44,8 @@ namespace Worm
          */
         public void onAddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            Vector3Int cell = cellMove.cell; // use last cell position because worm is not in the newest cell when it is first created
-            Obstacle WormObstacle = Map.SpawnGenerator.WormObstacleDict[cell]; // TODO: check whether this cell (cellMove's lastCellPosition) contains worm
+            Vector3Int cell = cellMove.cell;
+            Obstacle WormObstacle = Map.SpawnGenerator.WormObstacleDict[cell];
             GameObject wormGO = WormObstacle.obstacleObject;
             if (wormGO == null)
             {

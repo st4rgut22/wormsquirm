@@ -87,7 +87,7 @@ namespace Worm
         /**
          * Get the current cell of the worm
          * 
-         * @position    worm's position
+         * @position    worm's midsegment position
          */
         public static Vector3Int getCurrentCell(Vector3 position)
         {
@@ -99,9 +99,8 @@ namespace Worm
             if (!wormBase.isCreatingTunnel && !isDecisionProcessing)
             {
                 Vector3Int curCell = getCurrentCell(ring.position);
-                wormBase.setCurCell(curCell);
 
-                Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position);
+                Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position); // TODO: PROBLEM HERE? using ring instead of clit
                 if (curTunnel == null) // if no tunnel exists at ring position, we are not in an existing tunnel (need to confirm)
                 {
                     return;
@@ -188,7 +187,6 @@ namespace Worm
                 {
                     cell = Tunnel.TunnelMap.getCellPos(ring.position); // setting the cell position will prevent collision from repeating when entering an existing tunnel
                     enterExistingCell = cell;
-                    wormBase.setCurCell(cell);
                 }
             }
             else

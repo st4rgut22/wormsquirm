@@ -40,7 +40,7 @@ namespace Tunnel
 
         /**
          * When a decision has been made set a flag in order to prevent junction creation on collision. Instead, let 
-         * ChangeDirectionEvent() trigger junction creation
+         * ChangeDirectionEvent() trigger junction creation. Prevents creating the same junction
          */
         public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
         {
@@ -141,11 +141,11 @@ namespace Tunnel
         }
 
         /**
-         * When a new corner tunnel is added, the cell is assigned when the worm enters the tunnel, not on the next block interval as with straight segments
+         * 
          */
         public void onAddTunnel(Tunnel tunnel, CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            Vector3Int cell = cellMove.cell; // use THIS block interval's cell position
+            Vector3Int cell = cellMove.cell;
             addCell(cell, tunnel);
         }
 

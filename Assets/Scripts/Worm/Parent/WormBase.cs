@@ -7,7 +7,6 @@ namespace Worm
         [SerializeField]
         public Vector3Int initialCell;
 
-        public Vector3Int curCell { get; private set; } // the current cell worm is in using ring position as reference
 
         public Direction direction { get; private set; }
 
@@ -58,14 +57,6 @@ namespace Worm
         public new void setWormDescription(Worm WormDescription)
         {
             this.WormDescription = WormDescription;
-        }
-
-        /**
-         * Set the current cell of the worm
-         */
-        public void setCurCell(Vector3Int curCell)
-        {
-            this.curCell = curCell;
         }
 
         /**

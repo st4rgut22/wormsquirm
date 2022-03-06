@@ -78,8 +78,9 @@ namespace Worm
             {
                 wormGO = AiWorm.instantiate(wormId, WormContainer, turnSpeed);
                 Map.Astar wormAstar = wormGO.GetComponent<Map.Astar>(); // generate path using astar
+                RaiseInitWormEvent(wormGO, wormAstar, wormId); //  add worm to the map
+
                 initializeWormPath(wormAstar, wormGO);
-                RaiseInitWormEvent(wormGO, wormAstar, wormId);
             }
 
             private new void OnDisable()

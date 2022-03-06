@@ -14,12 +14,16 @@ namespace Tunnel
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isCellSameTunnel);
         public event BlockInterval BlockIntervalEvent;
 
+        public delegate void AIBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel);
+        public event AIBlockInterval AIBlockIntervalEvent;
+
         public delegate void Dig(Vector3 digLocation, Direction digDirection);
         public event Dig DigEvent;
 
         // Start is called before the first frame update
         void OnEnable()
         {
+            AIBlockIntervalEvent += FindObjectOfType<Map.SpawnGenerator>().onAiBlockInterval;
             BlockIntervalEvent += FindObjectOfType<Map.SpawnGenerator>().onBlockInterval;
             BlockIntervalEvent += FindObjectOfType<TunnelMap>().onBlockInterval; // subscribe dig manager to the BlockSize event
 
@@ -133,7 +137,6 @@ namespace Tunnel
 
                 if (isBlockMultiple)
                 {
-                    print("cur block " + curBlockLen + " last block " + lastBlockLen + " position is " + position);
                     if (curBlockLen >= 1 && curBlockLen > lastBlockLen) // the first block is already added on tunnel creation 
                     {
                         lastBlockLen = curBlockLen;
@@ -143,7 +146,11 @@ namespace Tunnel
                         Vector3Int curCell = Dir.Vector.getNextVector3Int(lastCellPosition, growthDirection);
 
                         bool isCollision = TunnelMap.getTunnelFromDict(curCell) != null;
+
+                        AIBlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
+
                         bool isCellSameTunnel = !isTurning && !isCollision;
+
                         if (isCellSameTunnel) // if turn will be made or there is a collision, the cell should not be added to the tunnell's list of cells
                         {
                             addCellToList(curCell);
@@ -228,6 +235,10 @@ namespace Tunnel
             if (!isStopped)
             {
                 BlockIntervalEvent -= FindObjectOfType<TunnelMap>().onBlockInterval;
+            }
+            if (FindObjectOfType<Map.SpawnGenerator>())
+            {
+                AIBlockIntervalEvent -= FindObjectOfType<Map.SpawnGenerator>().onAiBlockInterval;
             }
             if (DirtManager.Instance)
             {

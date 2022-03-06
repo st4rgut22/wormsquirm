@@ -17,6 +17,9 @@ namespace Map
         [SerializeField]
         private int aiCount;
 
+        [SerializeField]
+        private int playerCount; // the # of human players (equals 1 until multiplayer support arrives)
+
         private int aiSpawnCount; // used to id ai-controlled worms
 
         private int humanSpawnCount; // used to id human controlled worms TODO: multiplayer will have multiple human-controlled worms
@@ -35,7 +38,7 @@ namespace Map
             WormObstacleDict = new Dictionary<Vector3Int, Obstacle>();
             SwappedWormObstacleDict = new Dictionary<Obstacle, Vector3Int>();
             wormObstacleList = new List<Obstacle>();
-            humanSpawnCount = aiSpawnCount = 0;    
+            humanSpawnCount = aiSpawnCount = 0;
         }
 
         private void OnEnable()
@@ -87,15 +90,25 @@ namespace Map
                 print("in onBlockInterval not same cell!");
             }
             GameObject WormGO = WormObstacle.obstacleObject;
+            SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
+            SpawnBlockIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
+            SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
+        }
+
+        /**
+         * AI worms turn ON block intervals (instead of in the preceding cell). TunnelMaker must be notified to make a turn decision ahead of the onBlockInterval listener
+         */
+        public void onAiBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel)
+        {
+            Obstacle WormObstacle = getObstacle(lastBlockPositionInt, WormObstacleDict);
             if (WormObstacle.obstacleType == ObstacleType.AIWorm) // if worm is AI send an additional event to advance to the next checkpoint
             {
+                GameObject WormGO = WormObstacle.obstacleObject;
+
                 SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.TunnelMaker>().onBlockInterval;
                 SpawnBlockIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
                 SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.TunnelMaker>().onBlockInterval;
             }
-            SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
-            SpawnBlockIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
-            SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
         }
 
         /**
@@ -108,6 +121,8 @@ namespace Map
         {
             Obstacle wormObstacle = new Obstacle(worm.gameObject, worm.wormType, wormId);
             wormObstacleList.Add(wormObstacle);
+            initializeObstacleDict(WormObstacleDict, SwappedWormObstacleDict, wormObstacleList);
+            initializeInitialCells(wormObstacleList);
         }
 
         /**
@@ -154,8 +169,9 @@ namespace Map
          */
         public void onStartGame(GameMode gameMode)
         {
-            if (gameMode == GameMode.Solo) // create a single human worm, no ai worms
+            if (gameMode == GameMode.Solo) // create a single human worm, no ai worms (TESTING MODE)
             {
+                aiCount = 0;
                 SpawnPlayerWormEvent(HUMAN_WORM_ID);
             }
             else if (gameMode == GameMode.ReachTheGoal) // create human worm and ai worms
@@ -163,22 +179,20 @@ namespace Map
                 createAiWorms(aiCount);
                 SpawnPlayerWormEvent(HUMAN_WORM_ID);
             }
-            else if (gameMode == GameMode.TestFixedPath) // create a ai worm but no human worm
+            else if (gameMode == GameMode.TestFixedPath) // create a ai worm but no human worm (TESTING MODE)
             {
+                playerCount = 0; // temp
                 createAiWorms(aiCount);
             }
             else
             {
                 throw new System.Exception("the game mode " + gameMode + " is not supported yet");
             }
-            int totalSpawnCount = aiCount + 1;
+            int totalSpawnCount = aiCount + playerCount;
             if (totalSpawnCount != wormObstacleList.Count)
             {
                 throw new System.Exception("the number of wormObstacles created: " + wormObstacleList.Count + ", does not match expected count: " + totalSpawnCount);
             }
-            List<Obstacle> obstacles = getObstacleList();
-            initializeObstacleDict(WormObstacleDict, SwappedWormObstacleDict, obstacles);
-            initializeInitialCells(obstacles);
         }
 
         /**
@@ -214,7 +228,7 @@ namespace Map
             foreach (KeyValuePair<Vector3Int, Obstacle> WormObstacleEntry in WormObstacleDict)
             {
                 Vector3Int wormCell = WormObstacleEntry.Key;
-                destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, wormCell);
+                destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, wormCell, wormObstacleList);
             }
         }
 
@@ -225,7 +239,7 @@ namespace Map
          */
         public void onRemoveWorm(Vector3Int currentCell)
         {
-            destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, currentCell);
+            destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, currentCell, wormObstacleList);
         }
 
         private void OnDisable()
