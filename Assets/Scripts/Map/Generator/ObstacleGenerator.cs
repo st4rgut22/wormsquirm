@@ -86,16 +86,24 @@ namespace Map
         }
 
         /**
-         * Get the obstacle at a cell and check both the object-specific dict and combined-dict are synced
+         * Get the obstacle at a cell and check both the object-specific dict and combined-dict are synced. 
+         * Return null if the cell doesnt contain an obstalce (for instance if it was destroyed)
          */
         protected Obstacle getObstacle(Vector3Int currentPosition, Dictionary<Vector3Int, Obstacle> specificObstacleDict) 
         {
-            Obstacle Obstacle = obstacleDict[currentPosition];
-            if (Obstacle != specificObstacleDict[currentPosition])
+            if (obstacleDict.ContainsKey(currentPosition))
             {
-                throw new System.Exception("Obstacle " + Obstacle.obstacleType + " at " + currentPosition + ", does not match specific obstacle dict entry: " + specificObstacleDict[currentPosition].obstacleType);
+                Obstacle Obstacle = obstacleDict[currentPosition];
+                if (Obstacle != specificObstacleDict[currentPosition])
+                {
+                    throw new System.Exception("Obstacle " + Obstacle.obstacleType + " at " + currentPosition + ", does not match specific obstacle dict entry: " + specificObstacleDict[currentPosition].obstacleType);
+                }
+                return Obstacle;
             }
-            return Obstacle;
+            else
+            {
+                return null;
+            }
         }
 
         /**
@@ -105,8 +113,9 @@ namespace Map
          * @nextPosition                    the updated cell position
          * @specificObstaclePosDict         dictionary entry <position, obstacle>
          * @swapSpecificObstaclePosDict     swap dictionary entry <obstacle, position>
+         * @deleteCurCell                   whether the tunnel at currentPosition should be removed (eg if it does not exist)
          */
-        protected Obstacle updateObstacle(Obstacle ObstacleToUpdate, Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int oldPosition, Vector3Int nextPosition)
+        protected Obstacle updateObstacle(Obstacle ObstacleToUpdate, Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int oldPosition, Vector3Int nextPosition, bool isDeleteCurCell)
         {
             if (obstacleDict.ContainsKey(nextPosition))
             {
@@ -127,6 +136,12 @@ namespace Map
             }
             swappedObstacleDict[ObstacleToUpdate] = nextPosition;
             swapSpecificObstacleDict[ObstacleToUpdate] = nextPosition;
+
+            if (isDeleteCurCell)
+            {
+                obstacleDict.Remove(oldPosition);
+                specificObstacleDict.Remove(oldPosition);
+            }
             return ObstacleToUpdate;
         }
 

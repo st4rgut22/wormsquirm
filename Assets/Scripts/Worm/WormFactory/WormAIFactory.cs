@@ -50,7 +50,7 @@ namespace Worm
             private void initializeWormPath(Map.Astar wormAstar, GameObject wormGO)
             {
                 TunnelMaker tunnelMaker = wormGO.GetComponent<TunnelMaker>();
-                switch (GameManager.Instance.gameMode)
+                switch (GameManager.Instance.gameMode) // TODO: ADD SUPPORT FOR gameMode ReachTheGoal
                 {
                     case GameMode.TestAutoPath:
                         FollowPathEvent += wormAstar.onFollowPath;

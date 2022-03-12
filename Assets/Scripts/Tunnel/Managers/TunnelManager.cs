@@ -11,12 +11,10 @@ namespace Tunnel
         private List<Tunnel> TunnelList; // list consisting of straight tunnels and corner tunnels
         private List<Straight> GrowingTunnelList; // list of straight tunnels that are currently growing
 
-        public Vector3Int initialCell = Vector3Int.zero; // initial cell
+        public Vector3Int initialCell; // initial cell
 
         [SerializeField]
-        public float TUNNEL_OFFSET = .5f; // offset from the worm position and the tunnel entrance position
-
-        public Vector3Int startingCell;
+        public float TUNNEL_OFFSET; // offset from the worm position and the tunnel entrance position
 
         private new void Awake()
         {

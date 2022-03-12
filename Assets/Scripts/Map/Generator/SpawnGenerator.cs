@@ -5,6 +5,9 @@ namespace Map
 {
     public class SpawnGenerator : ObstacleGenerator
     {
+        public delegate void ChangeDirection(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId, Tunnel.CellMove cellMove, bool isCreatingTunnel);
+        public event ChangeDirection ChangeDirectionEvent;
+
         public delegate void SpawnAIWorm(string wormId);
         public event SpawnAIWorm SpawnAIWormEvent;
 
@@ -52,23 +55,46 @@ namespace Map
          * 
          * @currentCellPosition     the cell the worm is currently in
          * @nextCellPosition        the cell the worm wil lbe in in next
+         * @isDeleteCurCell         whether the old cell should be deleted
          */
-        public void onUpdateObstacle(Vector3Int curCellPos, Vector3Int nextCellPos)
+        public void onUpdateObstacle(Vector3Int curCellPos, Vector3Int nextCellPos, bool isDeleteCurCell)
         {
             print("update to " + nextCellPos);
             Obstacle obstacle = getObstacle(curCellPos, WormObstacleDict); // get obstacle from the last tunnel position
-            updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, curCellPos, nextCellPos); // update obstacle's position to next cell position
+            updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, curCellPos, nextCellPos, isDeleteCurCell); // update obstacle's position to next cell position
         }
 
-        // replace above
-        public void onAddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId)
+        /**
+         * Direection change should trigger worm obstacle to update to a turning cell (or out of a turning cell)
+         */
+        public void onChangeDirection(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId, Tunnel.CellMove cellMove, bool isCreatingTunnel)
         {
             if (!cellMove.isInit)
             {
-                print("timme;l last cel position " + cellMove.lastCellPosition + " worm cur cell position " + cellMove.cell);
                 Obstacle obstacle = getObstacle(cellMove.lastCellPosition, WormObstacleDict); // get obstacle from the last tunnel position
-                updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, cellMove.lastCellPosition, cellMove.cell); // update obstacle's position to next cell position
+                updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, cellMove.lastCellPosition, cellMove.cell, false); // update obstacle's position to next cell position
             }
+        }
+
+        /**
+         * Complements listener onChangeDirection to update cell position for new straight junction segments
+         */
+        public void onCreateJunctionOnCollision(Tunnel.Tunnel collisionTunnel, DirectionPair dirPair, Tunnel.CellMove cellMove, string playerId)
+        {
+            if (!cellMove.isInit && dirPair.isStraight()) // let onChangeDirection handle turns
+            {
+                Obstacle obstacle = getObstacle(cellMove.lastCellPosition, WormObstacleDict); // get obstacle from the last tunnel position
+                updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, cellMove.lastCellPosition, cellMove.cell, false); // update obstacle's position to next cell position
+            }
+        }
+
+        /**
+         * When a tunnel is entered listen for worm interval events, and forward this to the onBlockListener
+         */
+        public void onWormInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
+        {
+            bool isTunnelSame = Tunnel.TunnelMap.isTunnelSame(blockPositionInt, lastBlockPositionInt);
+            onBlockInterval(isBlockInterval, blockPositionInt, lastBlockPositionInt, (Tunnel.Straight) tunnel, isTunnelSame);
         }
 
         /**
@@ -80,19 +106,27 @@ namespace Map
         public void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel, bool isCellSameTunnel)
         {
             Obstacle WormObstacle = getObstacle(lastBlockPositionInt, WormObstacleDict);
-            if (isBlockMultiple && isCellSameTunnel) // when a new cell has been reached, update the map with the worm's new cell position
-            {                                        // if not the same tunnel, the straight tunnel ends here and shouldn't update the worm cell to the next block position (do this in onAddTunnel instead)
-                updateObstacle(WormObstacle, WormObstacleDict, SwappedWormObstacleDict, lastBlockPositionInt, blockPosition);
-                print("in onBlockInterval update lastblockpos " + lastBlockPositionInt + " to " + blockPosition);
-            }
-            if (!isCellSameTunnel)
+
+            if (WormObstacle != null)
             {
-                print("in onBlockInterval not same cell!");
+                if (isBlockMultiple && isCellSameTunnel) // when a new cell has been reached, update the map with the worm's new cell position
+                {                                        // if not the same tunnel, the straight tunnel ends here and shouldn't update the worm cell to the next block position (do this in onAddTunnel instead)
+                    updateObstacle(WormObstacle, WormObstacleDict, SwappedWormObstacleDict, lastBlockPositionInt, blockPosition, false);
+                    print("in onBlockInterval update lastblockpos " + lastBlockPositionInt + " to " + blockPosition);
+                }
+                if (!isCellSameTunnel)
+                {
+                    print("in onBlockInterval not same cell!");
+                }
+                GameObject WormGO = WormObstacle.obstacleObject;
+                SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
+                SpawnBlockIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
+                SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
             }
-            GameObject WormGO = WormObstacle.obstacleObject;
-            SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
-            SpawnBlockIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
-            SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
+            else
+            {
+                print("WARNING!!! no obstacle found at " + lastBlockPositionInt + " make sure it was destroyed!");
+            }
         }
 
         /**
@@ -184,6 +218,11 @@ namespace Map
                 playerCount = 0; // temp
                 createAiWorms(aiCount);
             }
+            else if (gameMode == GameMode.TestAutoPath) // create a ai worm but no human worm (TESTING MODE)
+            {
+                playerCount = 0; // temp
+                createAiWorms(aiCount);
+            }
             else
             {
                 throw new System.Exception("the game mode " + gameMode + " is not supported yet");
@@ -216,7 +255,7 @@ namespace Map
         public void onRespawn(Vector3Int currentCell)
         {
             Obstacle WormObstacle = WormObstacleDict[currentCell];
-            onRemoveWorm(currentCell);
+            onRemoveWorm(currentCell); // wait for removal confirmation before spawning again
             onSpawn(WormObstacle.obstacleType, WormObstacle.obstacleId);
         }
 
@@ -228,7 +267,7 @@ namespace Map
             foreach (KeyValuePair<Vector3Int, Obstacle> WormObstacleEntry in WormObstacleDict)
             {
                 Vector3Int wormCell = WormObstacleEntry.Key;
-                destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, wormCell, wormObstacleList);
+                onRemoveWorm(wormCell);
             }
         }
 
@@ -239,6 +278,7 @@ namespace Map
          */
         public void onRemoveWorm(Vector3Int currentCell)
         {
+            GameObject wormGO = obstacleDict[currentCell].obstacleObject;
             destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, currentCell, wormObstacleList);
         }
 

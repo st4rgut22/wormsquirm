@@ -155,7 +155,6 @@ namespace Tunnel
                         {
                             addCellToList(curCell);
                         }
-
                         BlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this, isCellSameTunnel);
                     }
                 }

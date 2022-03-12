@@ -26,6 +26,9 @@ namespace Tunnel
         public delegate void CreateTunnel(CellMove cellMove, DirectionPair directionPair, Tunnel tunnel, string wormId);
         public event CreateTunnel CreateTunnelEvent;
 
+        public delegate void UpdateCell(Vector3Int curCellPos, Vector3Int nextCellPos, bool isDeleteCurCell);
+        private event UpdateCell UpdateCellEvent;
+
         // Start is called before the first frame update
         protected void OnEnable()
         {
@@ -37,9 +40,13 @@ namespace Tunnel
 
             CreateJunctionOnCollisionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnCollision;
 
+            CreateJunctionOnCollisionEvent += FindObjectOfType<Map.SpawnGenerator>().onCreateJunctionOnCollision;
+
             CreateJunctionOnInitEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnInit;
 
             StopEvent += TunnelManager.Instance.onStop;
+
+            UpdateCellEvent += FindObjectOfType<Map.SpawnGenerator>().onUpdateObstacle;
         }
 
         /**
@@ -66,7 +73,9 @@ namespace Tunnel
                 }
                 else                                                                // we dont know which cell in the existing tunnel player is so use collisionCell
                 {
-                    cellMove = new CellMove(directionPair.prevDir, collisionCell);  // use cell before collision cell to get the contact position
+                    Direction oppDir = Dir.Base.getOppositeDirection(directionPair.prevDir);
+                    Vector3Int prevCollisionCell = Dir.Vector.getNextCellFromDirection(collisionCell, oppDir);
+                    cellMove = CellMove.getExistingCellMove(directionPair, prevCollisionCell);  // use cell before collision cell to get the contact position
                 }
 
                 if (Type.isTypeStraight(nextTunnel.type))
@@ -97,13 +106,15 @@ namespace Tunnel
             }
         }
 
-        /**
-         * The first decision made will initialize a tunnel of type 6-way junction (??)
-         */
         public void onInitDecision(Direction direction, string wormId, Vector3Int initialCell)
         {
             print("init decision event in direction " + direction);
             CellMove cellMove = CellMove.getInitialCellMove(direction, initialCell);
+            if (cellMove.isCellUpdated)
+            {
+                UpdateCellEvent(initialCell, cellMove.cell, true);
+            }
+
             InitWormPositionEvent(cellMove.startPosition, direction);
 
             DirectionPair sameDirPair = new DirectionPair(direction, direction);
@@ -118,6 +129,7 @@ namespace Tunnel
          */
         public void onChangeDirection(DirectionPair directionPair, Tunnel prevTunnel, string wormId, CellMove cellMove, bool isCreatingTunnel)
         {
+            print("change direction at " + cellMove.cell);
             Tunnel existingTunnel = TunnelMap.getTunnelFromDict(cellMove.cell);
             
             if (existingTunnel == null) // if tunnel does not exist at cell then no longer in existing tunnel
@@ -149,6 +161,10 @@ namespace Tunnel
             {
                 SliceTunnelEvent -= FindObjectOfType<Intersect.Slicer>().sliceTunnel;
             }
+            if(FindObjectOfType<Map.SpawnGenerator>())
+            {
+                CreateJunctionOnCollisionEvent -= FindObjectOfType<Map.SpawnGenerator>().onCreateJunctionOnCollision;
+            }
             if (FindObjectOfType<ModTunnelFactory>())
             {
                 CreateJunctionOnCollisionEvent -= FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnCollision;
@@ -162,7 +178,10 @@ namespace Tunnel
             {
                 StopEvent -= TunnelManager.Instance.onStop;
             }
+            if (FindObjectOfType<Map.SpawnGenerator>())
+            {
+                UpdateCellEvent -= FindObjectOfType<Map.SpawnGenerator>().onUpdateObstacle;
+            }
         }
     }
-
 }

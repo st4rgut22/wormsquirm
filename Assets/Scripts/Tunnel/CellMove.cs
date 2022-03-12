@@ -4,13 +4,15 @@ namespace Tunnel
 {
     public class CellMove
     {
-        public Vector3Int lastCellPosition { get; private set; }
         public Vector3 startPosition { get; private set; }
         public Vector3 center { get; private set; }
-        public Vector3Int cell { get; private set; }
 
+        public Vector3Int lastCellPosition { get; private set; }    // THE CELL WE ARE LEAVING
+        public Vector3Int cell { get; private set; }                // THE CELL WE ARE ABOUT TO ENTER
+        public Vector3Int nextCell { get; private set; }            // THE CELL FOLLOWING THAT WHICH WE ARE ABOUT TO ENTER
+
+        public bool isCellUpdated { get; private set; } // whether the cell's position has been updated, if yes update the cell maps
         public bool isInit;
-        public Vector3Int nextCell { get; private set; }
 
         /**
          * Get next cell positioning information
@@ -29,6 +31,14 @@ namespace Tunnel
         }
 
         /**
+         * @initialCell     the cell prior to the one we will turn in (calculated using clit position)
+         */
+        public static CellMove getExistingCellMove(DirectionPair directionPair, Vector3Int initialCell)
+        {
+            return new CellMove(directionPair, initialCell); // on game start, there is no previous direction so use current direction                
+        }
+
+        /**
          * Append tunnel to end of previous tunnel
          * 
          * @tunnel the previous tunnel
@@ -44,21 +54,51 @@ namespace Tunnel
 
             nextCell = Dir.Vector.getNextCellFromDirection(cell, curDirection);
             isInit = false;
-            Debug.Log("add cell " + cell + " for tunnel " + tunnel.gameObject.name);
+            isCellUpdated = false;
+            Debug.Log("add cella " + cell + " last cell " + lastCellPosition + " for tunnel " + tunnel.gameObject.name);
         }
 
+        /**
+         * Constructor for getting cell position information for existing tunnels
+         * 
+         * @curCell         the current cell worm is in, the turning cell (this.cell) is the next cell. The same as lastCellPosition
+         * @directionPair   the current and next direction of the worm
+         */
+        public CellMove(DirectionPair directionPair, Vector3Int curCell)
+        {
+            lastCellPosition = curCell;
+            cell = Dir.Vector.getNextCellFromDirection(curCell, directionPair.prevDir);
+            nextCell = Dir.Vector.getNextCellFromDirection(cell, directionPair.curDir);
+            center = Tunnel.initializeCenter(lastCellPosition);
+            startPosition = Tunnel.getOffsetPosition(directionPair.prevDir, center); // offset from center in oppDir
+            isInit = false;
+        }
+
+        /**
+         * Get the cell coordinates of the tunnel generated when worm is first created
+         */
         public CellMove(Direction initialDirection, Vector3Int cell)
         {
-            this.cell = cell;
-            lastCellPosition = cell;
+            if (Dir.Base.isDirectionNegative(initialDirection)) // because cells are counted in the positive direction, if direction is negative offset one cell in the negative direction to get the actual starting cell
+            {
+                this.cell = Dir.Vector.getNextCellFromDirection(cell, initialDirection);
+                isCellUpdated = true;
+            }
+            else
+            {
+                this.cell = cell;
+                isCellUpdated = false;
+            }
+            lastCellPosition = cell; // there is no last cell so initialize it with cell about to enter
+            Debug.Log("starting cell is " + this.cell + " last cell is " + cell + " initial direction is " + initialDirection);
 
-            center = Tunnel.initializeCenter(cell);
+            center = Tunnel.initializeCenter(cell); // center of the cell
+             
+            Direction oppDir = Dir.Base.getOppositeDirection(initialDirection);            
 
-            Direction oppDir = Dir.Base.getOppositeDirection(initialDirection);
+            startPosition = Tunnel.getInitialOffsetPosition(oppDir, cell); // offset from center in oppDir
 
-            startPosition = Tunnel.getOffsetPosition(oppDir, center); // offset from center in oppDir
-
-            nextCell = Dir.Vector.getNextCellFromDirection(cell, initialDirection);
+            nextCell = Dir.Vector.getNextCellFromDirection(this.cell, initialDirection);
             isInit = true;
         }
     }

@@ -57,6 +57,14 @@ namespace Tunnel
         }
 
         /**
+         * Return whether the tunnels are the same in different cells
+         */
+        public static bool isTunnelSame(Vector3Int cell1, Vector3Int cell2)
+        {
+            return TunnelMapDict[cell1] == TunnelMapDict[cell2];
+        }
+
+        /**
          * Adds tunnel type to the map at the provided coordinate
          */
         public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isCellSameTunnel)
@@ -145,8 +153,11 @@ namespace Tunnel
          */
         public void onAddTunnel(Tunnel tunnel, CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            Vector3Int cell = cellMove.cell;
-            addCell(cell, tunnel);
+            if (cellMove != null) // if null, it is a slice tunnel event and the t unnel type remains the same
+            {
+                Vector3Int cell = cellMove.cell;
+                addCell(cell, tunnel);
+            }
         }
 
         public static bool containsCell(Vector3Int cell)

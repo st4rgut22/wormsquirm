@@ -32,6 +32,7 @@ namespace Worm
             CollideTunnelEvent += Tunnel.CollisionManager.Instance.onCollide;
             WormIntervalEvent += GetComponent<InputProcessor>().onWormInterval;
             WormIntervalEvent += GetComponent<Turn>().onBlockInterval;
+            WormIntervalEvent += FindObjectOfType<Map.SpawnGenerator>().onWormInterval;
         }
 
         // Start is called before the first frame update
@@ -96,11 +97,15 @@ namespace Worm
 
         private void Update()
         {
+            if (GrowEvent != null)
+            {
+                GrowEvent(ring.position);
+            }
             if (!wormBase.isCreatingTunnel && !isDecisionProcessing)
             {
                 Vector3Int curCell = getCurrentCell(ring.position);
 
-                Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position); // TODO: PROBLEM HERE? using ring instead of clit
+                Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position); // use ring.position to check upcoming cell
                 if (curTunnel == null) // if no tunnel exists at ring position, we are not in an existing tunnel (need to confirm)
                 {
                     return;
@@ -112,11 +117,12 @@ namespace Worm
                 {
                     WormIntervalEvent(isNewBlock, curCell, cell, curTunnel); // initialize a turn etc before issuing collision event
                 }
-
+                 
                 if (isNewBlock && !wormBase.isChangingDirection) // entered a new cell, check if new tunnel needs to be modified based off worm direction
                 {
                     collideOnStraightDir(curCell, curTunnel);
                 }
+                curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position); // update the current tunnel if it has been changed
                 if (!curTunnel.containsCell(curCell))
                 {
                     throw new System.Exception("current tunnel " + curTunnel.name + " does not contain cell " + curCell + " even though it is part of the tunnel");
@@ -154,10 +160,10 @@ namespace Worm
          */
         protected void FixedUpdate()
         {
-            if (GrowEvent != null)
-            {
-                GrowEvent(ring.position);
-            }
+            //if (GrowEvent != null)
+            //{
+            //    GrowEvent(ring.position);
+            //}
         }
 
         /**
@@ -218,6 +224,10 @@ namespace Worm
             if (GetComponent<Turn>())
             {
                 WormIntervalEvent -= GetComponent<Turn>().onBlockInterval;
+            }
+            if (FindObjectOfType<Map.SpawnGenerator>())
+            {
+                WormIntervalEvent -= FindObjectOfType<Map.SpawnGenerator>().onWormInterval;
             }
         }
     }

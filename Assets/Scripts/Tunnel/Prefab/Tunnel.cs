@@ -138,6 +138,7 @@ namespace Tunnel
         public static Vector3 initializeCenter(Vector3 cellPos)
         {
             Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Up); // center is offset from cell location in up direction
+
             Vector3 initialCenter = cellPos + unitVector * CENTER_OFFSET;
             return initialCenter;
         }
@@ -152,6 +153,29 @@ namespace Tunnel
         {
             Vector3 unitVector = Dir.CellDirection.getUnitVectorFromDirection(direction);
             Vector3 offsetPosition = position + unitVector * CENTER_OFFSET;
+            return offsetPosition;
+        }
+
+        /**
+         * Get position of the starting tunnel. It must be offset such that others tunnels can reach it
+         * 
+         * @direction       the direction the tunnel grows in
+         * @position        tunnel cell coordinate integer
+         */
+        public static Vector3 getInitialOffsetPosition(Direction direction, Vector3 cell)
+        {
+            Vector3 offsetPosition = cell;
+            Vector3 unitVector = Vector3.zero;
+
+            if (direction == Direction.Left || direction == Direction.Right)
+            {
+                unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Left); // offset in the negative direction                
+            }
+            if (direction == Direction.Forward|| direction == Direction.Back)
+            {
+                unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Back); // offset in the negative direction                
+            }
+            offsetPosition = offsetPosition + unitVector * CENTER_OFFSET;
             return offsetPosition;
         }
 

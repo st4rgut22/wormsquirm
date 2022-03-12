@@ -43,6 +43,7 @@ namespace Worm
             RemoveSelfEvent += FindObjectOfType<Map.SpawnGenerator>().onRemoveWorm;
             SpawnEvent += FindObjectOfType<Map.SpawnGenerator>().onSpawn;
             ChangeDirectionEvent += Tunnel.CollisionManager.Instance.onChangeDirection;
+            ChangeDirectionEvent += FindObjectOfType<Map.SpawnGenerator>().onChangeDirection;
         }
 
         /**
@@ -96,17 +97,16 @@ namespace Worm
             }
             else // if existing tunnel use the worm position to get the Cell info
             {
-                if (wormBase.isChangingDirection)
-                {
+                //if (wormBase.isChangingDirection)
+                //{
                     Vector3Int curCell = Tunnel.TunnelMap.getCellPos(clit.position);
-                    Vector3Int nextCurCell = Dir.Vector.getNextCellFromDirection(curCell, directionPair.prevDir);
-                    cellMove = new Tunnel.CellMove(directionPair.curDir, nextCurCell); 
-                }
-                else
-                {
-                    Vector3Int curCell = Tunnel.TunnelMap.getCellPos(ring.position);
-                    cellMove = new Tunnel.CellMove(wormBase.direction, curCell); // if not making a consecutive turn, ring position will be in the same cell as the turn
-                }
+                    cellMove = Tunnel.CellMove.getExistingCellMove(directionPair, curCell);
+                //}
+                //else
+                //{
+                //    Vector3Int curCell = Tunnel.TunnelMap.getCellPos(ring.position);
+                //    cellMove = new Tunnel.CellMove(wormBase.direction, curCell); // if not making a consecutive turn, ring position will be in the same cell as the turn
+                //}
             }
             ChangeDirectionEvent(directionPair, tunnel, wormId, cellMove, wormBase.isCreatingTunnel);
         }
@@ -117,6 +117,7 @@ namespace Worm
             {
                 RemoveSelfEvent -= FindObjectOfType<Map.SpawnGenerator>().onRemoveWorm;
                 SpawnEvent -= FindObjectOfType<Map.SpawnGenerator>().onSpawn;
+                ChangeDirectionEvent -= FindObjectOfType<Map.SpawnGenerator>().onChangeDirection;
             }
             if (Tunnel.CollisionManager.Instance)
             {

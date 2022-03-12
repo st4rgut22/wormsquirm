@@ -14,7 +14,6 @@ namespace Tunnel
 
         protected void OnEnable()
         {
-            AddTunnelEvent += FindObjectOfType<Map.SpawnGenerator>().onAddTunnel;
             AddTunnelEvent += TunnelManager.Instance.onAddTunnel;
             AddTunnelEvent += FindObjectOfType<TunnelMap>().onAddTunnel;
             AddTunnelEvent += Worm.WormManager.Instance.onAddTunnel;
@@ -57,10 +56,6 @@ namespace Tunnel
             if (Worm.WormManager.Instance)
             {
                 AddTunnelEvent -= Worm.WormManager.Instance.onAddTunnel;
-            }
-            if (FindObjectOfType<Map.SpawnGenerator>())
-            {
-                AddTunnelEvent -= FindObjectOfType<Map.SpawnGenerator>().onAddTunnel;
             }
         }
     }
