@@ -171,7 +171,7 @@ namespace Worm
          * 
          * @tunnel      the newly added tunnel
          */
-        public void onAddTunnel(Tunnel.Tunnel tunnel, DirectionPair directionPair)
+        public void onAddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId)
         {
 
             bool isTunnelStraight = Tunnel.Type.isTypeStraight(tunnel.type);

@@ -97,16 +97,8 @@ namespace Worm
             }
             else // if existing tunnel use the worm position to get the Cell info
             {
-                //if (wormBase.isChangingDirection)
-                //{
-                    Vector3Int curCell = Tunnel.TunnelMap.getCellPos(clit.position);
-                    cellMove = Tunnel.CellMove.getExistingCellMove(directionPair, curCell);
-                //}
-                //else
-                //{
-                //    Vector3Int curCell = Tunnel.TunnelMap.getCellPos(ring.position);
-                //    cellMove = new Tunnel.CellMove(wormBase.direction, curCell); // if not making a consecutive turn, ring position will be in the same cell as the turn
-                //}
+                Vector3Int curCell = Tunnel.TunnelMap.getCellPos(clit.position);
+                cellMove = Tunnel.CellMove.getExistingCellMove(directionPair, curCell);
             }
             ChangeDirectionEvent(directionPair, tunnel, wormId, cellMove, wormBase.isCreatingTunnel);
         }

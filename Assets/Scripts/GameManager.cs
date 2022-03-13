@@ -16,7 +16,7 @@ public class GameManager : GenericSingletonClass<GameManager>
     private new void Awake()
     {
         base.Awake();
-        gameMode = GameMode.TestAutoPath;
+        gameMode = GameMode.ReachTheGoal;
     }
 
     private void OnEnable()

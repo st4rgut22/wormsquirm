@@ -9,7 +9,7 @@ namespace Worm
         public delegate void EnterExistingTunnel();
         public event EnterExistingTunnel EnterExistingTunnelEvent;
 
-        public delegate void AddTunnel(Tunnel.Tunnel tunnel, DirectionPair directionPair);
+        public delegate void AddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId);
         public event AddTunnel AddTunnelEvent;
 
         public Dictionary<string, GameObject> wormDictionary; // <wormId, worm GO>
@@ -37,6 +37,27 @@ namespace Worm
             EnterExistingTunnelEvent -= wormTunnelBroker.onEnterExistingTunnel;
         }
 
+        public void onRemoveWorm(string wormId)
+        {
+            if (!wormDictionary.ContainsKey(wormId))
+            {
+                throw new System.Exception("Cannot remove worm with id " + wormId + " because it doesn't exist");
+            }
+            wormDictionary.Remove(wormId);
+        }
+
+        /**
+         * Add a worm to the dictionary of worms when it is first instantiated
+         */
+        public void onInitWorm(Worm worm, Map.Astar wormAstar, string wormId)
+        {
+            if (wormDictionary.ContainsKey(wormId))
+            {
+                throw new System.Exception("Cannot init worm with id " + wormId + " because it already exists");
+            }
+            wormDictionary.Add(wormId, worm.gameObject);
+        }
+
         /**
          * Receive event indicating that a tunnel has been created
          * 
@@ -52,10 +73,14 @@ namespace Worm
                 throw new System.Exception("Failed to create junction. Worm " + wormId + " could not be found in the list of worms");
             }
             WormTunnelBroker wormTunnelBroker = wormGO.GetComponent<WormTunnelBroker>();
+            InputProcessor wormInputProcessor = wormGO.GetComponent<InputProcessor>();
 
+            AddTunnelEvent += wormInputProcessor.onAddTunnel;
             AddTunnelEvent += wormTunnelBroker.onAddTunnel;
-            AddTunnelEvent(tunnel, directionPair);
+            AddTunnelEvent(tunnel, cellMove, directionPair, wormId);
             AddTunnelEvent -= wormTunnelBroker.onAddTunnel;
+            AddTunnelEvent -= wormInputProcessor.onAddTunnel;
+
         }
     }
 }

@@ -51,7 +51,9 @@ namespace Worm
             isInitialized = true;
             setDirection(initialDirection);
             mappedInitialCell = initialCell;
-            // modify the LOCATION (not the actual placement) of the tunnel if the direction is negative because downward (or neg direction facing) tunnels will occupy the same cell location as upward tunnel in the next cell
+            // if in negative direction (eg down) modify initialCell so that the tunnel starts one cell earlier.
+            // this is because when going in negative direction tunnel cell Vector3Int positionmust be offset in the opposite direction to occupy the same
+            // space as when worm is traveling in the positive direction
             if (Dir.Base.isDirectionNegative(initialDirection))
             {
                 initialCell = Dir.Vector.getNextCellFromOppDirection(initialCell, initialDirection);                

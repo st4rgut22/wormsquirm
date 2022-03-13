@@ -103,7 +103,11 @@ namespace Tunnel
         {
             print("init decision event in direction " + direction);
             CellMove cellMove = CellMove.getInitialCellMove(direction, mappedInitialCell, initialCell);
+            GameObject wormGO = Worm.WormManager.Instance.wormDictionary[wormId];
+
+            InitWormPositionEvent += wormGO.GetComponent<Worm.WormInit>().onInitWormPosition;
             InitWormPositionEvent(cellMove.startPosition);
+            InitWormPositionEvent -= wormGO.GetComponent<Worm.WormInit>().onInitWormPosition;
 
             DirectionPair sameDirPair = new DirectionPair(direction, direction);
             CreateTunnelEvent(cellMove, sameDirPair, null, wormId);

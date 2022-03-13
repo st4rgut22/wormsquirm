@@ -79,8 +79,8 @@ namespace Worm
             {
                 if (isBlockInterval)
                 {
-                    if (!isTurnOnFirstBlock())
-                    {
+                    //if (!isTurnOnFirstBlock())
+                    //{
                         if (tunnel.containsCell(lastBlockPositionInt)) // this condition excludes the last cell adjacent from the corner as counting as a tunnel segment
                         {
                             tunnelSegmentCounter += 1;
@@ -89,22 +89,18 @@ namespace Worm
                             {
                                 updateCheckpoint();
                             }
-                            if (currentCheckpoint.length == 1) // next checkpoint is of length 1, set a flag
-                            {
-                                turnOnFirstBlock = blockPositionInt;
-                            }
+                            //if (currentCheckpoint.length == 1) // next checkpoint is of length 1, set a flag
+                            //{
+                            //    turnOnFirstBlock = blockPositionInt;
+                            //}
                         }
-                        else
-                        {
-                            print("nonono");
-                        }
-                    }
+                    //}
                 }
-                else if (isTurnOnFirstBlock() && !blockPositionInt.Equals(turnOnFirstBlock)) // checkpoint of length 1 is reached, when a new straight tunnel segment is started
-                {
-                    updateCheckpoint();
-                    turnOnFirstBlock = defaultValue; // reset the flag
-                }
+                //else if (isTurnOnFirstBlock() && !blockPositionInt.Equals(turnOnFirstBlock)) // checkpoint of length 1 is reached, when a new straight tunnel segment is started
+                //{
+                //    updateCheckpoint();
+                //    turnOnFirstBlock = defaultValue; // reset the flag
+                //}
             }
         }
 

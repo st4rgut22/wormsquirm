@@ -52,6 +52,11 @@ namespace Worm
                 TunnelMaker tunnelMaker = wormGO.GetComponent<TunnelMaker>();
                 switch (GameManager.Instance.gameMode) // TODO: ADD SUPPORT FOR gameMode ReachTheGoal
                 {
+                    case GameMode.ReachTheGoal:
+                        FollowPathEvent += wormAstar.onFollowPath;
+                        FollowPathEvent(tunnelMaker);
+                        FollowPathEvent -= wormAstar.onFollowPath;
+                        break;
                     case GameMode.TestAutoPath:
                         FollowPathEvent += wormAstar.onFollowPath;
                         FollowPathEvent(tunnelMaker);

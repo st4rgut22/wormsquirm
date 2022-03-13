@@ -20,7 +20,6 @@ namespace Worm
         private new void OnEnable()
         {
             base.OnEnable();
-            Tunnel.CollisionManager.Instance.InitWormPositionEvent += onInitWormPosition;
         }
 
         public void onInitWormPosition(Vector3 initPos)
@@ -32,7 +31,6 @@ namespace Worm
         private new void OnDisable()
         {
             base.OnDisable();
-            Tunnel.CollisionManager.Instance.InitWormPositionEvent -= onInitWormPosition;
         }
     }
 }

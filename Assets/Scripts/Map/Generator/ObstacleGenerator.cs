@@ -154,8 +154,6 @@ namespace Map
          */
         protected void initializeObstacleDict(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swappedSpecificObstacleDict, List<Obstacle>obstacleList)
         {
-            obstacleDict = new Dictionary<Vector3Int, Obstacle>();
-
             for (int i=0;i<obstacleList.Count;i++)
             {
                 Obstacle obstacle = obstacleList[i];

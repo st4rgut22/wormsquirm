@@ -11,6 +11,9 @@ namespace Map
         public delegate void SpawnAIWorm(string wormId);
         public event SpawnAIWorm SpawnAIWormEvent;
 
+        public delegate void RemoveWorm(string wormId);
+        public event RemoveWorm RemoveWormEvent;
+
         public delegate void SpawnPlayerWorm(string wormId);
         public event SpawnPlayerWorm SpawnPlayerWormEvent;
 
@@ -46,6 +49,7 @@ namespace Map
 
         private void OnEnable()
         {
+            RemoveWormEvent += Worm.WormManager.Instance.onRemoveWorm;
             SpawnAIWormEvent += FindObjectOfType<Worm.Factory.WormAIFactory>().onSpawn;
             SpawnPlayerWormEvent += FindObjectOfType<Worm.Factory.WormPlayerFactory>().onSpawn;
         }
@@ -154,9 +158,10 @@ namespace Map
         public void onInitWorm(Worm.Worm worm, Astar wormAstar, string wormId)
         {
             Obstacle wormObstacle = new Obstacle(worm.gameObject, worm.wormType, wormId);
+            List<Obstacle>singleWormObstacleList = new List<Obstacle>() { wormObstacle };
             wormObstacleList.Add(wormObstacle);
-            initializeObstacleDict(WormObstacleDict, SwappedWormObstacleDict, wormObstacleList);
-            initializeInitialCells(wormObstacleList);
+            initializeObstacleDict(WormObstacleDict, SwappedWormObstacleDict, singleWormObstacleList);
+            initializeInitialCells(wormObstacle);
         }
 
         /**
@@ -239,9 +244,9 @@ namespace Map
          * 
          * @obstacles       use the cell position of the obstacle to update the worm's initialCell property
          */
-        private void initializeInitialCells(List<Obstacle> obstacles)
+        private void initializeInitialCells(Obstacle obstacle)
         {
-            obstacles.ForEach((Obstacle obstacle) => obstacle.obstacleObject.GetComponent<Worm.WormBase>().setInitialCell(obstacle.obstacleCell));
+            obstacle.obstacleObject.GetComponent<Worm.WormBase>().setInitialCell(obstacle.obstacleCell);
         }
 
         protected override List<Obstacle> getObstacleList()
@@ -275,15 +280,21 @@ namespace Map
          * Destroy a single worm
          * 
          * @currentCell     the cell the worm died in
+         * @wormId          the id of the worm is not neeeded to index the dictionary, so null is passed in
          */
         public void onRemoveWorm(Vector3Int currentCell)
         {
-            GameObject wormGO = obstacleDict[currentCell].obstacleObject;
+            string wormId = WormObstacleDict[currentCell].obstacleId;
+            RemoveWormEvent(wormId);
             destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, currentCell, wormObstacleList);
         }
 
         private void OnDisable()
         {
+            if (Worm.WormManager.Instance)
+            {
+                RemoveWormEvent += Worm.WormManager.Instance.onRemoveWorm;
+            }
             if (FindObjectOfType<Worm.Factory.WormAIFactory>())
             {
                 SpawnAIWormEvent -= FindObjectOfType<Worm.Factory.WormAIFactory>().onSpawn;
