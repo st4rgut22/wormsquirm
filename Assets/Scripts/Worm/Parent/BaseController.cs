@@ -4,7 +4,7 @@ namespace Worm
 {
     public class BaseController : WormBody
     {
-        public delegate void InitDecision(Direction direction, string wormId, Vector3Int initialCell);
+        public delegate void InitDecision(Direction direction, string wormId, Vector3Int mappedInitialCell, Vector3Int initialCell);
         public event InitDecision InitDecisionEvent;
 
         public delegate void PlayerInput(Direction direction);
@@ -62,8 +62,8 @@ namespace Worm
          */
         protected void RaiseInitDecisionEvent(Direction localDirection)
         {
-            InitDecisionEvent(localDirection, wormId, wormBase.initialCell);
-            wormBase.initializeWorm();
+            wormBase.initializeWorm(Direction.Down); // TESTING
+            InitDecisionEvent(localDirection, wormId, wormBase.mappedInitialCell, wormBase.initialCell);
         }
 
         protected new void OnDisable()

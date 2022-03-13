@@ -4,9 +4,13 @@ namespace Worm
 {
     public class WormBase : WormBody
     {
-        [SerializeField]
-        public Vector3Int initialCell;
+        public delegate void UpdateCell(Vector3Int curCellPos, Vector3Int nextCellPos, bool isDeleteCurCell);
+        private event UpdateCell UpdateCellEvent;
 
+        [SerializeField]
+        public Vector3Int initialCell; // used to place tunnel
+
+        public Vector3Int mappedInitialCell; // initial cell translated if necessary in the map
 
         public Direction direction { get; private set; }
 
@@ -36,14 +40,22 @@ namespace Worm
         private new void OnEnable()
         {
             base.OnEnable();
+            UpdateCellEvent += FindObjectOfType<Map.SpawnGenerator>().onUpdateObstacle;
         }
 
         /**
-         * Set the boolean flag true to indicate the worm has started moving
+         * Initialize the worm's initial cell
          */
-        public void initializeWorm()
+        public void initializeWorm(Direction initialDirection)
         {
             isInitialized = true;
+            setDirection(initialDirection);
+            mappedInitialCell = initialCell;
+            // modify the LOCATION (not the actual placement) of the tunnel if the direction is negative because downward (or neg direction facing) tunnels will occupy the same cell location as upward tunnel in the next cell
+            if (Dir.Base.isDirectionNegative(initialDirection))
+            {
+                initialCell = Dir.Vector.getNextCellFromOppDirection(initialCell, initialDirection);                
+            }
         }
 
         public void setStraight(bool isStraight)
@@ -88,7 +100,8 @@ namespace Worm
         public void setInitialCell(Vector3Int initialCell)
         {
             this.initialCell = initialCell;
-        }        
+
+        }
 
         public void setDirection(Direction direction)
         {
@@ -99,6 +112,10 @@ namespace Worm
         private new void OnDisable()
         {
             base.OnDisable();
+            if (FindObjectOfType<Map.SpawnGenerator>())
+            {
+                UpdateCellEvent -= FindObjectOfType<Map.SpawnGenerator>().onUpdateObstacle;
+            }
         }
     }
 }

@@ -50,7 +50,8 @@ namespace Map
         public void OnInitWorm(Worm.Worm worm, Astar wormAstar, string wormId)
         {
             InitObjectiveEvent += wormAstar.onInitObjective;
-            InitObjectiveEvent(goalCell);
+            Vector3Int goalCell = new Vector3Int(-10, -10, -10);
+            InitObjectiveEvent(goalCell);// TESTING
             InitObjectiveEvent -= wormAstar.onInitObjective;
         }
 

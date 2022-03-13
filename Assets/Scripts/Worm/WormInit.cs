@@ -23,11 +23,10 @@ namespace Worm
             Tunnel.CollisionManager.Instance.InitWormPositionEvent += onInitWormPosition;
         }
 
-        public void onInitWormPosition(Vector3 initPos, Direction direction)
+        public void onInitWormPosition(Vector3 initPos)
         {
-            wormBase.setDirection(direction);
             transform.position = initPos; // add offset if necessary
-            transform.rotation = initWormRotateDict[direction];
+            transform.rotation = initWormRotateDict[wormBase.direction];
         }
 
         private new void OnDisable()
@@ -36,5 +35,4 @@ namespace Worm
             Tunnel.CollisionManager.Instance.InitWormPositionEvent -= onInitWormPosition;
         }
     }
-
 }

@@ -25,9 +25,15 @@ namespace Tunnel
             return new CellMove(tunnel, directionPair.prevDir); // get cell position using ingress direction going into the next cell
         }
 
-        public static CellMove getInitialCellMove(Direction direction, Vector3Int initialCell)
+        /**
+         * Initialize the first cell
+         * 
+         * @mappedInitialCell           The cell's location in the map, which may be translated from the original cell location
+         * @initialCell                 The cell location used to initialize the cell's position
+         */
+        public static CellMove getInitialCellMove(Direction direction, Vector3Int mappedInitialCell, Vector3Int initialCell)
         {
-            return new CellMove(direction, initialCell); // on game start, there is no previous direction so use current direction                
+            return new CellMove(direction, mappedInitialCell, initialCell); // on game start, there is no previous direction so use current direction                
         }
 
         /**
@@ -54,7 +60,6 @@ namespace Tunnel
 
             nextCell = Dir.Vector.getNextCellFromDirection(cell, curDirection);
             isInit = false;
-            isCellUpdated = false;
             Debug.Log("add cella " + cell + " last cell " + lastCellPosition + " for tunnel " + tunnel.gameObject.name);
         }
 
@@ -77,28 +82,19 @@ namespace Tunnel
         /**
          * Get the cell coordinates of the tunnel generated when worm is first created
          */
-        public CellMove(Direction initialDirection, Vector3Int cell)
+        public CellMove(Direction initialDirection, Vector3Int mappedInitialCell, Vector3Int originalCell)
         {
-            if (Dir.Base.isDirectionNegative(initialDirection)) // because cells are counted in the positive direction, if direction is negative offset one cell in the negative direction to get the actual starting cell
-            {
-                this.cell = Dir.Vector.getNextCellFromDirection(cell, initialDirection);
-                isCellUpdated = true;
-            }
-            else
-            {
-                this.cell = cell;
-                isCellUpdated = false;
-            }
-            lastCellPosition = cell; // there is no last cell so initialize it with cell about to enter
-            Debug.Log("starting cell is " + this.cell + " last cell is " + cell + " initial direction is " + initialDirection);
+            cell = mappedInitialCell;
+            lastCellPosition = mappedInitialCell; // there is no last cell so initialize it with cell about to enter
+            Debug.Log("starting cell is " + cell + " last cell is " + mappedInitialCell + " initial direction is " + initialDirection);
 
-            center = Tunnel.initializeCenter(cell); // center of the cell
+            center = Tunnel.initializeCenter(mappedInitialCell); // center of the cell
              
             Direction oppDir = Dir.Base.getOppositeDirection(initialDirection);            
+            startPosition = Tunnel.getInitialOffsetPosition(oppDir, originalCell); // offset from center in oppDir
 
-            startPosition = Tunnel.getInitialOffsetPosition(oppDir, cell); // offset from center in oppDir
-
-            nextCell = Dir.Vector.getNextCellFromDirection(this.cell, initialDirection);
+            Debug.Log("initial start position is " + startPosition);
+            nextCell = Dir.Vector.getNextCellFromDirection(cell, initialDirection);
             isInit = true;
         }
     }

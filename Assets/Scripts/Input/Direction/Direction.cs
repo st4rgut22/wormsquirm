@@ -59,6 +59,11 @@ namespace Dir
             return offset;
         }
 
+        public static Vector3Int getNextCellFromOppDirection(Vector3Int cellPosition, Direction direction)
+        {
+            Direction oppDir = Base.getOppositeDirection(direction);
+            return getNextCellFromDirection(cellPosition, oppDir);
+        }
 
         public static Vector3Int getNextCellFromDirection(Vector3Int cellPosition, Direction direction)
         {

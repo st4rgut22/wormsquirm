@@ -162,19 +162,20 @@ namespace Tunnel
          * @direction       the direction the tunnel grows in
          * @position        tunnel cell coordinate integer
          */
-        public static Vector3 getInitialOffsetPosition(Direction direction, Vector3 cell)
+        public static Vector3 getInitialOffsetPosition(Direction direction, Vector3 originalCell)
         {
-            Vector3 offsetPosition = cell;
+            Vector3 offsetPosition = originalCell;
             Vector3 unitVector = Vector3.zero;
 
             if (direction == Direction.Left || direction == Direction.Right)
             {
                 unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Left); // offset in the negative direction                
             }
-            if (direction == Direction.Forward|| direction == Direction.Back)
+            if (direction == Direction.Forward || direction == Direction.Back)
             {
                 unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Back); // offset in the negative direction                
             }
+
             offsetPosition = offsetPosition + unitVector * CENTER_OFFSET;
             return offsetPosition;
         }

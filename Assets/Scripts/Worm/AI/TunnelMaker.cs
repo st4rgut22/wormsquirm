@@ -22,7 +22,7 @@ namespace Worm
         private new void Awake()
         {
             base.Awake();
-            tunnelSegmentCounter = 1; // maintains count of added segments onBlockInterval event to decide when to turn
+            tunnelSegmentCounter = 0; // maintains count of added segments onBlockInterval event to decide when to turn
             checkPointIdx = 0; // does not include the initial tunnel
             isReadyToTurn = false;
             defaultValue = new Vector3Int(1000, 1000, 1000); // temporary default values
@@ -124,7 +124,7 @@ namespace Worm
             checkPointIdx++;
             if (checkPointIdx < checkpointList.Count)
             {
-                tunnelSegmentCounter = 1;
+                tunnelSegmentCounter = 0;
                 currentCheckpoint = checkpointList[checkPointIdx];
                 RaisePlayerInputEvent(currentCheckpoint.direction);                
                 print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
@@ -162,10 +162,6 @@ namespace Worm
             {
                 while (true)
                 {
-                    if (checkPointIdx >= checkpointList.Count)
-                    {
-                        print("test");
-                    }
                     if (isReadyToTurn) // break when the decision is done begin processed (eg worm reaches center of turn tunnel)
                     {
                         updateCheckpoint();

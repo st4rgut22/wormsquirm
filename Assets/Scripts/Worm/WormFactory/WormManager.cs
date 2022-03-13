@@ -44,7 +44,7 @@ namespace Worm
          */
         public void onAddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            Vector3Int cell = cellMove.lastCellPosition;
+            Vector3Int cell = cellMove.isInit ? cellMove.cell : cellMove.lastCellPosition; // if it is the first cell 
             Obstacle WormObstacle = Map.SpawnGenerator.WormObstacleDict[cell];
             GameObject wormGO = WormObstacle.obstacleObject;
             if (wormGO == null)

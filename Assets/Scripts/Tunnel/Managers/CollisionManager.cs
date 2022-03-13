@@ -11,7 +11,7 @@ namespace Tunnel
         public delegate void SliceTunnel(Straight collidedTunnel, Direction ingressDirection, Vector3 contactPosition);
         private event SliceTunnel SliceTunnelEvent; // fired when current tunnel intersects another tunnel
 
-        public delegate void InitWormPosition(Vector3 position, Direction direction);
+        public delegate void InitWormPosition(Vector3 position);
         public event InitWormPosition InitWormPositionEvent;
 
         public delegate void Stop(Straight tunnel);
@@ -25,9 +25,6 @@ namespace Tunnel
 
         public delegate void CreateTunnel(CellMove cellMove, DirectionPair directionPair, Tunnel tunnel, string wormId);
         public event CreateTunnel CreateTunnelEvent;
-
-        public delegate void UpdateCell(Vector3Int curCellPos, Vector3Int nextCellPos, bool isDeleteCurCell);
-        private event UpdateCell UpdateCellEvent;
 
         // Start is called before the first frame update
         protected void OnEnable()
@@ -45,8 +42,6 @@ namespace Tunnel
             CreateJunctionOnInitEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnInit;
 
             StopEvent += TunnelManager.Instance.onStop;
-
-            UpdateCellEvent += FindObjectOfType<Map.SpawnGenerator>().onUpdateObstacle;
         }
 
         /**
@@ -73,15 +68,13 @@ namespace Tunnel
                 }
                 else                                                                // we dont know which cell in the existing tunnel player is so use collisionCell
                 {
-                    Direction oppDir = Dir.Base.getOppositeDirection(directionPair.prevDir);
-                    Vector3Int prevCollisionCell = Dir.Vector.getNextCellFromDirection(collisionCell, oppDir);
+                    Vector3Int prevCollisionCell = Dir.Vector.getNextCellFromOppDirection(collisionCell, directionPair.prevDir);
                     cellMove = CellMove.getExistingCellMove(directionPair, prevCollisionCell);  // use cell before collision cell to get the contact position
                 }
 
                 if (Type.isTypeStraight(nextTunnel.type))
                 {
-                    Direction oppDir = Dir.Base.getOppositeDirection(directionPair.prevDir);
-                    Vector3Int prevCollisionCell = Dir.Vector.getNextCellFromDirection(collisionCell, oppDir);
+                    Vector3Int prevCollisionCell = Dir.Vector.getNextCellFromOppDirection(collisionCell, directionPair.prevDir);
                     Vector3 prevCollisionCenter = Tunnel.getOffsetPosition(Direction.Up, prevCollisionCell);
                     Vector3 contactPosition = Tunnel.getOffsetPosition(directionPair.prevDir, prevCollisionCenter);
                     print("contact position is " + contactPosition);
@@ -106,16 +99,11 @@ namespace Tunnel
             }
         }
 
-        public void onInitDecision(Direction direction, string wormId, Vector3Int initialCell)
+        public void onInitDecision(Direction direction, string wormId, Vector3Int mappedInitialCell, Vector3Int initialCell)
         {
             print("init decision event in direction " + direction);
-            CellMove cellMove = CellMove.getInitialCellMove(direction, initialCell);
-            if (cellMove.isCellUpdated)
-            {
-                UpdateCellEvent(initialCell, cellMove.cell, true);
-            }
-
-            InitWormPositionEvent(cellMove.startPosition, direction);
+            CellMove cellMove = CellMove.getInitialCellMove(direction, mappedInitialCell, initialCell);
+            InitWormPositionEvent(cellMove.startPosition);
 
             DirectionPair sameDirPair = new DirectionPair(direction, direction);
             CreateTunnelEvent(cellMove, sameDirPair, null, wormId);
@@ -177,10 +165,6 @@ namespace Tunnel
             if (FindObjectOfType<TunnelManager>())
             {
                 StopEvent -= TunnelManager.Instance.onStop;
-            }
-            if (FindObjectOfType<Map.SpawnGenerator>())
-            {
-                UpdateCellEvent -= FindObjectOfType<Map.SpawnGenerator>().onUpdateObstacle;
             }
         }
     }
