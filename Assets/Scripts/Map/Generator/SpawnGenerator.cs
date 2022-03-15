@@ -3,55 +3,39 @@ using UnityEngine;
 
 namespace Map
 {
-    public class SpawnGenerator : ObstacleGenerator
+    public abstract class SpawnGenerator : ObstacleGenerator
     {
         public delegate void ChangeDirection(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId, Tunnel.CellMove cellMove, bool isCreatingTunnel);
         public event ChangeDirection ChangeDirectionEvent;
 
-        public delegate void SpawnAIWorm(string wormId);
-        public event SpawnAIWorm SpawnAIWormEvent;
-
         public delegate void RemoveWorm(string wormId);
-        public event RemoveWorm RemoveWormEvent;
-
-        public delegate void SpawnPlayerWorm(string wormId);
-        public event SpawnPlayerWorm SpawnPlayerWormEvent;
+        public static event RemoveWorm RemoveWormEvent;
 
         public delegate void SpawnBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel);
-        public event SpawnBlockInterval SpawnBlockIntervalEvent;
+        public static event SpawnBlockInterval SpawnBlockIntervalEvent;
 
-        [SerializeField]
-        private int aiCount;
-
-        [SerializeField]
-        private int playerCount; // the # of human players (equals 1 until multiplayer support arrives)
-
-        private int aiSpawnCount; // used to id ai-controlled worms
-
-        private int humanSpawnCount; // used to id human controlled worms TODO: multiplayer will have multiple human-controlled worms
-
-        List<Obstacle> wormObstacleList; // list of spawned worm obstacles
+        static List<Obstacle> wormObstacleList; // list of spawned worm obstacles
 
         public static Dictionary<Vector3Int, Obstacle> WormObstacleDict { get; private set; }
-        public Dictionary<Obstacle, Vector3Int> SwappedWormObstacleDict { get; private set; }
+        public static Dictionary<Obstacle, Vector3Int> SwappedWormObstacleDict { get; private set; }
 
-        private const string HUMAN_WORM_ID = "Player";
-        private const string AI_WORM_ID = "AI";
+        /**
+         * Listener is fired to start spawning worms when the game is started
+         * 
+         * @gameMode        the type of game being played determines whether player, ai or both worm types are spawned
+         */
+        public abstract void onStartGame(GameMode gameMode);
 
-        private new void Awake()
+        protected new void Awake()
         {
             base.Awake();
             WormObstacleDict = new Dictionary<Vector3Int, Obstacle>();
             SwappedWormObstacleDict = new Dictionary<Obstacle, Vector3Int>();
             wormObstacleList = new List<Obstacle>();
-            humanSpawnCount = aiSpawnCount = 0;
         }
 
-        private void OnEnable()
+        protected void OnEnable()
         {
-            RemoveWormEvent += Worm.WormManager.Instance.onRemoveWorm;
-            SpawnAIWormEvent += FindObjectOfType<Worm.Factory.WormAIFactory>().onSpawn;
-            SpawnPlayerWormEvent += FindObjectOfType<Worm.Factory.WormPlayerFactory>().onSpawn;
         }
 
         /**
@@ -61,7 +45,7 @@ namespace Map
          * @nextCellPosition        the cell the worm wil lbe in in next
          * @isDeleteCurCell         whether the old cell should be deleted
          */
-        public void onUpdateObstacle(Vector3Int curCellPos, Vector3Int nextCellPos, bool isDeleteCurCell)
+        public static void onUpdateObstacle(Vector3Int curCellPos, Vector3Int nextCellPos, bool isDeleteCurCell)
         {
             print("update to " + nextCellPos);
             Obstacle obstacle = getObstacle(curCellPos, WormObstacleDict); // get obstacle from the last tunnel position
@@ -71,7 +55,7 @@ namespace Map
         /**
          * Direection change should trigger worm obstacle to update to a turning cell (or out of a turning cell)
          */
-        public void onChangeDirection(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId, Tunnel.CellMove cellMove, bool isCreatingTunnel)
+        public static void onChangeDirection(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId, Tunnel.CellMove cellMove, bool isCreatingTunnel)
         {
             if (!cellMove.isInit)
             {
@@ -83,7 +67,7 @@ namespace Map
         /**
          * Complements listener onChangeDirection to update cell position for new straight junction segments
          */
-        public void onCreateJunctionOnCollision(Tunnel.Tunnel collisionTunnel, DirectionPair dirPair, Tunnel.CellMove cellMove, string playerId)
+        public static void onCreateJunctionOnCollision(Tunnel.Tunnel collisionTunnel, DirectionPair dirPair, Tunnel.CellMove cellMove, string playerId)
         {
             if (!cellMove.isInit && dirPair.isStraight()) // let onChangeDirection handle turns
             {
@@ -95,10 +79,15 @@ namespace Map
         /**
          * When a tunnel is entered listen for worm interval events, and forward this to the onBlockListener
          */
-        public void onWormInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
+        public static void onWormInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
         {
             bool isTunnelSame = Tunnel.TunnelMap.isTunnelSame(blockPositionInt, lastBlockPositionInt);
             onBlockInterval(isBlockInterval, blockPositionInt, lastBlockPositionInt, (Tunnel.Straight) tunnel, isTunnelSame);
+        }
+
+        protected void RaiseSpawnIntervalEvent(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel)
+        {
+            SpawnBlockIntervalEvent(isBlockInterval, blockPositionInt, lastBlockPositionInt, tunnel);
         }
 
         /**
@@ -107,7 +96,7 @@ namespace Map
          * @lastBlockPositionInt        the most recently saved position of the worm
          * @isCellSameTUnnel            whether the cell belongs to the same tunnel
          */
-        public void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel, bool isCellSameTunnel)
+        public static void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel, bool isCellSameTunnel)
         {
             Obstacle WormObstacle = getObstacle(lastBlockPositionInt, WormObstacleDict);
 
@@ -134,28 +123,12 @@ namespace Map
         }
 
         /**
-         * AI worms turn ON block intervals (instead of in the preceding cell). TunnelMaker must be notified to make a turn decision ahead of the onBlockInterval listener
-         */
-        public void onAiBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel)
-        {
-            Obstacle WormObstacle = getObstacle(lastBlockPositionInt, WormObstacleDict);
-            if (WormObstacle.obstacleType == ObstacleType.AIWorm) // if worm is AI send an additional event to advance to the next checkpoint
-            {
-                GameObject WormGO = WormObstacle.obstacleObject;
-
-                SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.TunnelMaker>().onBlockInterval;
-                SpawnBlockIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
-                SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.TunnelMaker>().onBlockInterval;
-            }
-        }
-
-        /**
          * Acknowledge successful spawning of worm. Add the new worm to the list on game start OR as they are spawned
          * 
          * @worm        the type fo worm that has been created
          * @wormGO      the gameobject of the spawned worm
          */
-        public void onInitWorm(Worm.Worm worm, Astar wormAstar, string wormId)
+        public static void onInitWorm(Worm.Worm worm, Astar wormAstar, string wormId)
         {
             Obstacle wormObstacle = new Obstacle(worm.gameObject, worm.wormType, wormId);
             List<Obstacle>singleWormObstacleList = new List<Obstacle>() { wormObstacle };
@@ -165,86 +138,11 @@ namespace Map
         }
 
         /**
-         * Listener fired when a worm is spawned after being destroyed
-         * 
-         * @worm        the type of the worm
-         * @id          the id of the worm that is spawning
-         */
-        public void onSpawn(ObstacleType wormType, string id)
-        {
-            if (wormType == ObstacleType.AIWorm)
-            {
-                SpawnAIWormEvent(id);
-            }
-            else if (wormType == ObstacleType.PlayerWorm)
-            {
-                SpawnPlayerWormEvent(id);
-            }
-            else
-            {
-                throw new System.Exception("not a valid worm type: " + wormType);
-            }
-        }
-
-        /**
-         * Create worms controlled by AI on game start
-         * 
-         * @humanWorm   the type human worm
-         * @count       the number of AI worms to create
-         */
-        public void createAiWorms(int count)
-        {
-            for (int i = aiSpawnCount; i < aiSpawnCount + count; i++)
-            {
-                string id = AI_WORM_ID + " " + aiSpawnCount.ToString();
-                SpawnAIWormEvent(id);
-            }
-        }
-
-        /**
-         * Listener is fired to start spawning worms when the game is started
-         * 
-         * @gameMode        the type of game being played determines whether player, ai or both worm types are spawned
-         */
-        public void onStartGame(GameMode gameMode)
-        {
-            if (gameMode == GameMode.Solo) // create a single human worm, no ai worms (TESTING MODE)
-            {
-                aiCount = 0;
-                SpawnPlayerWormEvent(HUMAN_WORM_ID);
-            }
-            else if (gameMode == GameMode.ReachTheGoal) // create human worm and ai worms
-            {
-                createAiWorms(aiCount);
-                SpawnPlayerWormEvent(HUMAN_WORM_ID);
-            }
-            else if (gameMode == GameMode.TestFixedPath) // create a ai worm but no human worm (TESTING MODE)
-            {
-                playerCount = 0; // temp
-                createAiWorms(aiCount);
-            }
-            else if (gameMode == GameMode.TestAutoPath) // create a ai worm but no human worm (TESTING MODE)
-            {
-                playerCount = 0; // temp
-                createAiWorms(aiCount);
-            }
-            else
-            {
-                throw new System.Exception("the game mode " + gameMode + " is not supported yet");
-            }
-            int totalSpawnCount = aiCount + playerCount;
-            if (totalSpawnCount != wormObstacleList.Count)
-            {
-                throw new System.Exception("the number of wormObstacles created: " + wormObstacleList.Count + ", does not match expected count: " + totalSpawnCount);
-            }
-        }
-
-        /**
          * After the obstacle dicts are initialized, update the initial cell property of each worm
          * 
          * @obstacles       use the cell position of the obstacle to update the worm's initialCell property
          */
-        private void initializeInitialCells(Obstacle obstacle)
+        private static void initializeInitialCells(Obstacle obstacle)
         {
             obstacle.obstacleObject.GetComponent<Worm.WormBase>().setInitialCell(obstacle.obstacleCell);
         }
@@ -252,16 +150,6 @@ namespace Map
         protected override List<Obstacle> getObstacleList()
         {
             return wormObstacleList;
-        }
-
-        /**
-         * Player is destroyed and spawned again
-         */
-        public void onRespawn(Vector3Int currentCell)
-        {
-            Obstacle WormObstacle = WormObstacleDict[currentCell];
-            onRemoveWorm(currentCell); // wait for removal confirmation before spawning again
-            onSpawn(WormObstacle.obstacleType, WormObstacle.obstacleId);
         }
 
         /**
@@ -282,27 +170,19 @@ namespace Map
          * @currentCell     the cell the worm died in
          * @wormId          the id of the worm is not neeeded to index the dictionary, so null is passed in
          */
-        public void onRemoveWorm(Vector3Int currentCell)
+        public static void onRemoveWorm(Vector3Int currentCell)
         {
             string wormId = WormObstacleDict[currentCell].obstacleId;
+
+            RemoveWormEvent += Worm.WormManager.Instance.onRemoveWorm;
             RemoveWormEvent(wormId);
+            RemoveWormEvent -= Worm.WormManager.Instance.onRemoveWorm;
+
             destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, currentCell, wormObstacleList);
         }
 
-        private void OnDisable()
+        protected void OnDisable()
         {
-            if (Worm.WormManager.Instance)
-            {
-                RemoveWormEvent += Worm.WormManager.Instance.onRemoveWorm;
-            }
-            if (FindObjectOfType<Worm.Factory.WormAIFactory>())
-            {
-                SpawnAIWormEvent -= FindObjectOfType<Worm.Factory.WormAIFactory>().onSpawn;
-            }
-            if (FindObjectOfType<Worm.Factory.WormPlayerFactory>())
-            {
-                SpawnPlayerWormEvent -= FindObjectOfType<Worm.Factory.WormPlayerFactory>().onSpawn;
-            }
         }
     }
 

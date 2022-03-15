@@ -23,7 +23,7 @@ namespace Worm
 
             protected void OnEnable()
             {
-                InitWormEvent += FindObjectOfType<Map.SpawnGenerator>().onInitWorm;
+                InitWormEvent += Map.SpawnGenerator.onInitWorm;
                 InitWormEvent += WormManager.Instance.onInitWorm;
             }
 
@@ -37,7 +37,7 @@ namespace Worm
             {
                 if (GetComponent<Map.SpawnGenerator>())
                 {
-                    InitWormEvent -= FindObjectOfType<Map.SpawnGenerator>().onInitWorm;
+                    InitWormEvent -= Map.SpawnGenerator.onInitWorm;
                 }
                 if (WormManager.Instance)
                 {

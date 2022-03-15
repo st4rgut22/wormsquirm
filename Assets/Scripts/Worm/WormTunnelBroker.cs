@@ -32,7 +32,7 @@ namespace Worm
             CollideTunnelEvent += Tunnel.CollisionManager.Instance.onCollide;
             WormIntervalEvent += GetComponent<InputProcessor>().onWormInterval;
             WormIntervalEvent += GetComponent<Turn>().onBlockInterval;
-            WormIntervalEvent += FindObjectOfType<Map.SpawnGenerator>().onWormInterval;
+            WormIntervalEvent += Map.SpawnGenerator.onWormInterval;
         }
 
         // Start is called before the first frame update
@@ -227,7 +227,7 @@ namespace Worm
             }
             if (FindObjectOfType<Map.SpawnGenerator>())
             {
-                WormIntervalEvent -= FindObjectOfType<Map.SpawnGenerator>().onWormInterval;
+                WormIntervalEvent -= Map.SpawnGenerator.onWormInterval;
             }
         }
     }

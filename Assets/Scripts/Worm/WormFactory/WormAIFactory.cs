@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -65,8 +64,6 @@ namespace Worm
                     case GameMode.TestFixedPath:
                         followExamplePath(tunnelMaker);
                         break;
-                    default:
-                        throw new System.Exception("Game mode is invalid for AI worm " + GameManager.Instance.gameMode);
                 }
             }
 

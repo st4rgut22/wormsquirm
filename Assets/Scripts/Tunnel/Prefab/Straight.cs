@@ -23,8 +23,9 @@ namespace Tunnel
         // Start is called before the first frame update
         void OnEnable()
         {
-            AIBlockIntervalEvent += FindObjectOfType<Map.SpawnGenerator>().onAiBlockInterval;
-            BlockIntervalEvent += FindObjectOfType<Map.SpawnGenerator>().onBlockInterval;
+            AIBlockIntervalEvent += FindObjectOfType<Map.AiSpawnGenerator>().onAiBlockInterval;
+
+            BlockIntervalEvent += Map.SpawnGenerator.onBlockInterval;
             BlockIntervalEvent += FindObjectOfType<TunnelMap>().onBlockInterval; // subscribe dig manager to the BlockSize event
 
             DigEvent += DirtManager.Instance.onDig;
@@ -128,35 +129,35 @@ namespace Tunnel
                 setTunnelScale(position); // set tunnel scale using worm's position
                 
                 float length = getLength(); // get length of tunnel
+                print("length is " + length);
                 Vector3 deadEndPosition = getExitPosition(length);
                 DeadEndInstance.transform.position = deadEndPosition;
 
-                bool isBlockMultiple = TunnelMap.isDistanceMultiple(length);
                 Vector3 unitVectorInDir = Dir.CellDirection.getUnitVectorFromDirection(growthDirection);
                 int curBlockLen = (int)length;
 
-                if (isBlockMultiple)
+                bool isBlockMultiple = TunnelMap.isDistanceMultiple(length);
+                bool isNewBlock = curBlockLen >= 1 && curBlockLen > lastBlockLen;
+
+                if (isBlockMultiple && isNewBlock)
                 {
-                    if (curBlockLen >= 1 && curBlockLen > lastBlockLen) // the first block is already added on tunnel creation 
+                    lastBlockLen = curBlockLen;
+                    setCenter(length, growthDirection); // adjust the center to the new block
+
+                    Vector3Int lastCellPosition = getLastCellPosition();
+                    Vector3Int curCell = Dir.Vector.getNextVector3Int(lastCellPosition, growthDirection);
+
+                    bool isCollision = TunnelMap.getTunnelFromDict(curCell) != null;
+
+                    AIBlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
+
+                    bool isCellSameTunnel = !isTurning && !isCollision;
+
+                    if (isCellSameTunnel) // if turn will be made or there is a collision, the cell should not be added to the tunnell's list of cells
                     {
-                        lastBlockLen = curBlockLen;
-                        setCenter(length, growthDirection); // adjust the center to the new block
-
-                        Vector3Int lastCellPosition = getLastCellPosition();
-                        Vector3Int curCell = Dir.Vector.getNextVector3Int(lastCellPosition, growthDirection);
-
-                        bool isCollision = TunnelMap.getTunnelFromDict(curCell) != null;
-
-                        AIBlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
-
-                        bool isCellSameTunnel = !isTurning && !isCollision;
-
-                        if (isCellSameTunnel) // if turn will be made or there is a collision, the cell should not be added to the tunnell's list of cells
-                        {
-                            addCellToList(curCell);
-                        }
-                        BlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this, isCellSameTunnel);
+                        addCellToList(curCell);
                     }
+                    BlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this, isCellSameTunnel);
                 }
                 else // notify listeners that there is not a block multple
                 {
@@ -237,7 +238,8 @@ namespace Tunnel
             }
             if (FindObjectOfType<Map.SpawnGenerator>())
             {
-                AIBlockIntervalEvent -= FindObjectOfType<Map.SpawnGenerator>().onAiBlockInterval;
+                AIBlockIntervalEvent -= FindObjectOfType<Map.AiSpawnGenerator>().onAiBlockInterval;
+                BlockIntervalEvent -= Map.SpawnGenerator.onBlockInterval;
             }
             if (DirtManager.Instance)
             {

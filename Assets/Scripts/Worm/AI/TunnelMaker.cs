@@ -6,8 +6,8 @@ namespace Worm
 {
     public class TunnelMaker : BaseController
     {
-        public delegate void Respawn(Vector3Int currentCell);
-        public event Respawn RespawnEvent;
+        public delegate void RespawnAi(Vector3Int currentCell);
+        public event RespawnAi RespawnAiEvent;
 
         List<Checkpoint> checkpointList;
         int checkPointIdx;
@@ -32,7 +32,7 @@ namespace Worm
         private new void OnEnable()
         {
             base.OnEnable();
-            RespawnEvent += FindObjectOfType<Map.SpawnGenerator>().onRespawn;
+            RespawnAiEvent += FindObjectOfType<Map.AiSpawnGenerator>().onRespawnAi;
             FindObjectOfType<Turn>().ReachWaypointEvent += onReachWaypoint;
         }
 
@@ -142,7 +142,7 @@ namespace Worm
             {
                 case ObstacleType.AIWorm: // while testing the AI worm will initially reset when reaching its destination
                     Vector3Int curCell = WormTunnelBroker.getCurrentCell(clit.position);
-                    RespawnEvent(curCell);
+                    RespawnAiEvent(curCell);
                     break;
                 default:
                     throw new System.Exception("The AI of type " + wormBase.WormDescription.wormType + " has not been implemented yet");
@@ -176,7 +176,7 @@ namespace Worm
 
             if (FindObjectOfType<Map.SpawnGenerator>())
             {
-                RespawnEvent -= FindObjectOfType<Map.SpawnGenerator>().onRespawn;
+                RespawnAiEvent -= FindObjectOfType<Map.AiSpawnGenerator>().onRespawnAi;
             }
             if (FindObjectOfType<Turn>())
             {

@@ -10,8 +10,11 @@ namespace Worm
         public delegate void RemoveSelf(Vector3Int currentCell);
         public event RemoveSelf RemoveSelfEvent;
 
-        public delegate void Spawn(ObstacleType wormType, string wormId);
-        public event Spawn SpawnEvent;
+        public delegate void SpawnAi(ObstacleType wormType, string wormId);
+        public event SpawnAi SpawnAiEvent;
+
+        public delegate void SpawnHuman(ObstacleType wormType, string wormId);
+        public event SpawnHuman SpawnHumanEvent;
 
         public delegate void SaveWorm(string wormId, GameObject wormGO);
         public event SaveWorm SaveWormEvent;
@@ -40,10 +43,11 @@ namespace Worm
 
         protected void OnEnable()
         {
-            RemoveSelfEvent += FindObjectOfType<Map.SpawnGenerator>().onRemoveWorm;
-            SpawnEvent += FindObjectOfType<Map.SpawnGenerator>().onSpawn;
+            SpawnAiEvent += FindObjectOfType<Map.AiSpawnGenerator>().onAiSpawn;
+            SpawnHumanEvent += FindObjectOfType<Map.HumanSpawnGenerator>().onHumanSpawn;
+
             ChangeDirectionEvent += Tunnel.CollisionManager.Instance.onChangeDirection;
-            ChangeDirectionEvent += FindObjectOfType<Map.SpawnGenerator>().onChangeDirection;
+            ChangeDirectionEvent += Map.SpawnGenerator.onChangeDirection; // DO NOT MOVE !!! Order delegates are called MUST BE RESPECTED for proper updating of cells
         }
 
         /**
@@ -60,16 +64,9 @@ namespace Worm
         protected void RaiseRemoveSelfEvent()
         {
             Vector3Int currentCell = WormTunnelBroker.getCurrentCell(clit.position);
+            RemoveSelfEvent += Map.SpawnGenerator.onRemoveWorm;
             RemoveSelfEvent(currentCell);
-        }
-
-        /**
-         * When a worm is destroy it, issue a respawn event. This is NOT called when the game is started. Only when a player dies and respawns
-         */
-        protected void RaiseSpawnEvent()
-        {
-            Worm worm = GetComponent<Worm>();
-            SpawnEvent(worm.wormType, wormBase.wormId); // spawn 1 worm of the current worm's type
+            RemoveSelfEvent -= Map.SpawnGenerator.onRemoveWorm;
         }
 
         /**
@@ -100,16 +97,18 @@ namespace Worm
                 Vector3Int curCell = Tunnel.TunnelMap.getCellPos(clit.position);
                 cellMove = Tunnel.CellMove.getExistingCellMove(directionPair, curCell);
             }
+            print("Player " + wormId + " change direction. Current cell is " + cellMove.cell + " Next cell is " + cellMove.nextCell);
             ChangeDirectionEvent(directionPair, tunnel, wormId, cellMove, wormBase.isCreatingTunnel);
         }
 
         protected void OnDisable()
         {
             if (FindObjectOfType<Map.SpawnGenerator>())
-            {
-                RemoveSelfEvent -= FindObjectOfType<Map.SpawnGenerator>().onRemoveWorm;
-                SpawnEvent -= FindObjectOfType<Map.SpawnGenerator>().onSpawn;
-                ChangeDirectionEvent -= FindObjectOfType<Map.SpawnGenerator>().onChangeDirection;
+            {                
+                ChangeDirectionEvent -= Map.SpawnGenerator.onChangeDirection;
+
+                SpawnAiEvent -= FindObjectOfType<Map.AiSpawnGenerator>().onAiSpawn;
+                SpawnHumanEvent -= FindObjectOfType<Map.HumanSpawnGenerator>().onHumanSpawn;
             }
             if (Tunnel.CollisionManager.Instance)
             {

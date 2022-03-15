@@ -40,7 +40,7 @@ namespace Worm
         private new void OnEnable()
         {
             base.OnEnable();
-            UpdateCellEvent += FindObjectOfType<Map.SpawnGenerator>().onUpdateObstacle;
+            UpdateCellEvent += Map.SpawnGenerator.onUpdateObstacle;
         }
 
         /**
@@ -116,7 +116,7 @@ namespace Worm
             base.OnDisable();
             if (FindObjectOfType<Map.SpawnGenerator>())
             {
-                UpdateCellEvent -= FindObjectOfType<Map.SpawnGenerator>().onUpdateObstacle;
+                UpdateCellEvent -= Map.SpawnGenerator.onUpdateObstacle;;
             }
         }
     }

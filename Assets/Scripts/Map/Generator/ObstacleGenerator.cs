@@ -9,12 +9,11 @@ namespace Map
         // a dictionary comprised of all obstacles in the map       <Cell Location, Obstacle containing GameObject>
         public static Dictionary<Vector3Int, Obstacle> obstacleDict;
         // a dictionary comprised of all obstacles in the map       <Obstacle containing GameObject, Cell Location>
-        public Dictionary<Obstacle, Vector3Int> swappedObstacleDict; 
+        public static Dictionary<Obstacle, Vector3Int> swappedObstacleDict; 
 
         protected string obstacleType;
 
-        [SerializeField]
-        protected bool isRandomPlacement; // whether the obstacles are placed randomy or manually specified (locations would be defined in subclasses)
+        protected static bool isRandomPlacement; // whether the obstacles are placed randomy or manually specified (locations would be defined in subclasses)
 
         // TODO: Add abstract methods for initializeObstacleList()
 
@@ -25,6 +24,7 @@ namespace Map
         {
             obstacleDict = new Dictionary<Vector3Int, Obstacle>();
             swappedObstacleDict = new Dictionary<Obstacle, Vector3Int>();
+            isRandomPlacement = true;
         }
 
         protected abstract List<Obstacle> getObstacleList();
@@ -39,7 +39,7 @@ namespace Map
             return obstacleDict.ContainsKey(cell);
         }
 
-        private int getRandomPosition()
+        private static int getRandomPosition()
         {
             return Random.Range(-MAP_LENGTH, MAP_LENGTH);
         }
@@ -49,7 +49,7 @@ namespace Map
          *
          * @cell    the vector3Int cell
          */
-        private bool isInBounds(Vector3Int cell)
+        private static bool isInBounds(Vector3Int cell)
         {
             if (Mathf.Abs(cell.x) > MAP_LENGTH || Mathf.Abs(cell.y) > MAP_LENGTH || Mathf.Abs(cell.z) > MAP_LENGTH)
             {
@@ -61,7 +61,7 @@ namespace Map
             }
         }
 
-        private Vector3Int getRandomCell()
+        private static Vector3Int getRandomCell()
         {
             int randX = getRandomPosition();
             int randY = getRandomPosition();
@@ -73,7 +73,7 @@ namespace Map
         /**
          * Destroy obstacle at a position and remove references to it in the map
          */
-        protected void destroyObstacle(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int currentPosition, List<Obstacle> specificObstacleList)
+        protected static void destroyObstacle(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int currentPosition, List<Obstacle> specificObstacleList)
         {
             Obstacle obstacle = obstacleDict[currentPosition];
             specificObstacleList.Remove(obstacle);
@@ -89,7 +89,7 @@ namespace Map
          * Get the obstacle at a cell and check both the object-specific dict and combined-dict are synced. 
          * Return null if the cell doesnt contain an obstalce (for instance if it was destroyed)
          */
-        protected Obstacle getObstacle(Vector3Int currentPosition, Dictionary<Vector3Int, Obstacle> specificObstacleDict) 
+        protected static Obstacle getObstacle(Vector3Int currentPosition, Dictionary<Vector3Int, Obstacle> specificObstacleDict) 
         {
             if (obstacleDict.ContainsKey(currentPosition))
             {
@@ -115,7 +115,7 @@ namespace Map
          * @swapSpecificObstaclePosDict     swap dictionary entry <obstacle, position>
          * @deleteCurCell                   whether the tunnel at currentPosition should be removed (eg if it does not exist)
          */
-        protected Obstacle updateObstacle(Obstacle ObstacleToUpdate, Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int oldPosition, Vector3Int nextPosition, bool isDeleteCurCell)
+        protected static Obstacle updateObstacle(Obstacle ObstacleToUpdate, Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int oldPosition, Vector3Int nextPosition, bool isDeleteCurCell)
         {
             if (obstacleDict.ContainsKey(nextPosition))
             {
@@ -152,7 +152,7 @@ namespace Map
          * @obstacleList                    the list of gameobjects of a specific obstacle type
          * @obstacleType                    the name of the obstacle
          */
-        protected void initializeObstacleDict(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swappedSpecificObstacleDict, List<Obstacle>obstacleList)
+        protected static void initializeObstacleDict(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swappedSpecificObstacleDict, List<Obstacle>obstacleList)
         {
             for (int i=0;i<obstacleList.Count;i++)
             {
@@ -187,7 +187,7 @@ namespace Map
          * @obstacleDict            dictionary allow look-up of obstacles by cell pos
          * @swappedObstacleDict     dictionary allow look-up of cell pos by obstacle
          */
-        private void addEntryToObstacleDict(Vector3Int obstacleCellPos, Obstacle obstacle, Dictionary<Vector3Int, Obstacle> obstacleDict, Dictionary<Obstacle, Vector3Int> swappedObstacleDict)
+        private static void addEntryToObstacleDict(Vector3Int obstacleCellPos, Obstacle obstacle, Dictionary<Vector3Int, Obstacle> obstacleDict, Dictionary<Obstacle, Vector3Int> swappedObstacleDict)
         {
             obstacleDict[obstacleCellPos] = obstacle;
             swappedObstacleDict[obstacle] = obstacleCellPos;
@@ -196,7 +196,7 @@ namespace Map
         /**
          * Choose a random cell in the map that satisfies conditions of obstacle placement such as distance to nearest obstacle
          */
-        public Vector3Int getRandomEligibleCell()
+        public static Vector3Int getRandomEligibleCell()
         {
             while (true)
             {
@@ -231,7 +231,7 @@ namespace Map
          *
          *@originalCell     the proposed location of an obstacle
          */
-        private bool isObstacleLocationEligible(Vector3Int originalCell)
+        private static bool isObstacleLocationEligible(Vector3Int originalCell)
         {
             int checkCellArea = OBSTACLE_MIN_SPACING * 2 + 1; // check cells a certain distance away in all directions (x,y,z)
             Vector3Int minSpacingVector = new Vector3Int(checkCellArea, checkCellArea, checkCellArea);

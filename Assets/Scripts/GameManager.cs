@@ -22,7 +22,8 @@ public class GameManager : GenericSingletonClass<GameManager>
     private void OnEnable()
     {
         StartGameEvent += FindObjectOfType<Map.LandmarkGenerator>().onStartGame;
-        StartGameEvent += FindObjectOfType<Map.SpawnGenerator>().onStartGame;
+        StartGameEvent += FindObjectOfType<Map.AiSpawnGenerator>().onStartGame;
+        StartGameEvent += FindObjectOfType<Map.HumanSpawnGenerator>().onStartGame;
         DestroyGameEvent += FindObjectOfType<Tunnel.TunnelMap>().onDestroyGame;
         DestroyGameEvent += Tunnel.TunnelManager.Instance.onDestroyGame;
     }
@@ -36,8 +37,8 @@ public class GameManager : GenericSingletonClass<GameManager>
     {
         if (FindObjectOfType<Map.SpawnGenerator>())
         {
-            StartGameEvent -= FindObjectOfType<Map.SpawnGenerator>().onStartGame;
-            DestroyGameEvent -= FindObjectOfType<Map.SpawnGenerator>().onDestroyGame;
+            StartGameEvent -= FindObjectOfType<Map.AiSpawnGenerator>().onStartGame;
+            DestroyGameEvent -= FindObjectOfType<Map.HumanSpawnGenerator>().onDestroyGame;
         }
         if (FindObjectOfType<Tunnel.TunnelMap>())
         {

@@ -36,10 +36,9 @@ namespace Tunnel
             SliceTunnelEvent += FindObjectOfType<Intersect.Slicer>().sliceTunnel;
 
             CreateJunctionOnCollisionEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnCollision;
-
-            CreateJunctionOnCollisionEvent += FindObjectOfType<Map.SpawnGenerator>().onCreateJunctionOnCollision;
-
             CreateJunctionOnInitEvent += FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnInit;
+
+            CreateJunctionOnCollisionEvent += Map.SpawnGenerator.onCreateJunctionOnCollision;
 
             StopEvent += TunnelManager.Instance.onStop;
         }
@@ -155,11 +154,10 @@ namespace Tunnel
             }
             if(FindObjectOfType<Map.SpawnGenerator>())
             {
-                CreateJunctionOnCollisionEvent -= FindObjectOfType<Map.SpawnGenerator>().onCreateJunctionOnCollision;
+                CreateJunctionOnCollisionEvent -= Map.SpawnGenerator.onCreateJunctionOnCollision;
             }
             if (FindObjectOfType<ModTunnelFactory>())
             {
-                CreateJunctionOnCollisionEvent -= FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnCollision;
                 CreateJunctionOnCollisionEvent -= FindObjectOfType<ModTunnelFactory>().onCreateJunctionOnCollision;
             }
             if (FindObjectOfType<Factory>())

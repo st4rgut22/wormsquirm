@@ -65,7 +65,15 @@ namespace Worm
          */
         public void onAddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            Vector3Int cell = cellMove.isInit ? cellMove.cell : cellMove.lastCellPosition; // if it is the first cell 
+            Vector3Int cell = cellMove.isInit ? cellMove.cell : cellMove.lastCellPosition; // if it is the first cell
+            if (!Map.SpawnGenerator.WormObstacleDict.ContainsKey(cell))
+            {
+                throw new System.Exception("Tunnel not created at cell " + cell);
+            }
+            if (Map.SpawnGenerator.WormObstacleDict[cell] == null)
+            {
+                throw new System.Exception("Worm " + wormId + " does not exist in cell " + cell);
+            }
             Obstacle WormObstacle = Map.SpawnGenerator.WormObstacleDict[cell];
             GameObject wormGO = WormObstacle.obstacleObject;
             if (wormGO == null)
