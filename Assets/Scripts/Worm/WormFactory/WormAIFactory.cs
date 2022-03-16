@@ -8,7 +8,7 @@ namespace Worm
         // setup a AI worm
         public class WormAIFactory : WormFactoryProperties
         {
-            public delegate void FollowPath(TunnelMaker tunnelMaker);
+            public delegate void FollowPath(TunnelMaker tunnelMaker, WormTunnelBroker wormTunnelBroker);
             public event FollowPath FollowPathEvent;
 
             public delegate void InitCheckpoint(List<Checkpoint> checkpointList);
@@ -49,16 +49,18 @@ namespace Worm
             private void initializeWormPath(Map.Astar wormAstar, GameObject wormGO)
             {
                 TunnelMaker tunnelMaker = wormGO.GetComponent<TunnelMaker>();
-                switch (GameManager.Instance.gameMode) // TODO: ADD SUPPORT FOR gameMode ReachTheGoal
+                WormTunnelBroker wormTunnelBroker = wormGO.GetComponent<WormTunnelBroker>();
+
+                switch (GameManager.Instance.gameMode)
                 {
-                    case GameMode.ReachTheGoal:
+                    case GameMode.Chase:
                         FollowPathEvent += wormAstar.onFollowPath;
-                        FollowPathEvent(tunnelMaker);
+                        FollowPathEvent(tunnelMaker, wormTunnelBroker);
                         FollowPathEvent -= wormAstar.onFollowPath;
                         break;
                     case GameMode.TestAutoPath:
                         FollowPathEvent += wormAstar.onFollowPath;
-                        FollowPathEvent(tunnelMaker);
+                        FollowPathEvent(tunnelMaker, wormTunnelBroker);
                         FollowPathEvent -= wormAstar.onFollowPath;
                         break;
                     case GameMode.TestFixedPath:

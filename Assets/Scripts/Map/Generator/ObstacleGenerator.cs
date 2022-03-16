@@ -77,6 +77,7 @@ namespace Map
         {
             Obstacle obstacle = obstacleDict[currentPosition];
             specificObstacleList.Remove(obstacle);
+            print("destroy obstacle " + obstacle.obstacleId + " at cell " + currentPosition);
             GameObject obstacleGO = obstacle.obstacleObject;
             obstacleDict.Remove(currentPosition);
             swappedObstacleDict.Remove(obstacle);

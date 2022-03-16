@@ -24,7 +24,6 @@ namespace Map
         Vector3Int objectiveLocation;
 
         Worm.TunnelMaker currentTunnelMaker;
-        private Vector3Int initialCell;
 
         public class Item
         {
@@ -82,15 +81,19 @@ namespace Map
             isDestinationReceived = true;
         }
 
-        public void onFollowPath(Worm.TunnelMaker tunnelMaker)
-        {            
+        public void onFollowPath(Worm.TunnelMaker tunnelMaker, Worm.WormTunnelBroker wormTunnelBroker)
+        {
             currentTunnelMaker = tunnelMaker;
-            initialCell = currentTunnelMaker.getInitialCell();
-            StartCoroutine(astar());
+            Vector3Int initialCell = wormTunnelBroker.getCurrentCell();
+            StartCoroutine(astar(initialCell));
         }
 
-        // Start is called before the first frame update
-        private IEnumerator astar()
+        /**
+         * Start is called before the first frame update
+         * 
+         * @startingCell    the cell the worm is currently in
+         */
+        private IEnumerator astar(Vector3Int startingCell)
         {
             while (!isDestinationReceived) // wait for destination before starting path planning
             {
@@ -99,35 +102,35 @@ namespace Map
 
             initializeCostMap();
 
-            Item startItem = new Item(0, initialCell, objectiveLocation);
+            Item startItem = new Item(0, startingCell, objectiveLocation);
             HashSet<Item> unknownPathSet = new HashSet<Item>();
 
             unknownPathSet.Add(startItem);
             List<Item> unknownPathList = new List<Item>() { startItem };
-            findShortestPath(unknownPathList, unknownPathSet);
+            findShortestPath(unknownPathList, unknownPathSet, startingCell);
         }
 
         /**
          * Get the shortest path from start cell to goal cell
          */
-        List<Vector3Int> getShortestPath()
+        List<Vector3Int> getShortestPath(Vector3Int startingCell)
         {
             List<Vector3Int> shortestPath = new List<Vector3Int>();
 
             Vector3Int goalArrayPos = objectiveLocation + mapOffset;
             Item item = CostMap[goalArrayPos.x, goalArrayPos.y, goalArrayPos.z];
-            while (!item.cell.Equals(initialCell))
+            while (!item.cell.Equals(startingCell))
             {
                 print("shortest path to goalLocation " + item.cell);
                 shortestPath.Insert(0, item.cell);
                 item = item.cameFrom;
             }
-            shortestPath.Insert(0, initialCell);
+            shortestPath.Insert(0, startingCell);
 
             return shortestPath;
         }
 
-        void findShortestPath(List<Item> unknownPathList, HashSet<Item> unknownPathSet)
+        void findShortestPath(List<Item> unknownPathList, HashSet<Item> unknownPathSet, Vector3Int startingCell)
         {
             while (unknownPathList.Count > 0)
             {
@@ -136,7 +139,7 @@ namespace Map
                 if (item.cell.Equals(objectiveLocation))
                 {
                     print("shortest distance is " + item.totalCost);
-                    List<Vector3Int> shortestPath = getShortestPath();
+                    List<Vector3Int> shortestPath = getShortestPath(startingCell);
                     astarPathEvent(shortestPath, currentTunnelMaker);
                     return;
                 }

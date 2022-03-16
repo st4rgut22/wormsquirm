@@ -36,11 +36,20 @@ namespace Map
                 {
                     stepCounter += 1;
                 }
-                if (!isContinueStraight || i == lastCellIdx)
+                if (!isContinueStraight || i == lastCellIdx) // if a turn is made or it is the final index, add the previous straight segment
                 {
                     Checkpoint straightTunnelCheckpoint = new Checkpoint(prevDirection, stepCounter - TURN_STEP);
                     astarCheckpointList.Add(straightTunnelCheckpoint);
                     stepCounter = 1;
+                }
+                if (!isContinueStraight && i == lastCellIdx) // if a turn is made at the last index, add a new, final turn
+                {
+                    if (stepCounter != TURN_STEP)
+                    {
+                        throw new System.Exception("The final turn should have length 0, but stepCounter is " + stepCounter);
+                    }
+                    Checkpoint finalTurnCheckpoint = new Checkpoint(curDirection, stepCounter - TURN_STEP);
+                    astarCheckpointList.Add(finalTurnCheckpoint);
                 }
                 prevDirection = curDirection;
             }

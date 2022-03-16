@@ -12,12 +12,19 @@ namespace Worm
         public delegate void AddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId);
         public event AddTunnel AddTunnelEvent;
 
-        public Dictionary<string, GameObject> wormDictionary; // <wormId, worm GO>
+        public Dictionary<string, GameObject> WormDictionary; // <wormId, worm GO>
+        public Dictionary<string, WormTunnelBroker> WormTunnelBrokerDict; // <wormId, WormTunnelBroker>
+        public Dictionary<string, TunnelMaker> WormTunnelMakerDict; // <wormId, WormTunnelMaker> only stores AI references
+
+        public List<string> WormIdList; // List<wormId>
 
         private new void Awake()
         {
             base.Awake();
-            wormDictionary = new Dictionary<string, GameObject>();
+            WormDictionary = new Dictionary<string, GameObject>();
+            WormTunnelBrokerDict = new Dictionary<string, WormTunnelBroker>();
+            WormTunnelMakerDict = new Dictionary<string, TunnelMaker>();
+            WormIdList = new List<string>();
         }
 
         /**
@@ -39,11 +46,13 @@ namespace Worm
 
         public void onRemoveWorm(string wormId)
         {
-            if (!wormDictionary.ContainsKey(wormId))
+            if (!WormDictionary.ContainsKey(wormId))
             {
                 throw new System.Exception("Cannot remove worm with id " + wormId + " because it doesn't exist");
             }
-            wormDictionary.Remove(wormId);
+            WormDictionary.Remove(wormId);
+            WormTunnelBrokerDict.Remove(wormId);
+            WormTunnelMakerDict.Remove(wormId);
         }
 
         /**
@@ -51,11 +60,21 @@ namespace Worm
          */
         public void onInitWorm(Worm worm, Map.Astar wormAstar, string wormId)
         {
-            if (wormDictionary.ContainsKey(wormId))
+            if (WormDictionary.ContainsKey(wormId))
             {
                 throw new System.Exception("Cannot init worm with id " + wormId + " because it already exists");
             }
-            wormDictionary.Add(wormId, worm.gameObject);
+            WormIdList.Add(wormId);
+
+            WormTunnelBroker wormTunnelBroker = worm.gameObject.GetComponent<WormTunnelBroker>();
+            WormDictionary.Add(wormId, worm.gameObject);
+            WormTunnelBrokerDict.Add(wormId, wormTunnelBroker);
+
+            if (worm.wormType == ObstacleType.AIWorm)
+            {
+                TunnelMaker tunnelMaker = worm.gameObject.GetComponent<TunnelMaker>();
+                WormTunnelMakerDict.Add(wormId, tunnelMaker);
+            }
         }
 
         /**

@@ -34,7 +34,7 @@ namespace Map
          */
         public void onStartGame(GameMode gameMode)
         {
-            if (gameMode == GameMode.ReachTheGoal)
+            if (gameMode == GameMode.Chase)
             {
                 List<Obstacle> RewardObstacleList = getObstacleList();
                 initializeObstacleDict(RewardObstacleDict, SwapRewardObstacleDict, RewardObstacleList);

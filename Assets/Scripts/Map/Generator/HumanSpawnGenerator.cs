@@ -34,7 +34,7 @@ namespace Map
             {
                 SpawnPlayerWormEvent(HUMAN_WORM_ID);
             }
-            else if (gameMode == GameMode.ReachTheGoal) // create human worm and ai worms
+            else if (gameMode == GameMode.Chase) // create human worm and ai worms
             {
                 SpawnPlayerWormEvent(HUMAN_WORM_ID);
             }

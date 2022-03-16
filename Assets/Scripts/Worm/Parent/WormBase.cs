@@ -26,6 +26,8 @@ namespace Worm
 
         public Worm WormDescription { get; private set; }
 
+        public Vector3Int defaultCell = new Vector3Int(-100, -100, -100);
+
         private new void Awake()
         {
             base.Awake();

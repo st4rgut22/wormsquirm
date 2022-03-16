@@ -162,7 +162,7 @@ namespace Tunnel
                 else // notify listeners that there is not a block multple
                 {
                     Vector3Int lastCellPosition = getLastCellPosition();
-                    BlockIntervalEvent(isBlockMultiple, lastCellPosition, lastCellPosition, this, true);
+                    BlockIntervalEvent(false, lastCellPosition, lastCellPosition, this, true);
                 }
             }
         }

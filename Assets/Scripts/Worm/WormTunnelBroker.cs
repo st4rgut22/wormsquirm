@@ -16,7 +16,7 @@ namespace Worm
         public delegate void Move(Vector3 ringPosition, Direction direction);
         public event Move MoveEvent;
 
-        private Vector3Int cell;                // current cell the worm is in (using clit.position for measurement)
+        public Vector3Int cell { get; private set; }                // current cell the worm is in (using clit.position for measurement)
         private Vector3Int enterExistingCell;   // cell that is the entry to the existing tunnel, while worm is in this cell DONT update current tunnel because it will replace junction with previous tunnel
 
         protected Waypoint lastReachedWaypoint; // the last waypoint the player has reached. It is reset after a check
@@ -40,12 +40,21 @@ namespace Worm
         {
             base.Awake();
 
-            cell = Vector3Int.zero;
+            cell = wormBase.defaultCell;
             enterExistingCell = cell;
 
             wormBase.setIsCreatingTunnel(true);
             prevStraightTunnel = null;
             isDecisionProcessing = false;
+        }
+
+        /**
+         * Get the current cell depending on whether the worm is starting a path or already following a path
+         */
+        public Vector3Int getCurrentCell()
+        {
+            Vector3Int curCell = cell.Equals(wormBase.defaultCell) ? wormBase.initialCell : cell;
+            return curCell;
         }
 
         /**

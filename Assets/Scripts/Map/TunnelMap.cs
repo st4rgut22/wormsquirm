@@ -69,7 +69,7 @@ namespace Tunnel
          */
         public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isCellSameTunnel)
         {
-            if (isBlockInterval && !isTurnDecision)
+            if (isBlockInterval && isCellSameTunnel)  //(isBlockInterval && !isTurnDecision)
             {
                 // before traversing cell check that the next cell is empty to decide whether to intersect it
                 if (containsCell(blockPositionInt)) // exclude turn tunnel segments from part of the straight tunnel
@@ -84,10 +84,10 @@ namespace Tunnel
                     addCell(blockPositionInt, tunnel);
                 }
             }
-            else if (isBlockInterval)
-            {
-                isTurnDecision = false; // reset isTurnDecision after reaching a block interval in order to permit collisions with straight tunnel
-            }
+            //else if (isBlockInterval)
+            //{
+            //    isTurnDecision = false; // reset isTurnDecision after reaching a block interval in order to permit collisions with straight tunnel
+            //}
         }
 
         /**
