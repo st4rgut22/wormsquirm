@@ -14,15 +14,12 @@ namespace Tunnel
 
         public static Vector3Int startingCell; // the cell location of the first tunnel
 
-        private bool isTurnDecision;
-
         private const float XZ_INTERVAL_OFFSET = .5f;
 
         private void Awake()
         {
             cellList = new List<Vector3Int>(); // { TunnelManager.Instance.initialCell };
             TunnelMapDict = new Dictionary<Vector3Int, Tunnel>();
-            isTurnDecision = false;
         }
 
         private void OnEnable()
@@ -36,15 +33,6 @@ namespace Tunnel
         public void onStartMove(Direction direction)
         {
             startingCell = Dir.Vector.getNextCellFromDirection(TunnelManager.Instance.initialCell, direction);
-        }
-
-        /**
-         * When a decision has been made set a flag in order to prevent junction creation on collision. Instead, let 
-         * ChangeDirectionEvent() trigger junction creation. Prevents creating the same junction
-         */
-        public void onDecision(bool isStraightTunnel, Direction direction, Tunnel tunnel)
-        {
-            isTurnDecision = true;
         }
 
         /**
@@ -66,6 +54,8 @@ namespace Tunnel
 
         /**
          * Adds tunnel type to the map at the provided coordinate
+         * 
+         * @isCellSameTunnel        whether the block interval marks the beginning of a new tunnel segment (eg corner) or is a continuation of existing tunnel
          */
         public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isCellSameTunnel)
         {
@@ -84,10 +74,6 @@ namespace Tunnel
                     addCell(blockPositionInt, tunnel);
                 }
             }
-            //else if (isBlockInterval)
-            //{
-            //    isTurnDecision = false; // reset isTurnDecision after reaching a block interval in order to permit collisions with straight tunnel
-            //}
         }
 
         /**

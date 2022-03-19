@@ -11,7 +11,7 @@ namespace Worm
             public delegate void FollowPath(TunnelMaker tunnelMaker, WormTunnelBroker wormTunnelBroker);
             public event FollowPath FollowPathEvent;
 
-            public delegate void InitCheckpoint(List<Checkpoint> checkpointList);
+            public delegate void InitCheckpoint(List<Checkpoint> checkpointList, bool isInitPath, WormTunnelBroker wormTunnelBroker);
             public event InitCheckpoint InitCheckpointEvent;
 
             [SerializeField]
@@ -64,17 +64,17 @@ namespace Worm
                         FollowPathEvent -= wormAstar.onFollowPath;
                         break;
                     case GameMode.TestFixedPath:
-                        followExamplePath(tunnelMaker);
+                        followExamplePath(tunnelMaker, wormTunnelBroker);
                         break;
                 }
             }
 
-            private void followExamplePath(TunnelMaker tunnelMaker)
+            private void followExamplePath(TunnelMaker tunnelMaker, WormTunnelBroker wormTunnelBroker)
             {
                 List<Checkpoint> examplePath = FindObjectOfType<Test.ExampleNetwork>().getNetwork();
 
                 InitCheckpointEvent += tunnelMaker.onInitCheckpointList;
-                InitCheckpointEvent(examplePath);
+                InitCheckpointEvent(examplePath, true, wormTunnelBroker); // isInitPath = true because always starting over and re-initializing the worm after reaching the goal                                                                        
                 InitCheckpointEvent -= tunnelMaker.onInitCheckpointList;
             }
 

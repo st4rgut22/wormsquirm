@@ -5,7 +5,8 @@ public enum ObstacleType
     Rock,
     Goal,
     PlayerWorm,
-    AIWorm
+    AIWorm,
+    Unknown
 }
 
 /**
@@ -22,6 +23,11 @@ public class Obstacle
     {
         this.obstacleObject = obstacleObject;
         this.obstacleType = obstacleType;
+        this.obstacleId = obstacleId;
+    }
+
+    public Obstacle(string obstacleId)
+    {
         this.obstacleId = obstacleId;
     }
 

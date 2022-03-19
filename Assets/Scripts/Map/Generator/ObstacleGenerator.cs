@@ -23,17 +23,32 @@ namespace Map
         protected void Awake()
         {
             obstacleDict = new Dictionary<Vector3Int, Obstacle>();
-            swappedObstacleDict = new Dictionary<Obstacle, Vector3Int>();
+            swappedObstacleDict = new Dictionary<Obstacle, Vector3Int>(new ObstacleComparer());
             isRandomPlacement = true;
         }
 
         protected abstract List<Obstacle> getObstacleList();
 
+
+        protected class ObstacleComparer : IEqualityComparer<Obstacle>
+        {
+            public bool Equals(Obstacle obstacle1, Obstacle obstacle2) // used to check for equality when there is a has collision
+            {
+                return obstacle1.obstacleId == obstacle2.obstacleId;
+            }
+
+            public int GetHashCode(Obstacle obstacle) // used to get an object with a key
+            {
+                return obstacle.obstacleId.GetHashCode();
+            }
+        }
+
+
         /**
-         * Check whether a cell contains an obstacle
-         * 
-         * @cell the cell the worm want to enter
-         */
+            * Check whether a cell contains an obstacle
+            * 
+            * @cell the cell the worm want to enter
+            */
         public bool isCellObstacle(Vector3Int cell)
         {
             return obstacleDict.ContainsKey(cell);
@@ -53,11 +68,11 @@ namespace Map
         {
             if (Mathf.Abs(cell.x) > MAP_LENGTH || Mathf.Abs(cell.y) > MAP_LENGTH || Mathf.Abs(cell.z) > MAP_LENGTH)
             {
-                return true;
+                return false;
             }
             else
             {
-                return false;
+                return true;
             }
         }
 
@@ -67,7 +82,7 @@ namespace Map
             int randY = getRandomPosition();
             int randZ = getRandomPosition();
             Vector3Int randCell = new Vector3Int(randX, randY, randZ);
-            return randCell;
+            return randCell;            
         }
 
         /**
@@ -147,6 +162,21 @@ namespace Map
         }
 
         /**
+         * Tests placement of worms
+         */
+        private static Vector3Int getTestCellLocationForAIChaseWorm(Obstacle obstacle)
+        {
+            if (obstacle.obstacleId == "Player")
+            {
+                return new Vector3Int(8, -5, 6);
+            }
+            else
+            {
+                return new Vector3Int(-4, 1, -3);
+            }
+        }
+
+        /**
          * Randomly generate landmarks within the confines of the map
          * 
          * @specificObstacleDict            the obstacle dictionary for a specific obstacle type (eg rocks, players)
@@ -164,6 +194,7 @@ namespace Map
                 if (isRandomPlacement)
                 {
                     randObstaclePosition = getRandomEligibleCell();
+                    randObstaclePosition = getTestCellLocationForAIChaseWorm(obstacle); // TESTING
                     obstacle.setObstacleCell(randObstaclePosition);
                 }
                 else // if not randomly placed use the pre-set cell
@@ -235,13 +266,13 @@ namespace Map
         private static bool isObstacleLocationEligible(Vector3Int originalCell)
         {
             int checkCellArea = OBSTACLE_MIN_SPACING * 2 + 1; // check cells a certain distance away in all directions (x,y,z)
-            Vector3Int minSpacingVector = new Vector3Int(checkCellArea, checkCellArea, checkCellArea);
-            Vector3Int bottomLeftCell = minSpacingVector - originalCell;
-            for (int x = 0; x < OBSTACLE_MIN_SPACING; x++)
+            Vector3Int minSpacingVector = new Vector3Int(OBSTACLE_MIN_SPACING, OBSTACLE_MIN_SPACING, OBSTACLE_MIN_SPACING);
+            Vector3Int bottomLeftCell = originalCell - minSpacingVector;
+            for (int x = 0; x < checkCellArea; x++)
             {
-                for (int y = 0; y < OBSTACLE_MIN_SPACING; y++)
+                for (int y = 0; y < checkCellArea; y++)
                 {
-                    for (int z = 0; z < OBSTACLE_MIN_SPACING; z++)
+                    for (int z = 0; z < checkCellArea; z++)
                     {
                         Vector3Int cell = new Vector3Int(bottomLeftCell.x + x, originalCell.y + y, originalCell.z + z);
                         bool isCellInBounds = isInBounds(cell);

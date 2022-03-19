@@ -4,6 +4,9 @@ namespace Worm
 {
     public class WormTunnelBroker : WormBody
     {
+        public delegate void AbortTurn();
+        public event AbortTurn AbortTurnEvent;
+
         public delegate void WormInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel);
         public event WormInterval WormIntervalEvent;
 
@@ -26,6 +29,8 @@ namespace Worm
         Tunnel.Straight prevStraightTunnel;
         protected Tunnel.Tunnel prevTunnel;               // the previous tunnel, useful for checking when is the start of a new straight segment
 
+        public bool isTunnelCreated { get; private set; } // whether the worm has created a tunnel yet (indicating it is following a path) or not
+
         protected new void OnEnable()
         {
             base.OnEnable();
@@ -33,6 +38,7 @@ namespace Worm
             WormIntervalEvent += GetComponent<InputProcessor>().onWormInterval;
             WormIntervalEvent += GetComponent<Turn>().onBlockInterval;
             WormIntervalEvent += Map.SpawnGenerator.onWormInterval;
+            AbortTurnEvent += GetComponent<Turn>().onAbortDecision;
         }
 
         // Start is called before the first frame update
@@ -58,6 +64,16 @@ namespace Worm
         }
 
         /**
+         * Get the next cell using the worm's current cell and current direction
+         */
+        public Vector3Int getNextCell()
+        {
+            Vector3Int curCell = getCurrentCell();
+            Vector3Int nextCell = Dir.Vector.getNextCellFromDirection(curCell, wormBase.direction);
+            return nextCell;
+        }
+
+        /**
          * Listener is fired when worm enters an existing tunnel, for example by colliding with another tunnel
          */
         public void onEnterExistingTunnel()
@@ -79,11 +95,27 @@ namespace Worm
         }
 
         /**
-         * A tunnel interval event will trigger the worm to send its updated position to the map of worm locations
+         * Return true if the worm is going to turn in the next cell
          */
-        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
+        public bool isNextCellTurn()
         {
+            print("worm direction " + wormBase.direction + " does not match turn direction " + wormBase.turnDirection);
+            if (wormBase.turnDirection == Direction.None) // if turn direction is not initialized yet, there is no turn
+            {
+                return false;
+            }
+            else
+            {
+                return wormBase.direction != wormBase.turnDirection;
+            }            
+        }
 
+        /**
+         * Abort the next turn
+         */
+        public void RaiseAbortTurnEvent()
+        {
+            AbortTurnEvent();
         }
 
         /**
@@ -104,15 +136,21 @@ namespace Worm
             return Tunnel.TunnelMap.getCellPos(position);
         }
 
+        public Direction getDirection()
+        {
+            return wormBase.direction;
+        }
+
         private void Update()
         {
+            Vector3Int curCell = getCurrentCell(ring.position);
+
             if (GrowEvent != null)
             {
                 GrowEvent(ring.position);
             }
             if (!wormBase.isCreatingTunnel && !isDecisionProcessing)
             {
-                Vector3Int curCell = getCurrentCell(ring.position);
 
                 Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position); // use ring.position to check upcoming cell
                 if (curTunnel == null) // if no tunnel exists at ring position, we are not in an existing tunnel (need to confirm)
@@ -136,8 +174,11 @@ namespace Worm
                 {
                     throw new System.Exception("current tunnel " + curTunnel.name + " does not contain cell " + curCell + " even though it is part of the tunnel");
                 }
-                cell = curCell;
                 prevTunnel = curTunnel;
+            }
+            if (isTunnelCreated)
+            {
+                cell = curCell; // dont update cell until tunnel has been created
             }
         }
 
@@ -182,6 +223,7 @@ namespace Worm
          */
         public void onAddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId)
         {
+            isTunnelCreated = true;
 
             bool isTunnelStraight = Tunnel.Type.isTypeStraight(tunnel.type);
             bool isTunnelJunction = Tunnel.Type.isTypeJunction(tunnel.type);
@@ -232,6 +274,7 @@ namespace Worm
             }
             if (GetComponent<Turn>())
             {
+                AbortTurnEvent -= GetComponent<Turn>().onAbortDecision;
                 WormIntervalEvent -= GetComponent<Turn>().onBlockInterval;
             }
             if (FindObjectOfType<Map.SpawnGenerator>())

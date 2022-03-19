@@ -14,6 +14,8 @@ namespace Worm
 
         public Direction direction { get; private set; }
 
+        public Direction turnDirection { get; private set; } // the next direction is received as the turn begins
+
         public bool isStraight = true;
 
         public bool isInitialized { get; private set; }
@@ -34,6 +36,7 @@ namespace Worm
             isInitialized = false;
             setInitialCell(initialCell);
             setDirection(Direction.None);
+            setTurnDirection(Direction.None);
         }
 
         /**
@@ -105,6 +108,11 @@ namespace Worm
         {
             this.initialCell = initialCell;
 
+        }
+
+        public void setTurnDirection(Direction direction)
+        {
+            turnDirection = direction;
         }
 
         public void setDirection(Direction direction)

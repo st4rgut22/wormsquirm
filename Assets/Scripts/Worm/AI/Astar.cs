@@ -7,7 +7,7 @@ namespace Map
 {
     public class Astar : MonoBehaviour
     {
-        public delegate void astarPath(List<Vector3Int> gridCellPathList, Worm.TunnelMaker tunnelMaker);
+        public delegate void astarPath(List<Vector3Int> gridCellPathList, Worm.TunnelMaker tunnelMaker, Worm.WormTunnelBroker wormTunnelBroker, bool isInitPath);
         public event astarPath astarPathEvent;
 
         private bool isDestinationReceived; // flag set when landmark info is received, which is required for pathplanning
@@ -24,6 +24,7 @@ namespace Map
         Vector3Int objectiveLocation;
 
         Worm.TunnelMaker currentTunnelMaker;
+        Worm.WormTunnelBroker currentTunnelBroker;
 
         public class Item
         {
@@ -81,11 +82,33 @@ namespace Map
             isDestinationReceived = true;
         }
 
+        /**
+         * Get the initial cell the path should use
+         *
+         *@wormTunnelBroker     worm class with info about tunnel position
+         */
+        private Vector3Int getCell(Worm.WormTunnelBroker wormTunnelBroker)
+        {
+            Vector3Int pathInitialCell;
+            if (wormTunnelBroker.isTunnelCreated)
+            {
+                pathInitialCell = wormTunnelBroker.getNextCell();
+                print("choose initial cell as next cell " + pathInitialCell);
+            }
+            else
+            {
+                pathInitialCell = wormTunnelBroker.getCurrentCell();
+                print("choose initial cell as current cell " + pathInitialCell);
+            }
+            return pathInitialCell;
+        }
+
         public void onFollowPath(Worm.TunnelMaker tunnelMaker, Worm.WormTunnelBroker wormTunnelBroker)
         {
             currentTunnelMaker = tunnelMaker;
-            Vector3Int initialCell = wormTunnelBroker.getCurrentCell();
-            StartCoroutine(astar(initialCell));
+            currentTunnelBroker = wormTunnelBroker;
+            Vector3Int initialCell = getCell(wormTunnelBroker);
+            astar(initialCell, wormTunnelBroker.isTunnelCreated);
         }
 
         /**
@@ -93,21 +116,23 @@ namespace Map
          * 
          * @startingCell    the cell the worm is currently in
          */
-        private IEnumerator astar(Vector3Int startingCell)
+        private void astar(Vector3Int startingCell, bool isPathInitialized)
         {
-            while (!isDestinationReceived) // wait for destination before starting path planning
+            if (!isDestinationReceived) // if destination not received dont follow path because startingCell will be stale
             {
-                yield return null;
+                return;
+                //throw new System.Exception("Worm is supposed to create a path but the destination is not known");
             }
 
             initializeCostMap();
-
+            print("find path from " + startingCell + " to objective " + objectiveLocation);
             Item startItem = new Item(0, startingCell, objectiveLocation);
             HashSet<Item> unknownPathSet = new HashSet<Item>();
 
             unknownPathSet.Add(startItem);
             List<Item> unknownPathList = new List<Item>() { startItem };
-            findShortestPath(unknownPathList, unknownPathSet, startingCell);
+            findShortestPath(unknownPathList, unknownPathSet, startingCell, isPathInitialized);
+            isDestinationReceived = false;
         }
 
         /**
@@ -130,7 +155,25 @@ namespace Map
             return shortestPath;
         }
 
-        void findShortestPath(List<Item> unknownPathList, HashSet<Item> unknownPathSet, Vector3Int startingCell)
+        /**
+         * When finding the shortest path avoid any obstacles along the path (unless the obstacle is self or goal)
+         * 
+         * @startingCell        the cell the path starts at
+         * @cell                the current cell to check
+         */
+        private bool isCellFree(Vector3Int startingCell, Vector3Int cell)
+        {
+            if (startingCell.Equals(cell) || cell.Equals(objectiveLocation))
+            {
+                return true;
+            }
+            else
+            {
+                return !ObstacleGenerator.obstacleDict.ContainsKey(cell);
+            }
+        }
+
+        void findShortestPath(List<Item> unknownPathList, HashSet<Item> unknownPathSet, Vector3Int startingCell, bool isPathInitialized)
         {
             while (unknownPathList.Count > 0)
             {
@@ -140,7 +183,7 @@ namespace Map
                 {
                     print("shortest distance is " + item.totalCost);
                     List<Vector3Int> shortestPath = getShortestPath(startingCell);
-                    astarPathEvent(shortestPath, currentTunnelMaker);
+                    astarPathEvent(shortestPath, currentTunnelMaker, currentTunnelBroker, isPathInitialized);
                     return;
                 }
 
@@ -151,7 +194,7 @@ namespace Map
                 {
                     if (isCellWithinBoundaries(neighbor))
                     {
-                        if (!ObstacleGenerator.obstacleDict.ContainsKey(neighbor))
+                        if (isCellFree(startingCell, neighbor))
                         {
                             Vector3Int pos = neighbor + mapOffset;
                             Item neighborItem = CostMap[pos.x, pos.y, pos.z];
@@ -167,6 +210,10 @@ namespace Map
                                     unknownPathList.Add(neighborItem);
                                 }
                             }
+                        }
+                        else
+                        {
+                            print("uoh");
                         }
                     }
                     else
@@ -241,7 +288,7 @@ namespace Map
         {
             if (FindObjectOfType<Map.AstarNetwork>())
             {
-                astarPathEvent -= FindObjectOfType<Map.AstarNetwork>().onAstarPath;
+                astarPathEvent -= FindObjectOfType<AstarNetwork>().onAstarPath;
             }
             if (FindObjectOfType<Test.AstarVisualizer>())
             {

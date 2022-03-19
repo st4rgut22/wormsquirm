@@ -128,6 +128,14 @@ namespace Worm
         }
 
         /**
+         * turn has been aborted
+         */
+        public void onAbortDecision()
+        {
+            wormBase.setDecision(false);
+        }
+
+        /**
          * Called on receipt of decision to change direction
          * 
          * @isWaitBlockEvent before executing turn, should wait for blockIntervalEvent? (applicable for straight tunnels)
@@ -137,6 +145,8 @@ namespace Worm
         public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
         {
             wormBase.setDecision(true);
+            wormBase.setTurnDirection(direction);
+
             directionPair.prevDir = directionPair.curDir;
             directionPair.curDir = direction;
             print("decide to go in curDirection " + direction + " is straight tunnel " + isStraightTunnel + " tunnel name is " + tunnel.name);

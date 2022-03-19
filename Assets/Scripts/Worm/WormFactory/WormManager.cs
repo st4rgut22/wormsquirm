@@ -17,6 +17,7 @@ namespace Worm
         public Dictionary<string, TunnelMaker> WormTunnelMakerDict; // <wormId, WormTunnelMaker> only stores AI references
 
         public List<string> WormIdList; // List<wormId>
+        private string playerWormId;
 
         private new void Awake()
         {
@@ -44,6 +45,11 @@ namespace Worm
             EnterExistingTunnelEvent -= wormTunnelBroker.onEnterExistingTunnel;
         }
 
+        public string getPlayerWormId()
+        {
+            return playerWormId;
+        }
+
         public void onRemoveWorm(string wormId)
         {
             if (!WormDictionary.ContainsKey(wormId))
@@ -64,6 +70,11 @@ namespace Worm
             {
                 throw new System.Exception("Cannot init worm with id " + wormId + " because it already exists");
             }
+            if (worm.wormType == ObstacleType.PlayerWorm)
+            {
+                playerWormId = wormId;
+            }
+
             WormIdList.Add(wormId);
 
             WormTunnelBroker wormTunnelBroker = worm.gameObject.GetComponent<WormTunnelBroker>();

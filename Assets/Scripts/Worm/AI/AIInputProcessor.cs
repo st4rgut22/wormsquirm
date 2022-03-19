@@ -6,10 +6,10 @@ namespace Worm
         {
             if (!isDecisionProcessing)
             {
-                bool isSameDirection = Tunnel.ActionPoint.instance.isDirectionAlongDecisionAxis(currentTunnel, direction);
-                if (!isSameDirection)
+                bool isDifferentDirection = Tunnel.ActionPoint.instance.isDirectionAlongDecisionAxis(currentTunnel, direction);
+                if (!isDifferentDirection) // dont execute a decision event if it is already going in same direction
                 {
-                    throw new System.Exception("Input direction should not be in the same direction (or opposite) of worm " + direction);
+                    return;
                 }
 
                 bool isStraightTunnel = Tunnel.Type.isTypeStraight(currentTunnel.type); // if this is the first tunnel it should be straight type

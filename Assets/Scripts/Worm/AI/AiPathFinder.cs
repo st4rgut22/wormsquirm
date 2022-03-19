@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 
 namespace Worm
@@ -11,10 +13,20 @@ namespace Worm
         public delegate void FollowPath(TunnelMaker tunnelMaker, WormTunnelBroker wormTunnelBroker);
         public event FollowPath FollowPathEvent;
 
+        private Obstacle targetObstacle;
+        private const int RETARGET_INTERVAL = 5; // time interval to re-lockon the target
+
+        private string playerId;
+
         private void OnEnable()
         {
             InitObjectiveEvent += FindObjectOfType<Map.Astar>().onInitObjective;
             FollowPathEvent += FindObjectOfType<Map.Astar>().onFollowPath;
+        }
+
+        private void Start()
+        {
+            StartCoroutine(BroadcastBeacon());
         }
 
         /**
@@ -33,19 +45,51 @@ namespace Worm
         }
 
         /**
+         * Listener is triggered when a target has been acquired
+         * @targetId    the id of the target
+         */
+        public void onTargetReceived(string targetId)
+        {
+            targetObstacle = new Obstacle(targetId);
+        }
+
+        /**
+         * Add a worm to the dictionary of worms when it is first instantiated
+         */
+        public void onInitPlayerWorm(Worm worm, Map.Astar wormAstar, string wormId)
+        {
+            playerId = wormId;
+            onTargetReceived(playerId); // TODO: Testing code, target should be acquired on some event like picking up a reward or getting within range of enemy
+        }
+
+        /**
          * Command all AI to chase a obstacle
          * 
          * @obstacleId      the id of the obstacle being chased (eg another worm)
          */
-        public void onBroadcastBeacon(string obstacleId)
+        private IEnumerator BroadcastBeacon()
         {
-            WormTunnelBroker wormTunnelBroker = WormManager.Instance.WormTunnelBrokerDict[obstacleId];
-            Vector3Int destinationCell = wormTunnelBroker.getCurrentCell();
+            string wormPlayerId = WormManager.Instance.getPlayerWormId();
 
-            WormManager.Instance.WormIdList.ForEach((wormId) =>
+            // wait until the target has been received
+            while (targetObstacle == null)
             {
-                setAiPath(wormId, obstacleId, destinationCell);
-            });
+                yield return null;
+            }
+
+            while (true) // TODO: add end condition here
+            {
+                Vector3Int lockOnCell = Map.ObstacleGenerator.swappedObstacleDict[targetObstacle];
+                print("lock on cell is " + lockOnCell);
+                WormManager.Instance.WormIdList.ForEach((wormId) => // TODO: Set conditions for notifying AIworms such as distance from worm
+                {
+                    if (wormId != targetObstacle.obstacleId && wormId != wormPlayerId) // dont chase yourself, cannot command player to follow a path
+                    {
+                        setAiPath(wormId, targetObstacle.obstacleId, lockOnCell);
+                    }
+                });
+                yield return new WaitForSeconds(RETARGET_INTERVAL);
+            }
         }
 
         private void OnDisable()

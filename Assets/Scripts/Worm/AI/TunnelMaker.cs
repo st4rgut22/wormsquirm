@@ -16,6 +16,8 @@ namespace Worm
         Checkpoint currentCheckpoint;
 
         private bool isReadyToTurn;             // used to time changeDirection events when the worm is ready to turn
+        private bool isModifyPath;              // true when a new path should be generated, modifying the existing path. '
+
         private Vector3Int turnOnFirstBlock;    // acts like a boolean flag, stores the last position, and the next new position will execute the turn. 
         Vector3Int defaultValue;
 
@@ -24,6 +26,7 @@ namespace Worm
             base.Awake();
             tunnelSegmentCounter = 0; // maintains count of added segments onBlockInterval event to decide when to turn
             checkPointIdx = 0; // does not include the initial tunnel
+            isModifyPath = false;
             isReadyToTurn = false;
             defaultValue = new Vector3Int(1000, 1000, 1000); // temporary default values
             turnOnFirstBlock = defaultValue;
@@ -37,16 +40,62 @@ namespace Worm
         }
 
         /**
-         * Tunnel maker receives a checkpoint list for a worm to execute
-         * 
-         * @TODO: worm id specifies which worm should follow the checkpoints
+         * Check if a checkpoint list is valid, for example worm cannot go in the opposite direction
          */
-        public void onInitCheckpointList(List<Checkpoint> checkpointList)
+        private bool isCheckpointListValid(List<Checkpoint> checkpointList, Direction wormDir)
         {
-            this.checkpointList = checkpointList;
-            currentCheckpoint = this.checkpointList[0];
-            print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
-            RaiseInitDecisionEvent(currentCheckpoint.direction);
+            if (wormDir != Direction.None)
+            {
+                Checkpoint firstCheckpoint = checkpointList[0];
+                bool isDirectionOpposite = Dir.Base.getOppositeDirection(firstCheckpoint.direction) == wormDir;
+                return !isDirectionOpposite;
+            }
+            return true;
+        }
+
+        /**
+         * Tunnel maker receives a checkpoint list for a worm to execute on initializing target position
+         * OR Tunnel maker receives a checkpoint list showing the path to target's updated position
+         * 
+         * @isInitPath          if false, the worm has not created a tunnel yet and should emit an initialization event
+         * @wormTunnelBroker    worm component that can describes worm-tunnel relationship
+         */
+        public void onInitCheckpointList(List<Checkpoint> checkpointList, bool isInitPath, WormTunnelBroker wormTunnelBroker)
+        {
+            Direction curDirection = wormTunnelBroker.getDirection();
+            bool checkpointListIsValid = isCheckpointListValid(checkpointList, curDirection);
+            if (!checkpointListIsValid)
+            {
+                return; // dont init new checkpoint list if it is invalid, exit early
+            }
+            initializePath(checkpointList);
+
+            bool isNextCellTurn = wormTunnelBroker.isNextCellTurn();
+            if (isNextCellTurn) // if next cell is turn, abort the turn, because it belongs to the old path
+            {
+                wormTunnelBroker.RaiseAbortTurnEvent();
+            }
+            if (!isInitPath)
+            {
+                //print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
+                RaiseInitDecisionEvent(currentCheckpoint.direction);
+            }
+            else
+            {
+                isModifyPath = true; // modify the existing path when the next block interval or turn exit is reached
+            }
+        }
+
+        /**
+         * Initialize path variables to start a new path
+         * 
+         * @checkpoints     the new list of checkpoints the worm should follow
+         */
+        private void initializePath(List<Checkpoint>checkpoints)
+        {
+            checkPointIdx = tunnelSegmentCounter = 0;
+            checkpointList = checkpoints;
+            currentCheckpoint = checkpointList[0];
         }
 
         public void onReachWaypoint(Waypoint waypoint)
@@ -57,7 +106,7 @@ namespace Worm
             }
         }
 
-        /**
+        /** 
          * Flag set when the worm enters a turn and reaches a point in the turn where it is ready to receive another changeDirection event
          */
         public void onDecisionProcessing(bool isDecisionProcessing, Waypoint waypoint)
@@ -79,28 +128,21 @@ namespace Worm
             {
                 if (isBlockInterval)
                 {
-                    //if (!isTurnOnFirstBlock())
-                    //{
-                        if (tunnel.containsCell(lastBlockPositionInt)) // this condition excludes the last cell adjacent from the corner as counting as a tunnel segment
-                        {
-                            tunnelSegmentCounter += 1;
+                    if (isModifyPath)
+                    {
+                        updateCheckpoint();
+                        return;
+                    }
+                    if (tunnel.containsCell(lastBlockPositionInt)) // this condition excludes the last cell adjacent from the corner as counting as a straight tunnel segment
+                    {
+                        tunnelSegmentCounter += 1;
 
-                            if (currentCheckpoint.length == tunnelSegmentCounter)
-                            {
-                                updateCheckpoint();
-                            }
-                            //if (currentCheckpoint.length == 1) // next checkpoint is of length 1, set a flag
-                            //{
-                            //    turnOnFirstBlock = blockPositionInt;
-                            //}
+                        if (currentCheckpoint.length == tunnelSegmentCounter)
+                        {
+                            updateCheckpoint();
                         }
-                    //}
+                    }
                 }
-                //else if (isTurnOnFirstBlock() && !blockPositionInt.Equals(turnOnFirstBlock)) // checkpoint of length 1 is reached, when a new straight tunnel segment is started
-                //{
-                //    updateCheckpoint();
-                //    turnOnFirstBlock = defaultValue; // reset the flag
-                //}
             }
         }
 
@@ -118,6 +160,12 @@ namespace Worm
         private void updateCheckpoint()
         {
             checkPointIdx++;
+
+            if (isModifyPath) // reset checkpoint if new checkpoint list is received
+            {
+                checkPointIdx = 0;
+                isModifyPath = false;
+            }
             if (checkPointIdx < checkpointList.Count)
             {
                 tunnelSegmentCounter = 0;
@@ -128,8 +176,6 @@ namespace Worm
             else
             {
                 ResetObjective();
-                //RaiseRaiseRemoveSelfEvent();
-                //RaiseSpawnEvent();
             }
         }
 
@@ -158,6 +204,7 @@ namespace Worm
             {
                 while (true)
                 {
+
                     if (isReadyToTurn) // break when the decision is done begin processed (eg worm reaches center of turn tunnel)
                     {
                         updateCheckpoint();

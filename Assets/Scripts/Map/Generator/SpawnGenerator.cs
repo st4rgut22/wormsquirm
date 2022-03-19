@@ -30,7 +30,7 @@ namespace Map
         {
             base.Awake();
             WormObstacleDict = new Dictionary<Vector3Int, Obstacle>();
-            SwappedWormObstacleDict = new Dictionary<Obstacle, Vector3Int>();
+            SwappedWormObstacleDict = new Dictionary<Obstacle, Vector3Int>(new ObstacleComparer());
             wormObstacleList = new List<Obstacle>();
         }
 

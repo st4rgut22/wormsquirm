@@ -62,7 +62,7 @@ namespace Worm
          */
         protected void RaiseInitDecisionEvent(Direction localDirection)
         {
-            wormBase.initializeWorm(localDirection);// TESTING
+            wormBase.initializeWorm(localDirection);
             InitDecisionEvent(localDirection, wormId, wormBase.mappedInitialCell, wormBase.initialCell);
         }
 

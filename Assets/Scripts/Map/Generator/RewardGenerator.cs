@@ -49,9 +49,9 @@ namespace Map
          */
         public void OnInitWorm(Worm.Worm worm, Astar wormAstar, string wormId)
         {
-            InitObjectiveEvent += wormAstar.onInitObjective;
-            InitObjectiveEvent(goalCell);// TESTING
-            InitObjectiveEvent -= wormAstar.onInitObjective;
+            //InitObjectiveEvent += wormAstar.onInitObjective;
+            //InitObjectiveEvent(goalCell);// TESTING
+            //InitObjectiveEvent -= wormAstar.onInitObjective;
         }
 
         /**

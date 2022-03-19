@@ -37,7 +37,9 @@ namespace Worm
             {
                 wormGO = HumanWorm.instantiate(wormId, WormContainer, turnSpeed);
                 Map.Astar wormAstar = wormGO.GetComponent<Map.Astar>();             // generate path using astar
+                InitWormEvent += FindObjectOfType<AiPathFinder>().onInitPlayerWorm;
                 RaiseInitWormEvent(wormGO, wormAstar, wormId);
+                InitWormEvent -= FindObjectOfType<AiPathFinder>().onInitPlayerWorm;
             }
 
             private new void OnDisable()

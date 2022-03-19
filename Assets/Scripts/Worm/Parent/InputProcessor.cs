@@ -20,8 +20,6 @@ namespace Worm
         protected new void OnEnable()
         {
             base.OnEnable();
-
-            DecisionEvent += FindObjectOfType<Tunnel.TunnelMap>().onDecision;
             DecisionEvent += GetComponent<Turn>().onDecision;
             DecisionEvent += GetComponent<Force>().onDecision;
         }
@@ -91,10 +89,6 @@ namespace Worm
         protected new void OnDisable()
         {
             base.OnDisable();
-            if (FindObjectOfType<Tunnel.TunnelMap>())
-            {
-                DecisionEvent -= FindObjectOfType<Tunnel.TunnelMap>().onDecision;
-            }
             if (FindObjectOfType<Turn>())
             {
                 DecisionEvent -= GetComponent<Turn>().onDecision;

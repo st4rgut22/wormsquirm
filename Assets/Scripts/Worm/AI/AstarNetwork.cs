@@ -5,7 +5,7 @@ namespace Map
 {
     public class AstarNetwork : MonoBehaviour
     {
-        public delegate void initCheckpoint(List<Checkpoint> checkpointList);
+        public delegate void initCheckpoint(List<Checkpoint> checkpointList, bool isInitPath, Worm.WormTunnelBroker WormTunnelBroker);
         public event initCheckpoint initCheckpointEvent;
 
         const int TURN_STEP = 1;
@@ -13,10 +13,12 @@ namespace Map
         /**
          * Convert the list of cell positions to a list of directions for TunnelMaker to process
          * 
-         * @gridCellPathList is the list of cell posiitons along the path
-         * @nullCell initially set to a default value, which is the default null value
+         * @isModifyPath        is the worm modifying a path
+         * @gridCellPathList    is the list of cell posiitons along the path
+         * @initialDirection    the current direction of the worm
+         * @curCell             the current cell of the worm
          */
-        private List<Checkpoint> getCheckpointListFromPath(List<Vector3Int> gridCellPathList)
+        private List<Checkpoint> getCheckpointListFromPath(List<Vector3Int> gridCellPathList, bool isModifyPath, Direction initialDirection, Vector3Int curCell)
         {
             List<Checkpoint> astarCheckpointList = new List<Checkpoint>();
             Direction prevDirection = Direction.None;
@@ -24,10 +26,12 @@ namespace Map
 
             int stepCounter = 1;
 
-            for (int i=1;i<gridCellPathList.Count;i++)
+            for (int i = 1; i < gridCellPathList.Count; i++)
             {
                 Vector3Int gridCell = gridCellPathList[i];
                 Vector3Int prevCell = gridCellPathList[i - 1];
+                print("prev cell is " + prevCell + " curCell is " + gridCell);
+
                 Direction curDirection = Dir.CellDirection.getDirectionFromCells(prevCell, gridCell);
 
                 bool isContinueStraight = curDirection == prevDirection || prevDirection == Direction.None;
@@ -53,14 +57,27 @@ namespace Map
                 }
                 prevDirection = curDirection;
             }
+            if (isModifyPath)
+            {
+                Checkpoint firstCheckpoint = astarCheckpointList[0];
+                if (firstCheckpoint.direction != initialDirection) // exclude the turning cell from the modified path
+                {
+                    astarCheckpointList[0] = new Checkpoint(firstCheckpoint.direction, firstCheckpoint.length - 1);
+                }                
+            }
             return astarCheckpointList;
         }
 
-        public void onAstarPath(List<Vector3Int> gridCellPathList, Worm.TunnelMaker tunnelMaker)
+        public void onAstarPath(List<Vector3Int> gridCellPathList, Worm.TunnelMaker tunnelMaker, Worm.WormTunnelBroker wormTunnelBroker, bool isInitPath)
         {
-            List<Checkpoint> checkpointList = getCheckpointListFromPath(gridCellPathList);
+            Direction curDirection = wormTunnelBroker.getDirection();
+            Vector3Int curCell = wormTunnelBroker.getCurrentCell();
+
+            print("initial direction on follow new path is " + curDirection);
+            List<Checkpoint> checkpointList = getCheckpointListFromPath(gridCellPathList, isInitPath, curDirection, curCell);
+
             initCheckpointEvent += tunnelMaker.onInitCheckpointList;
-            initCheckpointEvent(checkpointList);
+            initCheckpointEvent(checkpointList, isInitPath, wormTunnelBroker);
             initCheckpointEvent -= tunnelMaker.onInitCheckpointList;
         }
     }

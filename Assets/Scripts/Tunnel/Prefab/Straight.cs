@@ -151,8 +151,7 @@ namespace Tunnel
 
                     AIBlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
 
-                    bool isCellSameTunnel = !isTurning && !isCollision;
-
+                    bool isCellSameTunnel = !isTurning && !isCollision; // AIBlockIntervalEvent sets isTurning so make sure this statement follows the event
                     if (isCellSameTunnel) // if turn will be made or there is a collision, the cell should not be added to the tunnell's list of cells
                     {
                         addCellToList(curCell);

@@ -29,7 +29,7 @@ namespace Test
             }
         }
 
-        public void onAstarPath(List<Vector3Int> gridCellPathList, Worm.TunnelMaker tunnelMaker)
+        public void onAstarPath(List<Vector3Int> gridCellPathList, Worm.TunnelMaker tunnelMaker, Worm.WormTunnelBroker wormTunnelBroker, bool isInitPath)
         {
             visualizePath(gridCellPathList);
         }
