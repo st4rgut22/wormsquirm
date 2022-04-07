@@ -1,7 +1,7 @@
 public enum GameMode
 {
     Solo,
-    TestFixedPath,
+    DebugFixedPath,
     TestAutoPath,
     Chase
 }

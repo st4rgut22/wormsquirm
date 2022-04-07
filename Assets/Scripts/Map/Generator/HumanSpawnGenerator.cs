@@ -6,11 +6,13 @@ namespace Map
 {
     public class HumanSpawnGenerator : SpawnGenerator
     {
-        public delegate void SpawnPlayerWorm(string wormId);
+        public delegate void SpawnPlayerWorm(string wormId, string chaseWormId);
         public event SpawnPlayerWorm SpawnPlayerWormEvent;
 
         [SerializeField]
         private int playerCount; // the # of human players (equals 1 until multiplayer support arrives)
+
+        private Vector3Int initLocation; // if undefined will use random location
 
         private int humanSpawnCount; // used to id human controlled worms TODO: multiplayer will have multiple human-controlled worms
 
@@ -30,17 +32,9 @@ namespace Map
 
         public override void onStartGame(GameMode gameMode)
         {
-            if (gameMode == GameMode.Solo) // create a single human worm, no ai worms (TESTING MODE)
+            if (playerCount > 0)
             {
-                SpawnPlayerWormEvent(HUMAN_WORM_ID);
-            }
-            else if (gameMode == GameMode.Chase) // create human worm and ai worms
-            {
-                SpawnPlayerWormEvent(HUMAN_WORM_ID);
-            }
-            else
-            {
-                throw new System.Exception("the game mode " + gameMode + " is not supported yet");
+                SpawnPlayerWormEvent(HUMAN_WORM_ID, chaseWormId);
             }
         }
 
@@ -51,12 +45,12 @@ namespace Map
         {
             Obstacle WormObstacle = WormObstacleDict[currentCell];
             onRemoveWorm(currentCell); // wait for removal confirmation before spawning again
-            onHumanSpawn(WormObstacle.obstacleType, WormObstacle.obstacleId);
+            onHumanSpawn(WormObstacle.obstacleId);
         }
 
-        public void onHumanSpawn(ObstacleType wormType, string id)
+        public void onHumanSpawn(string id)
         {
-            SpawnPlayerWormEvent(id);
+            SpawnPlayerWormEvent(id, chaseWormId);
         }
 
         private new void OnDisable()

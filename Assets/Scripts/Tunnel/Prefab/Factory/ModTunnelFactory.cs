@@ -76,8 +76,7 @@ namespace Tunnel
         private Transform getJunctionTransform(List<Direction> holeDirectionList)
         {
             int holeCount = holeDirectionList.Count;
-            bool isDirAdjacent = Dir.Base.areDirectionsAdjacent(holeDirectionList);
-
+            bool isDirAdjacent = Dir.Base.areDirectionsAdjacent(holeCount, holeDirectionList);
             if (holeCount == 3)
             {
                 return isDirAdjacent ? Type.instance.ThreewayTunnelAdj : Type.instance.ThreewayTunnelOpp; // get the correc three way tunnl (based on pivot rotation)
@@ -151,7 +150,7 @@ namespace Tunnel
         public override Tunnel getTunnel()
         {
             List<Direction>holeDirections = collidedTunnel.holeDirectionList;
-
+            print("get junction with hole directions " + holeDirections);
             string junctionId = getTunnelId(Type.JUNCTION, junctionCount);            
 
             List<Direction> allHoleDirections = new List<Direction>(holeDirections);

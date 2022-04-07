@@ -29,17 +29,40 @@ namespace Dir
         /**
          * Determine if directions are adjacent, if opposites are present then return false
          */
-        public static bool areDirectionsAdjacent(List<Direction> directionList)
+        public static bool areDirectionsAdjacent(int holeCount, List<Direction> directionList)
         {
-            foreach (Direction dir in directionList)
+            if (holeCount == 3)
             {
-                Direction oppDir = getOppositeDirection(dir);
-                if (directionList.Contains(oppDir))
-                {
-                    return false;
-                }
+                return isHolesAdjacent(directionList, 1); // find 1 pair of opposite sides
+            }
+            else if (holeCount == 4)
+            {
+                return isHolesAdjacent(directionList, 2); // find 2 pairs of opposite sides
             }
             return true;
+        }
+
+        /**
+         * Count the numbner of opposite hole pairs to determine what kind of orientation to use
+         */
+        private static bool isHolesAdjacent(List<Direction> directionList, int totalOppositePairCount)
+        {
+            int oppositeCount = 0;
+            List<Direction> excludeDirections = new List<Direction>();
+            foreach (Direction dir in directionList)
+            {
+                if (!excludeDirections.Contains(dir))
+                {
+                    Direction oppDir = getOppositeDirection(dir);
+                    if (directionList.Contains(oppDir))
+                    {
+                        oppositeCount += 1;
+                        excludeDirections.Add(dir);
+                        excludeDirections.Add(oppDir);
+                    }
+                }
+            }
+            return oppositeCount != totalOppositePairCount; // not opposite means it is adjacent
         }
 
         /**

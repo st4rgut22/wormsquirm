@@ -33,13 +33,14 @@ namespace Worm
                 base.OnEnable();
             }
 
-            public void onSpawn(string wormId)
+            public override void onSpawn(string wormId, string chaseWormId)
             {
                 wormGO = HumanWorm.instantiate(wormId, WormContainer, turnSpeed);
                 Map.Astar wormAstar = wormGO.GetComponent<Map.Astar>();             // generate path using astar
-                InitWormEvent += FindObjectOfType<AiPathFinder>().onInitPlayerWorm;
-                RaiseInitWormEvent(wormGO, wormAstar, wormId);
-                InitWormEvent -= FindObjectOfType<AiPathFinder>().onInitPlayerWorm;
+
+                //InitWormEvent += FindObjectOfType<AiPathFinder>().onInitPlayerWorm; // instruct ai's path finder to chas ethis worm
+                RaiseInitWormEvent(wormGO, wormAstar, wormId, chaseWormId);
+                //InitWormEvent -= FindObjectOfType<AiPathFinder>().onInitPlayerWorm;
             }
 
             private new void OnDisable()

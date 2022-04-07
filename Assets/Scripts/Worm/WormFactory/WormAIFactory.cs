@@ -45,8 +45,9 @@ namespace Worm
              * 
              * @wormGO      the gameobject worm to initialize the path of
              * @wormAstar   the worm's path finder
+             * @chaseWormId the id of the worm being chased
              */
-            private void initializeWormPath(Map.Astar wormAstar, GameObject wormGO)
+            private void initializeWormPath(Map.Astar wormAstar, GameObject wormGO, string chaseWormId)
             {
                 TunnelMaker tunnelMaker = wormGO.GetComponent<TunnelMaker>();
                 WormTunnelBroker wormTunnelBroker = wormGO.GetComponent<WormTunnelBroker>();
@@ -63,8 +64,11 @@ namespace Worm
                         FollowPathEvent(tunnelMaker, wormTunnelBroker);
                         FollowPathEvent -= wormAstar.onFollowPath;
                         break;
-                    case GameMode.TestFixedPath:
-                        followExamplePath(tunnelMaker, wormTunnelBroker);
+                    case GameMode.DebugFixedPath:
+                        if (tunnelMaker.wormId == chaseWormId) // only the worm being chase should follow fixed path, other worms follow auto path.
+                        {
+                            followExamplePath(tunnelMaker, wormTunnelBroker);
+                        }
                         break;
                 }
             }
@@ -74,17 +78,17 @@ namespace Worm
                 List<Checkpoint> examplePath = FindObjectOfType<Test.ExampleNetwork>().getNetwork();
 
                 InitCheckpointEvent += tunnelMaker.onInitCheckpointList;
-                InitCheckpointEvent(examplePath, true, wormTunnelBroker); // isInitPath = true because always starting over and re-initializing the worm after reaching the goal                                                                        
+                InitCheckpointEvent(examplePath, false, wormTunnelBroker); // isInitPath = true because always starting over and re-initializing the worm after reaching the goal                                                                        
                 InitCheckpointEvent -= tunnelMaker.onInitCheckpointList;
             }
 
-            public void onSpawn(string wormId)
+            public override void onSpawn(string wormId, string chaseWormId)
             {
                 wormGO = AiWorm.instantiate(wormId, WormContainer, turnSpeed);
                 Map.Astar wormAstar = wormGO.GetComponent<Map.Astar>(); // generate path using astar
-                RaiseInitWormEvent(wormGO, wormAstar, wormId); //  add worm to the map
+                RaiseInitWormEvent(wormGO, wormAstar, wormId, chaseWormId); //  add worm to the map
 
-                initializeWormPath(wormAstar, wormGO);
+                initializeWormPath(wormAstar, wormGO, chaseWormId);
             }
 
             private new void OnDisable()

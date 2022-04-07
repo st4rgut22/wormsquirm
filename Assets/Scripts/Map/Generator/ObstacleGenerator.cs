@@ -9,11 +9,12 @@ namespace Map
         // a dictionary comprised of all obstacles in the map       <Cell Location, Obstacle containing GameObject>
         public static Dictionary<Vector3Int, Obstacle> obstacleDict;
         // a dictionary comprised of all obstacles in the map       <Obstacle containing GameObject, Cell Location>
-        public static Dictionary<Obstacle, Vector3Int> swappedObstacleDict; 
+        public static Dictionary<Obstacle, Vector3Int> swappedObstacleDict;
+        // a dictionary of <obstacle id, initial obstacle position> pairs
 
+        protected static Dictionary<string, Vector3Int> initPositionDict; 
+        
         protected string obstacleType;
-
-        protected static bool isRandomPlacement; // whether the obstacles are placed randomy or manually specified (locations would be defined in subclasses)
 
         // TODO: Add abstract methods for initializeObstacleList()
 
@@ -24,7 +25,7 @@ namespace Map
         {
             obstacleDict = new Dictionary<Vector3Int, Obstacle>();
             swappedObstacleDict = new Dictionary<Obstacle, Vector3Int>(new ObstacleComparer());
-            isRandomPlacement = true;
+            initPositionDict = new Dictionary<string, Vector3Int>();
         }
 
         protected abstract List<Obstacle> getObstacleList();
@@ -141,6 +142,7 @@ namespace Map
                     throw new System.Exception("Next position at " + nextPosition + " is occupied by " + obstacleDict[nextPosition].obstacleType + " but " + ObstacleToUpdate.obstacleType + " is trying to move to it. Collide event should have been fired and dealt with");
                 }
             }
+            print("update obstacle dict with " + ObstacleToUpdate.obstacleId + " at next position " + nextPosition);
             obstacleDict[nextPosition] = ObstacleToUpdate;
             specificObstacleDict[nextPosition] = ObstacleToUpdate;
             obstacleDict[oldPosition] = null; // remove reference for the previous key (aka cell position)
@@ -189,13 +191,12 @@ namespace Map
             {
                 Obstacle obstacle = obstacleList[i];
 
-                Vector3Int randObstaclePosition;
+                Vector3Int obstaclePosition;
 
-                if (isRandomPlacement)
+                if (!initPositionDict.ContainsKey(obstacle.obstacleId)) // if no predefined starting cel, use a random cell
                 {
-                    randObstaclePosition = getRandomEligibleCell();
-                    randObstaclePosition = getTestCellLocationForAIChaseWorm(obstacle); // TESTING
-                    obstacle.setObstacleCell(randObstaclePosition);
+                    obstaclePosition = getRandomEligibleCell();
+                    //randObstaclePosition = getTestCellLocationForAIChaseWorm(obstacle); // TESTING
                 }
                 else // if not randomly placed use the pre-set cell
                 {
@@ -203,11 +204,12 @@ namespace Map
                     {
                         throw new System.Exception("obstacle cell for obstacle " + obstacle.obstacleId + " is not defined");
                     }
-                    randObstaclePosition = obstacle.obstacleCell;
+                    obstaclePosition = initPositionDict[obstacle.obstacleId];
                 }
+                obstacle.setObstacleCell(obstaclePosition);
 
-                addEntryToObstacleDict(randObstaclePosition, obstacle, obstacleDict, swappedObstacleDict);
-                addEntryToObstacleDict(randObstaclePosition, obstacle, specificObstacleDict, swappedSpecificObstacleDict);
+                addEntryToObstacleDict(obstaclePosition, obstacle, obstacleDict, swappedObstacleDict);
+                addEntryToObstacleDict(obstaclePosition, obstacle, specificObstacleDict, swappedSpecificObstacleDict);
             }
         }
 
@@ -221,6 +223,10 @@ namespace Map
          */
         private static void addEntryToObstacleDict(Vector3Int obstacleCellPos, Obstacle obstacle, Dictionary<Vector3Int, Obstacle> obstacleDict, Dictionary<Obstacle, Vector3Int> swappedObstacleDict)
         {
+            if (obstacle.obstacleType == ObstacleType.AIWorm)
+            {
+                print("add entry to obstacle dict at cell " + obstacleCellPos + " for obstacle " + obstacle.obstacleId);
+            }            
             obstacleDict[obstacleCellPos] = obstacle;
             swappedObstacleDict[obstacle] = obstacleCellPos;
         }

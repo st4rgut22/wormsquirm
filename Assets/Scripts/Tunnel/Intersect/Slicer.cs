@@ -26,11 +26,11 @@ namespace Intersect
 
             Direction oppGrowthDirection = Dir.Base.getOppositeDirection(collidedTunnel.growthDirection);
             Vector3 sliceOppGrowthDirFace = getSlicedPosition(ingressDirection, oppGrowthDirection, contactPosition); // position of slice opposite growth direction
-            updateTunnel(collidedTunnel, collidedTunnel.ingressPosition, sliceOppGrowthDirFace);
+            updateTunnel(duplicateTunnel, collidedTunnel.ingressPosition, sliceOppGrowthDirFace);
 
             Vector3 sliceGrowthDirFace = getSlicedPosition(ingressDirection, duplicateTunnel.growthDirection, contactPosition);  // position of slice in growth direction
-            Vector3 collidedTunnelEgressPosition = duplicateTunnel.getEgressPosition(duplicateTunnel.growthDirection);
-            updateTunnel(duplicateTunnel, sliceGrowthDirFace, collidedTunnelEgressPosition);
+            Vector3 collidedTunnelEgressPosition = collidedTunnel.getEgressPosition(collidedTunnel.growthDirection);
+            updateTunnel(collidedTunnel, sliceGrowthDirFace, collidedTunnelEgressPosition);
 
             AddTunnelEvent(duplicateTunnel, null, null, null); // add the duplicated segment to the list of tunnels in the network
         }

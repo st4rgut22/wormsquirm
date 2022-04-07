@@ -17,7 +17,7 @@ namespace Worm
         public Dictionary<string, TunnelMaker> WormTunnelMakerDict; // <wormId, WormTunnelMaker> only stores AI references
 
         public List<string> WormIdList; // List<wormId>
-        private string playerWormId;
+        private string chaseWormId;
 
         private new void Awake()
         {
@@ -45,9 +45,9 @@ namespace Worm
             EnterExistingTunnelEvent -= wormTunnelBroker.onEnterExistingTunnel;
         }
 
-        public string getPlayerWormId()
+        public string getChaseWormId()
         {
-            return playerWormId;
+            return chaseWormId;
         }
 
         public void onRemoveWorm(string wormId)
@@ -56,9 +56,15 @@ namespace Worm
             {
                 throw new System.Exception("Cannot remove worm with id " + wormId + " because it doesn't exist");
             }
+            WormIdList.Remove(wormId);
             WormDictionary.Remove(wormId);
             WormTunnelBrokerDict.Remove(wormId);
             WormTunnelMakerDict.Remove(wormId);
+        }
+
+        public bool isWormIdPlayer(string wormId)
+        {
+            return wormId == chaseWormId;
         }
 
         /**
@@ -72,7 +78,7 @@ namespace Worm
             }
             if (worm.wormType == ObstacleType.PlayerWorm)
             {
-                playerWormId = wormId;
+                chaseWormId = wormId;
             }
 
             WormIdList.Add(wormId);

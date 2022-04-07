@@ -10,10 +10,10 @@ namespace Worm
         public delegate void RemoveSelf(Vector3Int currentCell);
         public event RemoveSelf RemoveSelfEvent;
 
-        public delegate void SpawnAi(ObstacleType wormType, string wormId);
+        public delegate void SpawnAi(string wormId);
         public event SpawnAi SpawnAiEvent;
 
-        public delegate void SpawnHuman(ObstacleType wormType, string wormId);
+        public delegate void SpawnHuman(string wormId);
         public event SpawnHuman SpawnHumanEvent;
 
         public delegate void SaveWorm(string wormId, GameObject wormGO);

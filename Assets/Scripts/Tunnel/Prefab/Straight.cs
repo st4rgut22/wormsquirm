@@ -8,7 +8,8 @@ namespace Tunnel
         public Direction growthDirection;
 
         private bool isSliced;
-        
+        private bool isTunnelCreatedByPlayer;
+
         int lastBlockLen; // last block added used to retroactively add blocks that did not fall on an interval
 
         public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isCellSameTunnel);
@@ -38,6 +39,7 @@ namespace Tunnel
             ingressPosition = transform.position;
             isStopped = false;
             isSliced = false;
+            isTunnelCreatedByPlayer = false;
             lastBlockLen = -1;
         }
 
@@ -88,22 +90,12 @@ namespace Tunnel
             holeDirectionList = new List<Direction>() { growthDirection, oppositeGrowthDirection };
         }
 
-        /**
-         * Get exit position of a tunnel to position a dead end cap
-         */
-        private Vector3 getExitPosition(float length)
-        {
-            float originAxisPosition = Dir.Vector.getAxisPositionFromDirection(growthDirection, transform.position);
-            float exitAxisPosition = Dir.Base.isDirectionNegative(growthDirection) ? originAxisPosition - length : originAxisPosition + length;
-            Vector3 deadEndPosition = Dir.Vector.substituteVector3FromDirection(growthDirection, transform.position, exitAxisPosition);
-            return deadEndPosition;
-        }
-
         /** 
          * Unsubscribe tunnel from addTunnelEvent after being added
          */
         public override void onAddTunnel(Tunnel tunnel, CellMove cellMove, DirectionPair directionPair, string wormId)
         {
+            isTunnelCreatedByPlayer = Worm.WormManager.Instance.isWormIdPlayer(wormId);
             base.onAddTunnel(tunnel, cellMove, directionPair, wormId);
             FindObjectOfType<NewTunnelFactory>().AddTunnelEvent -= onAddTunnel;
         }
@@ -129,8 +121,7 @@ namespace Tunnel
                 setTunnelScale(position); // set tunnel scale using worm's position
                 
                 float length = getLength(); // get length of tunnel
-                print("length is " + length);
-                Vector3 deadEndPosition = getExitPosition(length);
+                Vector3 deadEndPosition = getExit(growthDirection);
                 DeadEndInstance.transform.position = deadEndPosition;
 
                 Vector3 unitVectorInDir = Dir.CellDirection.getUnitVectorFromDirection(growthDirection);
@@ -149,9 +140,12 @@ namespace Tunnel
 
                     bool isCollision = TunnelMap.getTunnelFromDict(curCell) != null;
 
-                    AIBlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
-
+                    if (!isTunnelCreatedByPlayer) // only emit ai block interval event if worm is created by an AI worm
+                    {
+                        AIBlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
+                    }
                     bool isCellSameTunnel = !isTurning && !isCollision; // AIBlockIntervalEvent sets isTurning so make sure this statement follows the event
+                    print("is cell " + curCell + " belong to same tunnel? " + isCellSameTunnel + " because isTurning = " + isTurning + " and isCollision = " + isCollision);
                     if (isCellSameTunnel) // if turn will be made or there is a collision, the cell should not be added to the tunnell's list of cells
                     {
                         addCellToList(curCell);
@@ -178,6 +172,19 @@ namespace Tunnel
             }
             BlockIntervalEvent -= FindObjectOfType<TunnelMap>().onBlockInterval; // unsubscribe map manager to the BlockSize event
         }
+
+        /**
+         * Get exit position of a tunnel to position a dead end cap
+         */
+        protected override Vector3 getExit(Direction growthDirection)
+        {
+            float length = getLength();
+            float originAxisPosition = Dir.Vector.getAxisPositionFromDirection(growthDirection, transform.position);
+            float exitAxisPosition = Dir.Base.isDirectionNegative(growthDirection) ? originAxisPosition - length : originAxisPosition + length;
+            Vector3 deadEndPosition = Dir.Vector.substituteVector3FromDirection(growthDirection, transform.position, exitAxisPosition);
+            return deadEndPosition;
+
+        } 
 
         private void destroyDeadEnd()
         {
@@ -223,7 +230,7 @@ namespace Tunnel
 
             float scale = getScale(totalDist);
 
-            print("worm ring position is " + position.y + " rounded scale is " + scale.ToString("F4"));
+            //print("worm ring position is " + position.y + " rounded scale is " + scale.ToString("F4"));
 
             Vector3 curScale = transform.localScale;
             transform.localScale = new Vector3(curScale.x, scale, curScale.z);

@@ -22,7 +22,7 @@ namespace Worm
 
         public bool isCreatingTunnel { get; private set; }
 
-        public bool isDecision { get; private set; } // flag to check if a decision has been made
+        public bool isPendingTurn { get; private set; } // flag to check if a decision has been made
 
         public bool isChangingDirection { get; private set; } // flag to check if worm is changing direction in a cell
 
@@ -79,7 +79,7 @@ namespace Worm
         }
 
         /**
-         * Set a boolean flag indicating if worm is changing direction
+         * Set a boolean flag indicating if worm is ACTIVELY changing direction
          */
         public void setChangingDirection(bool isChangingDirection)
         {
@@ -89,9 +89,9 @@ namespace Worm
         /**
          * Set a boolean flag indicating if worm is about to turn
          */
-        public void setDecision(bool isDecision)
+        public void setPendingTurn(bool isDecision)
         {
-            this.isDecision = isDecision;
+            isPendingTurn = isDecision;
         }
 
         /**

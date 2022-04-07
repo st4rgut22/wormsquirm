@@ -11,6 +11,9 @@ namespace Worm
 
         DirectionPair directionPair;
 
+        public delegate void SetTurnCell(Vector3Int turnCell);
+        public SetTurnCell SetTurnCellEvent;
+
         public delegate void ReachWaypoint(Waypoint waypoint);
         public ReachWaypoint ReachWaypointEvent;
 
@@ -26,7 +29,7 @@ namespace Worm
             destinationWaypoint = null;
             isWaypointReached = true;
             directionPair = new DirectionPair(Direction.None, Direction.None);
-            wormBase.setDecision(false);
+            wormBase.setPendingTurn(false);
         }
 
         private new void OnEnable()
@@ -35,6 +38,7 @@ namespace Worm
             FollowWaypointEvent += GetComponent<Movement>().onFollowWaypoint;
             ReachWaypointEvent += GetComponent<Movement>().onReachWaypoint;
             ReachWaypointEvent += GetComponent<WormTunnelBroker>().onReachWaypoint;
+            SetTurnCellEvent += GetComponent<WormTunnelBroker>().onSetTurnCell;
             TorqueEvent += GetComponent<Force>().onTorque;
             TorqueEvent += GetComponent<InputProcessor>().onTorque;
         } 
@@ -54,7 +58,7 @@ namespace Worm
                 isWaypointReached = isNegativeDir ? ringAxisPosition <= waypointAxisPosition : ringAxisPosition >= waypointAxisPosition;
                 if (isWaypointReached)
                 {
-                    if (!wormBase.isStraight) // apply torque if not going in a straight direction to exit waypoint
+                    if (!wormBase.isStraight && !directionPair.isStraight()) // apply torque if not going in a straight direction to exit waypoint
                     {
                         TorqueEvent(directionPair, destinationWaypoint);
                     }
@@ -81,8 +85,8 @@ namespace Worm
          */
         private void initializeTurnWaypointList(DirectionPair directionPair, Vector3 startWaypointPosition)
         {   
-            print("init waypoint list prev dir " + directionPair.prevDir + " cur dir " + directionPair.curDir);
             Vector3 centerWaypointPosition = getOffsetPosition(startWaypointPosition, directionPair.prevDir, Tunnel.Tunnel.CENTER_OFFSET);
+            print("init waypoint list prev dir " + directionPair.prevDir + " cur dir " + directionPair.curDir + " center waypoint position is " + centerWaypointPosition);
             Vector3 exitWaypointPosition = getOffsetPosition(centerWaypointPosition, directionPair.curDir, Tunnel.Tunnel.CENTER_OFFSET); // 2.0, 3.5, ...
 
             Waypoint startWP = new Waypoint(startWaypointPosition, MoveType.ENTRANCE, directionPair);
@@ -98,12 +102,12 @@ namespace Worm
          * @tunnel          the tunnel turn is initiated in
          * @turnCellCenter  the center of the cell turn will happen in
          */
-        private void turn(Tunnel.Tunnel tunnel, Vector3 turnCellCenter)
+        private void turn(Tunnel.Tunnel tunnel, Vector3 prevTurnCellCenter)
         {
-            wormBase.setDecision(false);
+            wormBase.setPendingTurn(false);
             wormBase.setStraight(false);
             RaiseChangeDirectionEvent(directionPair, tunnel, wormId); // rotate tunnel in the direction
-            Vector3 turnCellEntrancePosition = Tunnel.Tunnel.getOffsetPosition(directionPair.prevDir, turnCellCenter);
+            Vector3 turnCellEntrancePosition = Tunnel.Tunnel.getOffsetPosition(directionPair.prevDir, prevTurnCellCenter);
             initializeTurnWaypointList(directionPair, turnCellEntrancePosition);
         }
 
@@ -115,6 +119,7 @@ namespace Worm
         public void onExitTurn(Direction direction, Tunnel.Tunnel tunnel)
         {
             wormBase.setStraight(true);
+            wormBase.setTurnDirection(Direction.None); // reset turn direction 
             DirectionPair straightDirectionPair = new DirectionPair(direction, direction);
             RaiseChangeDirectionEvent(straightDirectionPair, tunnel, wormId);
         }
@@ -132,7 +137,7 @@ namespace Worm
          */
         public void onAbortDecision()
         {
-            wormBase.setDecision(false);
+            wormBase.setPendingTurn(false);
         }
 
         /**
@@ -144,15 +149,16 @@ namespace Worm
          */
         public void onDecision(bool isStraightTunnel, Direction direction, Tunnel.Tunnel tunnel)
         {
-            wormBase.setDecision(true);
+            wormBase.setPendingTurn(true);
             wormBase.setTurnDirection(direction);
 
             directionPair.prevDir = directionPair.curDir;
             directionPair.curDir = direction;
-            print("decide to go in curDirection " + direction + " is straight tunnel " + isStraightTunnel + " tunnel name is " + tunnel.name);
+            print("decide to go in curDirection " + direction + " position is " + transform.position + " is straight tunnel " + isStraightTunnel + " tunnel name is " + tunnel.name);
             if (!isStraightTunnel) // turn immediately  if in junction or corner (dont wait for block interval event) :)
             {
-                turn(tunnel, tunnel.center); 
+                turn(tunnel, tunnel.center);
+                SetTurnCellEvent(tunnel.getLastCellPosition());
             }
         }
 
@@ -160,18 +166,19 @@ namespace Worm
          * Received when the active tunnel grows to a multiple of block size making it eligible for a direction change
          * 
          * @isBlockMultiple     did the straight tunnel reach a multiple of block size?
-         * @prevTunnel              The tunnel PRIOR to the tunnel the decision to change direction will be made from
+         * @prevTunnel              The tunnel PRIOR to the turn tunnel
          */
         public void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Tunnel prevTunnel)
         {
             if (isBlockMultiple)
             {
-                print("is block multiple block Position is " + blockPosition + " last block position is " + lastBlockPositionInt + " for tunnel " + prevTunnel.name + " is decision " + wormBase.isDecision);
+                print("is block multiple block Position is " + blockPosition + " last block position is " + lastBlockPositionInt + " for tunnel " + prevTunnel.name + " is decision " + wormBase.isPendingTurn);
             }
-            if (isBlockMultiple && wormBase.isDecision) // initiate turn for straight tunnels
+            if (isBlockMultiple && wormBase.isPendingTurn) // initiate turn for straight tunnels
             {
                 Vector3 prevCellCenter = Tunnel.Tunnel.getOffsetPosition(Direction.Up, lastBlockPositionInt);
-                turn(prevTunnel, prevCellCenter);          
+                turn(prevTunnel, prevCellCenter);
+                SetTurnCellEvent(blockPosition);
             }
         }
 
@@ -196,6 +203,7 @@ namespace Worm
                 ReachWaypointEvent -= GetComponent<WormTunnelBroker>().onReachWaypoint;
                 TorqueEvent -= GetComponent<Force>().onTorque;
                 TorqueEvent -= GetComponent<InputProcessor>().onTorque;
+                SetTurnCellEvent -= GetComponent<WormTunnelBroker>().onSetTurnCell;
             }
         }
     }

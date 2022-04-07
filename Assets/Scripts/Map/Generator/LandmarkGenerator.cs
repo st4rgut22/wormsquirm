@@ -38,7 +38,7 @@ namespace Map
          */
         public void onStartGame(GameMode gameMode)
         {
-            if (gameMode != GameMode.TestFixedPath && isRockObstacleEnabled)    // TestFixedPath is the only situation it doesnt make sene to have obstacles
+            if (gameMode != GameMode.DebugFixedPath && isRockObstacleEnabled)    // TestFixedPath is the only situation it doesnt make sene to have obstacles
             {
                 List<Obstacle> RockObstacleList = getObstacleList();
                 initializeObstacleDict(RockObstacleDict, SwapRockObstacleDict, RockObstacleList);

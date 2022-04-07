@@ -51,8 +51,11 @@ namespace Worm
         {
             DirectionPair dirPair = new DirectionPair(wormBase.direction, direction);
             print("apply torque in direction " + direction);
-            lastTorqueEventDirection = direction;
-            InputTorqueEvent(dirPair, turnSpeed);
+            if (!dirPair.isStraight())
+            {
+                InputTorqueEvent(dirPair, turnSpeed);
+                lastTorqueEventDirection = direction;
+            }
         }
 
         void Update()

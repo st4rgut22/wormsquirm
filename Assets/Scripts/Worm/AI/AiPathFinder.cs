@@ -16,8 +16,6 @@ namespace Worm
         private Obstacle targetObstacle;
         private const int RETARGET_INTERVAL = 5; // time interval to re-lockon the target
 
-        private string playerId;
-
         private void OnEnable()
         {
             InitObjectiveEvent += FindObjectOfType<Map.Astar>().onInitObjective;
@@ -43,23 +41,12 @@ namespace Worm
             TunnelMaker chaserTunnelMaker = WormManager.Instance.WormTunnelMakerDict[chaserWormId];
             FollowPathEvent(chaserTunnelMaker, chaserTunnelBroker);
         }
-
-        /**
-         * Listener is triggered when a target has been acquired
-         * @targetId    the id of the target
-         */
-        public void onTargetReceived(string targetId)
-        {
-            targetObstacle = new Obstacle(targetId);
-        }
-
         /**
          * Add a worm to the dictionary of worms when it is first instantiated
          */
-        public void onInitPlayerWorm(Worm worm, Map.Astar wormAstar, string wormId)
+        public void onInitChaseWorm(Worm worm, Map.Astar wormAstar, string wormId)
         {
-            playerId = wormId;
-            onTargetReceived(playerId); // TODO: Testing code, target should be acquired on some event like picking up a reward or getting within range of enemy
+            targetObstacle = new Obstacle(wormId);
         }
 
         /**
@@ -69,7 +56,7 @@ namespace Worm
          */
         private IEnumerator BroadcastBeacon()
         {
-            string wormPlayerId = WormManager.Instance.getPlayerWormId();
+            string wormPlayerId = WormManager.Instance.getChaseWormId();
 
             // wait until the target has been received
             while (targetObstacle == null)

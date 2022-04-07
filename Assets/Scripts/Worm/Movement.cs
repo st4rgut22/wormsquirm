@@ -54,9 +54,10 @@ namespace Worm
             DecisionProcessingEvent += GetComponent<InputProcessor>().onDecisionProcessing;
             DecisionProcessingEvent += GetComponent<WormTunnelBroker>().onDecisionProcessing;
             CompleteTurnEvent += GetComponent<Force>().onCompleteTurn;
-            if (FindObjectOfType<TunnelMaker>()) // applies to AI
+            if (GetComponent<TunnelMaker>()) // applies to AI
             {
                 DecisionProcessingEvent += FindObjectOfType<TunnelMaker>().onDecisionProcessing;
+                CompleteTurnEvent += GetComponent<TunnelMaker>().onCompleteTurn;
             }
         }
 
@@ -65,7 +66,6 @@ namespace Worm
             if (wormBase.direction != Direction.None)
             {
                 Vector3 forceDir = -head.transform.up; // negative because worm's forward vector is opposite world space forward vector
-                Debug.Log("go in the direction" + forceDir);
                 ForceEvent(head, forceDir); // make the worm go striaght ahead
             }
         }
@@ -147,7 +147,6 @@ namespace Worm
             {
                 if (wormBase.isStraight)
                 {
-                    print("complete straight");
                     completeStraight(waypoint);
                 }
                 else
@@ -163,7 +162,6 @@ namespace Worm
                 }
                 else if (waypoint.move == MoveType.CENTER)
                 {
-                    print("apply up force to the ring rgbdy");
                     DecisionProcessingEvent(false, waypoint); // allow decisions to be made again when center of tunnel is reached (eg a consecutive turn)
                 }
                 //else
@@ -182,7 +180,6 @@ namespace Worm
         private void moveToNextWaypoint(Waypoint prevWaypoint)
         {
             waypointIndex = waypointList.FindIndex(wp => prevWaypoint.Equals(wp)); // EXIT pos of prevCell equals the ENTER pos of current cell
-            print("waypoint index is " + waypointIndex);
             if (waypointIndex == waypointList.Count - 1)
             {
                 throw new System.Exception("last waypoint should not execute moveToNextWaypoint. Last waypoint should be of type EXIT not " + prevWaypoint.move);
@@ -219,11 +216,11 @@ namespace Worm
             ExitTurnEvent -= GetComponent<Turn>().onExitTurn;
             MoveToWaypointEvent -= GetComponent<Turn>().onMoveToWaypoint;
             CompleteTurnEvent -= GetComponent<Force>().onCompleteTurn;
-
             DecisionProcessingEvent -= GetComponent<InputProcessor>().onDecisionProcessing;
 
             if (GetComponent<TunnelMaker>()) // applies to AI
             {
+                CompleteTurnEvent -= GetComponent<TunnelMaker>().onCompleteTurn;
                 DecisionProcessingEvent -= GetComponent<TunnelMaker>().onDecisionProcessing;
             }
             if (GetComponent<WormTunnelBroker>())

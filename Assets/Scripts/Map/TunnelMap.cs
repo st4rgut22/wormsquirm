@@ -83,7 +83,7 @@ namespace Tunnel
           */
         public static Vector3Int getCellPos(Vector3 position)
         {
-            print("clit position before " + position);
+            //print("clit position before " + position);
             if (position.x > XZ_INTERVAL_OFFSET)
             {
                 position.x += XZ_INTERVAL_OFFSET;

@@ -23,7 +23,8 @@ namespace Test
             snakeEatsHeadStraight,
             snakeEatsHeadImmediateTurn,
             snakeEatsHeadCornerTurn,
-            debugTurn
+            debugTurn,
+            initUp
         }
 
         /**
@@ -59,9 +60,19 @@ namespace Test
                     return snakeEatsHeadImmediateTurn();
                 case Network.snakeEatsHeadCornerTurn:
                     return snakeEatsHeadCornerJunction();
+                case Network.initUp:
+                    return initUp();
                 default:
                     throw new System.Exception(tunnelNetwork + " is not a valid tunnel network");
             }
+        }
+
+        private List<Checkpoint> initUp()
+        {
+            Checkpoint cp0 = new Checkpoint(Direction.Up, 10);
+            List<Checkpoint> initUp = new List<Checkpoint>() { cp0 };
+
+            return initUp;
         }
 
         private List<Checkpoint> initThreeIntersectLoop()

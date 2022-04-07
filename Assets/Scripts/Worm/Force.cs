@@ -38,18 +38,15 @@ namespace Worm
          */
         public void onForce(Rigidbody rigidbody, Vector3 forceVector)
         {
-            print("applying force in direction " + forceVector);
 
             float maxSpeed = rigidbody.velocity.getMaxValue();
-            print("MAX SPEED IS " + maxSpeed);
             if (maxSpeed < maxVelocity)
             {
-                print("adding force forceVector is " + forceVector + " force magnitude is " + forceMagnitude + " product is " + (forceMagnitude * forceVector));
+                //print("adding force forceVector is " + forceVector + " force magnitude is " + forceMagnitude + " product is " + (forceMagnitude * forceVector));
                 rigidbody.AddForce(forceVector * forceMagnitude);
             }
             else
             {
-                print("going to fast applying brakes");
                 rigidbody.AddForce(-brakeSpeed * forceVector * forceMagnitude); // apply the brakes until velocity is under maxVelocity
             }
         }

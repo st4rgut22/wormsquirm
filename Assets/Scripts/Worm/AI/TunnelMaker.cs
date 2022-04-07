@@ -18,6 +18,8 @@ namespace Worm
         private bool isReadyToTurn;             // used to time changeDirection events when the worm is ready to turn
         private bool isModifyPath;              // true when a new path should be generated, modifying the existing path. '
 
+        public bool isInitDecision { get; private set; }           // true if decision is made to start going the path
+
         private Vector3Int turnOnFirstBlock;    // acts like a boolean flag, stores the last position, and the next new position will execute the turn. 
         Vector3Int defaultValue;
 
@@ -28,6 +30,7 @@ namespace Worm
             checkPointIdx = 0; // does not include the initial tunnel
             isModifyPath = false;
             isReadyToTurn = false;
+            isInitDecision = false;
             defaultValue = new Vector3Int(1000, 1000, 1000); // temporary default values
             turnOnFirstBlock = defaultValue;
         }
@@ -54,6 +57,18 @@ namespace Worm
         }
 
         /**
+         * If path is modified while coming out of a turn, handle the checkpoint update on turn completion
+         */
+        public void onCompleteTurn(string wormId, Direction direction)
+        {
+            if (isModifyPath)
+            {
+                print("completed turn now modifying the path");
+                updateCheckpoint();
+            }
+        }
+
+        /**
          * Tunnel maker receives a checkpoint list for a worm to execute on initializing target position
          * OR Tunnel maker receives a checkpoint list showing the path to target's updated position
          * 
@@ -70,18 +85,20 @@ namespace Worm
             }
             initializePath(checkpointList);
 
-            bool isNextCellTurn = wormTunnelBroker.isNextCellTurn();
-            if (isNextCellTurn) // if next cell is turn, abort the turn, because it belongs to the old path
+            if (wormBase.isPendingTurn) // if next cell is turn, abort the turn, because it belongs to the old path
             {
+                print("raise abort turn event");
                 wormTunnelBroker.RaiseAbortTurnEvent();
             }
             if (!isInitPath)
             {
                 //print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
+                isInitDecision = true;
                 RaiseInitDecisionEvent(currentCheckpoint.direction);
             }
             else
             {
+                print("go dir received a new checkpoint list");
                 isModifyPath = true; // modify the existing path when the next block interval or turn exit is reached
             }
         }
@@ -111,7 +128,6 @@ namespace Worm
          */
         public void onDecisionProcessing(bool isDecisionProcessing, Waypoint waypoint)
         {
-            print("set decision processing to " + isDecisionProcessing);
             isReadyToTurn = !isDecisionProcessing;
         }
 
@@ -136,7 +152,7 @@ namespace Worm
                     if (tunnel.containsCell(lastBlockPositionInt)) // this condition excludes the last cell adjacent from the corner as counting as a straight tunnel segment
                     {
                         tunnelSegmentCounter += 1;
-
+                        print("go dir " + currentCheckpoint.direction + " on block interval increment tunnel segment counter to " + tunnelSegmentCounter + "," + (currentCheckpoint.length - tunnelSegmentCounter) + " segments to go until turn");
                         if (currentCheckpoint.length == tunnelSegmentCounter)
                         {
                             updateCheckpoint();
@@ -170,8 +186,15 @@ namespace Worm
             {
                 tunnelSegmentCounter = 0;
                 currentCheckpoint = checkpointList[checkPointIdx];
-                RaisePlayerInputEvent(currentCheckpoint.direction);                
-                print("go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length);
+                if (currentCheckpoint.direction != wormBase.direction)
+                {
+                    RaisePlayerInputEvent(currentCheckpoint.direction);
+                }
+                else
+                {
+                    print("breaktime");
+                }
+                print(gameObject.name + " go dir " + currentCheckpoint.direction + " for length " + currentCheckpoint.length + " current pos is " + ring.transform.position);
             }
             else
             {

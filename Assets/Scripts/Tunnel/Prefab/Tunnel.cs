@@ -37,7 +37,6 @@ namespace Tunnel
 
         public string wormCreatorId { get; private set; }
         protected Vector3 wormPosition;
-        protected Direction wormDirection;
 
         protected bool isCollision;
 
@@ -67,6 +66,16 @@ namespace Tunnel
             return DeadEndInstance;
         }
 
+
+        /**
+         * Get the exit position
+         */
+        protected virtual Vector3 getExit(Direction exitDirection)
+        {
+            Vector3 exitPos = getOffsetPosition(exitDirection, center);
+            return exitPos;
+        }
+
         /**
          * If a player is making a turn or going straight into this tunnel ,check whether the tunnel needs to be modified by seeing if the holes line up with player
          * 
@@ -92,9 +101,21 @@ namespace Tunnel
          */
         public Vector3 getEgressPosition(Direction faceDirection)
         {
-            Vector3Int lastCellPos = getLastCellPosition();
-            Vector3 centerCellPos = getOffsetPosition(Direction.Up, lastCellPos);
-            return getOffsetPosition(faceDirection, centerCellPos);
+            if (isStopped)
+            {
+                Vector3Int lastCellPos = getLastCellPosition();
+                Vector3 centerCellPos = getOffsetPosition(Direction.Up, lastCellPos);
+                return getOffsetPosition(faceDirection, centerCellPos);
+            }
+            else // straight tunnel
+            {
+                if (type != Type.Name.STRAIGHT)
+                {
+                    throw new Exception("Tunnel is not stopped, should be of type STRAIGHT but is type " + gameObject.name);
+                }
+                print("getting egress position of a growing tunnel " + gameObject.name + " in direction " + faceDirection);
+                return getExit(faceDirection);
+            }
         }
 
         /**
@@ -166,17 +187,20 @@ namespace Tunnel
         {
             Vector3 offsetPosition = originalCell;
             Vector3 unitVector = Vector3.zero;
+            Vector3 yOffset = Vector3.zero;
 
             if (direction == Direction.Left || direction == Direction.Right)
             {
-                unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Left); // offset in the negative direction                
+                unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Left); // offset in the negative direction
+                yOffset = Vector3.up * CENTER_OFFSET;
             }
             if (direction == Direction.Forward || direction == Direction.Back)
             {
-                unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Back); // offset in the negative direction                
+                unitVector = Dir.CellDirection.getUnitVectorFromDirection(Direction.Back); // offset in the negative direction
+                yOffset = Vector3.up * CENTER_OFFSET;
             }
 
-            offsetPosition = offsetPosition + unitVector * CENTER_OFFSET;
+            offsetPosition = offsetPosition + unitVector * CENTER_OFFSET + yOffset;
             return offsetPosition;
         }
 

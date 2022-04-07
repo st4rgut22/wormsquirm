@@ -19,6 +19,7 @@ namespace Worm
         public delegate void Move(Vector3 ringPosition, Direction direction);
         public event Move MoveEvent;
 
+        public Vector3Int turnCell { get; private set; }            // 
         public Vector3Int cell { get; private set; }                // current cell the worm is in (using clit.position for measurement)
         private Vector3Int enterExistingCell;   // cell that is the entry to the existing tunnel, while worm is in this cell DONT update current tunnel because it will replace junction with previous tunnel
 
@@ -29,8 +30,8 @@ namespace Worm
         Tunnel.Straight prevStraightTunnel;
         protected Tunnel.Tunnel prevTunnel;               // the previous tunnel, useful for checking when is the start of a new straight segment
 
-        public bool isTunnelCreated { get; private set; } // whether the worm has created a tunnel yet (indicating it is following a path) or not
-
+        public bool isTunnelCreated { get; private set; }       // whether the worm has created a tunnel yet
+        
         protected new void OnEnable()
         {
             base.OnEnable();
@@ -52,6 +53,7 @@ namespace Worm
             wormBase.setIsCreatingTunnel(true);
             prevStraightTunnel = null;
             isDecisionProcessing = false;
+            isTunnelCreated = false;
         }
 
         /**
@@ -68,9 +70,30 @@ namespace Worm
          */
         public Vector3Int getNextCell()
         {
-            Vector3Int curCell = getCurrentCell();
-            Vector3Int nextCell = Dir.Vector.getNextCellFromDirection(curCell, wormBase.direction);
-            return nextCell;
+            if (wormBase.isChangingDirection)
+            {                
+                Vector3Int nextCell = Dir.Vector.getNextCellFromDirection(turnCell, wormBase.turnDirection);
+                print("is changing direction in " + turnCell + " next cell is " + nextCell);
+                return nextCell;
+            }
+            else // if is pending turn (in which case the turn will be aborted) or going straight, just get the next cell in the current direction
+            {
+                Vector3Int curCell;
+                if (isTunnelCreated)
+                {
+                    Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position); // use ring.position to check upcoming cell
+                    curCell = curTunnel.getLastCellPosition(); // use the last added cell of the tunnel as position because blocks are added ahead of worm cell
+                    print("getting the current cell using the current tunnel for worm " + gameObject.name + " which is " + curTunnel.name + " at loc " + curCell);
+                }
+                else
+                {
+                    curCell = getCurrentCell(); // use the worm's position to get the current cell
+                    print("getting next current using worm's position in existing tunnel for worm " + gameObject.name + " which is loc " + curCell);
+                }
+                Vector3Int nextCell = Dir.Vector.getNextCellFromDirection(curCell, wormBase.direction);
+                print("going straight in dir " + wormBase.direction + " next cell is " + nextCell);
+                return nextCell;
+            }
         }
 
         /**
@@ -79,6 +102,15 @@ namespace Worm
         public void onEnterExistingTunnel()
         {
             wormBase.setIsCreatingTunnel(false);
+        }
+
+        /**
+         * Set the cell the turn is happening in
+         */
+        public void onSetTurnCell(Vector3Int turnCell)
+        {
+            print("set turn cell which is " + turnCell);
+            this.turnCell = turnCell;
         }
 
         /**
@@ -92,22 +124,6 @@ namespace Worm
             {
                 lastReachedWaypoint = waypoint;
             }
-        }
-
-        /**
-         * Return true if the worm is going to turn in the next cell
-         */
-        public bool isNextCellTurn()
-        {
-            print("worm direction " + wormBase.direction + " does not match turn direction " + wormBase.turnDirection);
-            if (wormBase.turnDirection == Direction.None) // if turn direction is not initialized yet, there is no turn
-            {
-                return false;
-            }
-            else
-            {
-                return wormBase.direction != wormBase.turnDirection;
-            }            
         }
 
         /**
@@ -143,6 +159,15 @@ namespace Worm
 
         private void Update()
         {
+            if (!isTunnelCreated)
+            {
+                Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(wormBase.initialCell);
+                if (curTunnel != null)
+                {
+                    isTunnelCreated = true;
+                }
+            }
+
             Vector3Int curCell = getCurrentCell(ring.position);
 
             if (GrowEvent != null)
@@ -206,28 +231,16 @@ namespace Worm
         }
 
         /**
-         * Issue an event that grows the current tunnel
-         */
-        protected void FixedUpdate()
-        {
-            //if (GrowEvent != null)
-            //{
-            //    GrowEvent(ring.position);
-            //}
-        }
-
-        /**
          * Listen for when a tunnel is added to unregister and register the GrowEvent listener
          * 
          * @tunnel      the newly added tunnel
          */
         public void onAddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId)
         {
-            isTunnelCreated = true;
-
             bool isTunnelStraight = Tunnel.Type.isTypeStraight(tunnel.type);
             bool isTunnelJunction = Tunnel.Type.isTypeJunction(tunnel.type);
 
+            //isTunnelCreated = true;
             // unregister the previous tunnel's grow event, and register the new one
             if (prevStraightTunnel != null)
             {

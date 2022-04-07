@@ -15,6 +15,8 @@ namespace Worm
             [SerializeField]
             protected Transform WormContainer;
 
+            abstract public void onSpawn(string wormId, string chaseWormId);
+
             protected GameObject wormGO;
 
             protected string wormTag;
@@ -27,10 +29,20 @@ namespace Worm
                 InitWormEvent += WormManager.Instance.onInitWorm;
             }
 
-            protected void RaiseInitWormEvent(GameObject wormGO, Map.Astar wormAstar, string wormId)
+            protected void RaiseInitWormEvent(GameObject wormGO, Map.Astar wormAstar, string wormId, string chaseWormId)
             {
+                if (wormId == chaseWormId)
+                {
+                    InitWormEvent += FindObjectOfType<AiPathFinder>().onInitChaseWorm; // instruct ai's path finder to chas ethis worm
+                }
+
                 Worm worm = wormGO.GetComponent<Worm>();
                 InitWormEvent(worm, wormAstar, wormId);
+
+                if (wormId == chaseWormId)
+                {
+                    InitWormEvent -= FindObjectOfType<AiPathFinder>().onInitChaseWorm; // instruct ai's path finder to chas ethis worm
+                }
             }
 
             protected void OnDisable()

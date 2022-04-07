@@ -10,13 +10,14 @@ public class GameManager : GenericSingletonClass<GameManager>
     public event DestroyGame DestroyGameEvent;
 
     public bool isNewMap;
+    public static int MAP_LENGTH = 10; // distance from origin to one edge of the map
 
     public GameMode gameMode { get; private set; }
 
     private new void Awake()
     {
         base.Awake();
-        gameMode = GameMode.Chase;
+        gameMode = GameMode.DebugFixedPath;
     }
 
     private void OnEnable()

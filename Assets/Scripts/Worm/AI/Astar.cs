@@ -12,14 +12,15 @@ namespace Map
 
         private bool isDestinationReceived; // flag set when landmark info is received, which is required for pathplanning
 
-        const int MAP_LENGTH = 10; // distance from origin to one edge of the map
         Vector3Int mapOffset;
 
-        const int DIMENSION_LEN = MAP_LENGTH * 2 + 1;
         const int MAX_LENGTH = 10000000;
         const int STEP_COST = 1;
 
-        Item[,,] CostMap = new Item[DIMENSION_LEN, DIMENSION_LEN, DIMENSION_LEN];
+        int DIMENSION_LEN = GameManager.MAP_LENGTH * 2 + 1;
+        int mapLength;
+
+        Item[,,] CostMap;
 
         Vector3Int objectiveLocation;
 
@@ -66,8 +67,10 @@ namespace Map
 
         private void Awake()
         {
+            mapLength = GameManager.MAP_LENGTH;
+            CostMap = new Item[DIMENSION_LEN, DIMENSION_LEN, DIMENSION_LEN];
             isDestinationReceived = false;
-            mapOffset = new Vector3Int(MAP_LENGTH, MAP_LENGTH, MAP_LENGTH); // offset to convert a cell position to a array position
+            mapOffset = new Vector3Int(mapLength, mapLength, mapLength); // offset to convert a cell position to a array position (because only positive indices exist)
         }
 
         /**
@@ -79,6 +82,11 @@ namespace Map
         public void onInitObjective(Vector3Int objectiveLocation)
         {
             this.objectiveLocation = objectiveLocation;
+            bool isCellInbounds = isCellWithinBoundaries(this.objectiveLocation);
+            if (!isCellInbounds)
+            {
+                throw new System.Exception("The cell " + objectiveLocation + " is not in bounds and cannot be reached");
+            }
             isDestinationReceived = true;
         }
 
@@ -108,7 +116,7 @@ namespace Map
             currentTunnelMaker = tunnelMaker;
             currentTunnelBroker = wormTunnelBroker;
             Vector3Int initialCell = getCell(wormTunnelBroker);
-            astar(initialCell, wormTunnelBroker.isTunnelCreated);
+            astar(initialCell, tunnelMaker.isInitDecision);
         }
 
         /**
@@ -175,13 +183,13 @@ namespace Map
 
         void findShortestPath(List<Item> unknownPathList, HashSet<Item> unknownPathSet, Vector3Int startingCell, bool isPathInitialized)
         {
+            print("starting cell is " + startingCell + " objective location is " + objectiveLocation);
             while (unknownPathList.Count > 0)
             {
                 Item item = findClosestItem(unknownPathList);
 
                 if (item.cell.Equals(objectiveLocation))
                 {
-                    print("shortest distance is " + item.totalCost);
                     List<Vector3Int> shortestPath = getShortestPath(startingCell);
                     astarPathEvent(shortestPath, currentTunnelMaker, currentTunnelBroker, isPathInitialized);
                     return;
@@ -189,7 +197,7 @@ namespace Map
 
                 unknownPathList.Remove(item);
                 List<Vector3Int> neighborCells = getNeighbors(item.cell);
-
+                
                 foreach (Vector3Int neighbor in neighborCells)
                 {
                     if (isCellWithinBoundaries(neighbor))
@@ -211,10 +219,6 @@ namespace Map
                                 }
                             }
                         }
-                        else
-                        {
-                            print("uoh");
-                        }
                     }
                     else
                     {
@@ -228,7 +232,7 @@ namespace Map
 
         bool isCellWithinBoundaries(Vector3Int cell)
         {
-            return Mathf.Abs(cell.x) <= MAP_LENGTH && Mathf.Abs(cell.y) <= MAP_LENGTH && Mathf.Abs(cell.z) <= MAP_LENGTH;
+            return Mathf.Abs(cell.x) <= mapLength && Mathf.Abs(cell.y) <= mapLength && Mathf.Abs(cell.z) <= mapLength;
         }
 
         /**

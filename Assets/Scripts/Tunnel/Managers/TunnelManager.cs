@@ -102,6 +102,7 @@ namespace Tunnel
             foreach (Transform prefabOrientation in rotationParent)
             {
                 Rotation.Rotation rotation = prefabOrientation.gameObject.GetComponent<Rotation.Rotation>();
+                print("check prefab " + prefabOrientation.name + " for hole directions " + holeDirList);
                 if (rotation.isRotationInRotationDict(ingressDir, holeDirList))
                 {
                     return prefabOrientation;

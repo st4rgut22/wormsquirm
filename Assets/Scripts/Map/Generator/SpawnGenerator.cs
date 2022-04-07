@@ -19,6 +19,9 @@ namespace Map
         public static Dictionary<Vector3Int, Obstacle> WormObstacleDict { get; private set; }
         public static Dictionary<Obstacle, Vector3Int> SwappedWormObstacleDict { get; private set; }
 
+        [SerializeField]
+        protected string chaseWormId; // worm that is being chased
+
         /**
          * Listener is fired to start spawning worms when the game is started
          * 
@@ -31,7 +34,7 @@ namespace Map
             base.Awake();
             WormObstacleDict = new Dictionary<Vector3Int, Obstacle>();
             SwappedWormObstacleDict = new Dictionary<Obstacle, Vector3Int>(new ObstacleComparer());
-            wormObstacleList = new List<Obstacle>();
+            wormObstacleList = new List<Obstacle>();            
         }
 
         protected void OnEnable()

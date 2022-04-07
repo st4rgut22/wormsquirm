@@ -4,7 +4,7 @@ namespace Map
 {
     public class AiSpawnGenerator : SpawnGenerator
     {
-        public delegate void SpawnAIWorm(string wormId);
+        public delegate void SpawnAIWorm(string wormId, string chaseWormId);
         public event SpawnAIWorm SpawnAIWormEvent;
 
         [SerializeField]
@@ -20,10 +20,22 @@ namespace Map
             aiSpawnCount = 0;
         }
 
+        private void Start()
+        {
+            initWormPositions();
+        }
+
         private new void OnEnable()
         {
             base.OnEnable();
             SpawnAIWormEvent += FindObjectOfType<Worm.Factory.WormAIFactory>().onSpawn;
+        }
+
+        // initialize positions of a couple worms, the rest are rand generated
+        private void initWormPositions()
+        {
+            initPositionDict[getAIWormId(0)] = new Vector3Int(0, 0, 0);
+            initPositionDict[getAIWormId(1)] = new Vector3Int(10, 10, 10);
         }
 
         public override void onStartGame(GameMode gameMode)
@@ -56,12 +68,17 @@ namespace Map
         {
             Obstacle WormObstacle = WormObstacleDict[currentCell];
             onRemoveWorm(currentCell); // wait for removal confirmation before spawning again
-            onAiSpawn(WormObstacle.obstacleType, WormObstacle.obstacleId);
+            onAiSpawn(WormObstacle.obstacleId);
         }
 
-        public void onAiSpawn(ObstacleType wormType, string id)
+        public void onAiSpawn(string obstacleId)
         {
-            SpawnAIWormEvent(id);
+            SpawnAIWormEvent(obstacleId, chaseWormId);
+        }
+
+        private string getAIWormId(int count)
+        {
+            return AI_WORM_ID + " " + count.ToString();
         }
 
         /**
@@ -74,8 +91,8 @@ namespace Map
         {
             for (int i = aiSpawnCount; i < aiSpawnCount + count; i++)
             {
-                string id = AI_WORM_ID + " " + aiSpawnCount.ToString();
-                SpawnAIWormEvent(id);
+                string id = getAIWormId(i);
+                SpawnAIWormEvent(id, chaseWormId);
             }
         }
 
