@@ -18,7 +18,7 @@ namespace Map
          * @initialDirection    the current direction of the worm
          * @curCell             the previous cell of the worm
          */
-        private List<Checkpoint> getCheckpointListFromPath(List<Vector3Int> gridCellPathList, bool isModifyPath, Direction initialDirection, Vector3Int previousCell)
+        private List<Checkpoint> getCheckpointListFromPath(List<Vector3Int> gridCellPathList, bool isModifyPath, Direction initialDirection, bool isTurn)
         {
             List<Checkpoint> astarCheckpointList = new List<Checkpoint>();
             Direction prevDirection = Direction.None;
@@ -60,10 +60,10 @@ namespace Map
             if (isModifyPath && astarCheckpointList.Count > 0)
             {
                 Checkpoint firstCheckpoint = astarCheckpointList[0];
-                if (firstCheckpoint.direction != initialDirection) // exclude the turning cell from the modified path
+                if (firstCheckpoint.direction != initialDirection || isTurn) // exclude the turning cell from the modified path when worm going straight
                 {
                     print("first checkpoint direction " + firstCheckpoint.direction + " does not match initial direction " + initialDirection + " shortening dist by 1 to " + (firstCheckpoint.length - 1));
-                    //astarCheckpointList[0] = new Checkpoint(firstCheckpoint.direction, firstCheckpoint.length - 1);
+                    astarCheckpointList[0] = new Checkpoint(firstCheckpoint.direction, firstCheckpoint.length - 1);
                 }
                 else
                 {
@@ -77,9 +77,11 @@ namespace Map
         {
             Direction curDirection = wormTunnelBroker.getDirection();
             Vector3Int curCell = wormTunnelBroker.getCurrentCell();
+            bool isChangeDir = wormTunnelBroker.getIsChangingDirection();
 
             print("initial direction on follow new path is " + curDirection);
-            List<Checkpoint> checkpointList = getCheckpointListFromPath(gridCellPathList, isInitPath, curDirection, curCell);
+            
+            List<Checkpoint> checkpointList = getCheckpointListFromPath(gridCellPathList, isInitPath, curDirection, isChangeDir);
             if (checkpointList.Count > 0)
             {
                 initCheckpointEvent += tunnelMaker.onInitCheckpointList;

@@ -12,7 +12,7 @@ namespace Tunnel
 
         int lastBlockLen; // last block added used to retroactively add blocks that did not fall on an interval
 
-        public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isCellSameTunnel);
+        public delegate void BlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isTunnelSame, bool isTurning, bool isCollide);
         public event BlockInterval BlockIntervalEvent;
 
         public delegate void AIBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel);
@@ -68,7 +68,7 @@ namespace Tunnel
 
             while (!newCell.Equals(newEndCell))
             {
-                addCellToList(newCell);
+                addCellToList(newCell); // TODO: PROBLEM INVESTIAGATE, STRAIGHT 13 HAS AN EXTRA CELL APPENDED AT (-5, 5, ...) WHY???
                 TunnelMap.addCell(newCell, this); // update the cells in the map
                 newCell = Dir.Vector.getNextCellFromDirection(newCell, growthDirection);
             }
@@ -144,18 +144,17 @@ namespace Tunnel
                     {
                         AIBlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
                     }
-                    bool isCellSameTunnel = !isTurning && !isCollision; // AIBlockIntervalEvent sets isTurning so make sure this statement follows the event
-                    print("is cell " + curCell + " belong to same tunnel? " + isCellSameTunnel + " because isTurning = " + isTurning + " and isCollision = " + isCollision);
-                    if (isCellSameTunnel) // if turn will be made or there is a collision, the cell should not be added to the tunnell's list of cells
+                    if (!isTurning && !isCollision) // if turn will be made or there is a collision, the cell should not be added to the tunnell's list of cells
                     {
                         addCellToList(curCell);
                     }
-                    BlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this, isCellSameTunnel);
+                    bool isTunnelSame = !isTurning && !isCollision;
+                    BlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this, isTunnelSame, isTurning, isCollision);
                 }
                 else // notify listeners that there is not a block multple
                 {
                     Vector3Int lastCellPosition = getLastCellPosition();
-                    BlockIntervalEvent(false, lastCellPosition, lastCellPosition, this, true);
+                    BlockIntervalEvent(false, lastCellPosition, lastCellPosition, this, !isCollision, isTurning, isCollision);
                 }
             }
         }

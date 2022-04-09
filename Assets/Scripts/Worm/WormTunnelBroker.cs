@@ -65,6 +65,11 @@ namespace Worm
             return curCell;
         }
 
+        public bool getIsChangingDirection()
+        {
+            return wormBase.isChangingDirection;
+        }
+
         /**
          * Get the next cell using the worm's current cell and current direction
          */
@@ -159,14 +164,14 @@ namespace Worm
 
         private void Update()
         {
-            if (!isTunnelCreated)
-            {
-                Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(wormBase.initialCell);
-                if (curTunnel != null)
-                {
-                    isTunnelCreated = true;
-                }
-            }
+            //if (!isTunnelCreated)
+            //{
+            //    Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(wormBase.initialCell);
+            //    if (curTunnel != null)
+            //    {
+            //        isTunnelCreated = true;
+            //    }
+            //}
 
             Vector3Int curCell = getCurrentCell(ring.position);
 
@@ -174,7 +179,7 @@ namespace Worm
             {
                 GrowEvent(ring.position);
             }
-            if (!wormBase.isCreatingTunnel && !isDecisionProcessing)
+            if (!wormBase.isCreatingTunnel && !isDecisionProcessing) // in an existing tunnel
             {
 
                 Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position); // use ring.position to check upcoming cell
@@ -240,7 +245,7 @@ namespace Worm
             bool isTunnelStraight = Tunnel.Type.isTypeStraight(tunnel.type);
             bool isTunnelJunction = Tunnel.Type.isTypeJunction(tunnel.type);
 
-            //isTunnelCreated = true;
+            isTunnelCreated = true; // <--- potential problem here
             // unregister the previous tunnel's grow event, and register the new one
             if (prevStraightTunnel != null)
             {

@@ -76,7 +76,7 @@ namespace Tunnel
                     Vector3Int prevCollisionCell = Dir.Vector.getNextCellFromOppDirection(collisionCell, directionPair.prevDir);
                     Vector3 prevCollisionCenter = Tunnel.getOffsetPosition(Direction.Up, prevCollisionCell);
                     Vector3 contactPosition = Tunnel.getOffsetPosition(directionPair.prevDir, prevCollisionCenter);
-                    print("contact position is " + contactPosition);
+
                     Direction ingressDirection = directionPair.prevDir;
                     SliceTunnelEvent((Straight)nextTunnel, ingressDirection, contactPosition);
                 }

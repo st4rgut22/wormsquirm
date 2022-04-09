@@ -11,7 +11,7 @@ namespace Map
         public delegate void RemoveWorm(string wormId);
         public static event RemoveWorm RemoveWormEvent;
 
-        public delegate void SpawnBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel);
+        public delegate void SpawnBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel);
         public static event SpawnBlockInterval SpawnBlockIntervalEvent;
 
         static List<Obstacle> wormObstacleList; // list of spawned worm obstacles
@@ -72,7 +72,7 @@ namespace Map
          */
         public static void onCreateJunctionOnCollision(Tunnel.Tunnel collisionTunnel, DirectionPair dirPair, Tunnel.CellMove cellMove, string playerId)
         {
-            if (!cellMove.isInit && dirPair.isStraight()) // let onChangeDirection handle turns
+        if (!cellMove.isInit && dirPair.isStraight()) // let onChangeDirection handle turns
             {
                 Obstacle obstacle = getObstacle(cellMove.lastCellPosition, WormObstacleDict); // get obstacle from the last tunnel position
                 updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, cellMove.lastCellPosition, cellMove.cell, false); // update obstacle's position to next cell position
@@ -85,7 +85,7 @@ namespace Map
         public static void onWormInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel)
         {
             bool isTunnelSame = Tunnel.TunnelMap.isTunnelSame(blockPositionInt, lastBlockPositionInt);
-            onBlockInterval(isBlockInterval, blockPositionInt, lastBlockPositionInt, (Tunnel.Straight) tunnel, isTunnelSame);
+            onBlockInterval(isBlockInterval, blockPositionInt, lastBlockPositionInt, tunnel, isTunnelSame, false, false); // last 2 arguments dont matter
         }
 
         protected void RaiseSpawnIntervalEvent(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel)
@@ -97,22 +97,19 @@ namespace Map
          * Block interval event forwarded to the correct worm. Get the worm from the cell that the tunnel just occupied, and update the location of the worm
          * 
          * @lastBlockPositionInt        the most recently saved position of the worm
-         * @isCellSameTUnnel            whether the cell belongs to the same tunnel
+         * @isStraight                  whether going straight
          */
-        public static void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel, bool isCellSameTunnel)
+        public static void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel, bool isTunnelSame, bool isTurn, bool isCollide)
         {
             Obstacle WormObstacle = getObstacle(lastBlockPositionInt, WormObstacleDict);
 
             if (WormObstacle != null)
             {
-                if (isBlockMultiple && isCellSameTunnel) // when a new cell has been reached, update the map with the worm's new cell position
-                {                                        // if not the same tunnel, the straight tunnel ends here and shouldn't update the worm cell to the next block position (do this in onAddTunnel instead)
+                // when a new cell has been reached, update the map with the worm's new cell position only if new cell belongs to a straight tunnel
+                if (isBlockMultiple && isTunnelSame) 
+                {
                     updateObstacle(WormObstacle, WormObstacleDict, SwappedWormObstacleDict, lastBlockPositionInt, blockPosition, false);
                     print("in onBlockInterval update lastblockpos " + lastBlockPositionInt + " to " + blockPosition);
-                }
-                if (!isCellSameTunnel)
-                {
-                    print("in onBlockInterval not same cell!");
                 }
                 GameObject WormGO = WormObstacle.obstacleObject;
                 SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event

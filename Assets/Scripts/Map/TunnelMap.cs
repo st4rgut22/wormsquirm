@@ -57,19 +57,19 @@ namespace Tunnel
          * 
          * @isCellSameTunnel        whether the block interval marks the beginning of a new tunnel segment (eg corner) or is a continuation of existing tunnel
          */
-        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isCellSameTunnel)
+        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Straight tunnel, bool isTunnelSame, bool isTurn, bool isCollide)
         {
-            if (isBlockInterval && isCellSameTunnel)  //(isBlockInterval && !isTurnDecision)
+            if (isBlockInterval)
             {
                 // before traversing cell check that the next cell is empty to decide whether to intersect it
-                if (containsCell(blockPositionInt)) // exclude turn tunnel segments from part of the straight tunnel
+                if (!isTurn && containsCell(blockPositionInt)) // exclude turn tunnel segments from part of the straight tunnel
                 {
                     print("collision occurred with straight tunnel at " + blockPositionInt);
                     Tunnel intersectTunnel = TunnelMapDict[blockPositionInt];
                     DirectionPair dirPair = new DirectionPair(tunnel.growthDirection, tunnel.growthDirection); // go straight
                     CollideTunnelEvent(dirPair, tunnel, intersectTunnel, blockPositionInt, true); // send event when tunnels intersect AND not turning
                 }
-                else
+                else if (isTunnelSame)
                 {
                     addCell(blockPositionInt, tunnel);
                 }
