@@ -164,15 +164,6 @@ namespace Worm
 
         private void Update()
         {
-            //if (!isTunnelCreated)
-            //{
-            //    Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(wormBase.initialCell);
-            //    if (curTunnel != null)
-            //    {
-            //        isTunnelCreated = true;
-            //    }
-            //}
-
             Vector3Int curCell = getCurrentCell(ring.position);
 
             if (GrowEvent != null)

@@ -163,14 +163,6 @@ namespace Worm
         }
 
         /**
-         * Set true if player will turn on the first block interval of a straight tunnel segment
-         */
-        private bool isTurnOnFirstBlock()
-        {
-            return !turnOnFirstBlock.Equals(defaultValue);
-        }
-
-        /**
          * After a checkpoint is reached update the checkpoint
          */
         private void updateCheckpoint()

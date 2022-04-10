@@ -66,6 +66,14 @@ namespace Tunnel
             return DeadEndInstance;
         }
 
+        public void replaceHoleDirections(List<Direction> holeDirections)
+        {
+            if (gameObject.name == "Straight 1")
+            {
+                print("sldkjf");
+            }
+            holeDirectionList = holeDirections;
+        }
 
         /**
          * Get the exit position

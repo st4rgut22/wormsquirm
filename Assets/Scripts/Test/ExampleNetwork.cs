@@ -147,12 +147,12 @@ namespace Test
         // start off going right instead of up
         private List<Checkpoint> snakeEatsHead()
         {
-            Checkpoint cp0 = new Checkpoint(Direction.Up, 6);
+            Checkpoint cp0 = new Checkpoint(Direction.Up, 4);
             Checkpoint cp1 = new Checkpoint(Direction.Left, 3);
             Checkpoint cp2 = new Checkpoint(Direction.Down, 4);
             Checkpoint cp3 = new Checkpoint(Direction.Right, 3);
             Checkpoint cp4 = new Checkpoint(Direction.Up, 2);
-            Checkpoint cp5 = new Checkpoint(Direction.Left, 5);
+            Checkpoint cp5 = new Checkpoint(Direction.Left, 10);
             List<Checkpoint> snakeEatsHeadList = new List<Checkpoint>() { cp0, cp1, cp2, cp3, cp4, cp5 };
             return snakeEatsHeadList;
         }

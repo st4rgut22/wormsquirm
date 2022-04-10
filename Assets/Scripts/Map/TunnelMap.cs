@@ -121,7 +121,7 @@ namespace Tunnel
          */
         static double getRoundedDistance(double distance)
         {
-            double roundedScale = Math.Round(distance * 1000f) / 1000f;
+            double roundedScale = Math.Round(distance * 100f) / 100f;
             return roundedScale;
         }
 

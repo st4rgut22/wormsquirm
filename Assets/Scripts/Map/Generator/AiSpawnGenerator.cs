@@ -35,7 +35,8 @@ namespace Map
         private void initWormPositions()
         {
             initPositionDict[getAIWormId(0)] = new Vector3Int(0, 0, 0);
-            initPositionDict[getAIWormId(1)] = new Vector3Int(10, 10, 10);
+            initPositionDict[getAIWormId(1)] = new Vector3Int(-10, -10, 0);
+            //initPositionDict[getAIWormId(2)] = new Vector3Int(7, 7, 7);
         }
 
         public override void onStartGame(GameMode gameMode)
@@ -50,15 +51,13 @@ namespace Map
          */
         public void onAiBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel)
         {
+            print("block position is " + blockPosition + " last block position is " + lastBlockPositionInt);
             Obstacle WormObstacle = getObstacle(lastBlockPositionInt, WormObstacleDict);
-            if (WormObstacle.obstacleType == ObstacleType.AIWorm) // if worm is AI send an additional event to advance to the next checkpoint
-            {
-                GameObject WormGO = WormObstacle.obstacleObject;
+            GameObject WormGO = WormObstacle.obstacleObject;
 
-                SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.TunnelMaker>().onBlockInterval;
-                RaiseSpawnIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
-                SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.TunnelMaker>().onBlockInterval;
-            }
+            SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.TunnelMaker>().onBlockInterval;
+            RaiseSpawnIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
+            SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.TunnelMaker>().onBlockInterval;
         }
 
         /**

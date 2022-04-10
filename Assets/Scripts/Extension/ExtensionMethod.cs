@@ -18,7 +18,7 @@ namespace Tunnel
 
             Tunnel tunnel = tunnelGO.GetComponent<Tunnel>();
 
-            tunnel.holeDirectionList = new List<Direction>(egressHoleDirectionList);
+            tunnel.replaceHoleDirections(new List<Direction>(egressHoleDirectionList));
             tunnel.setHoleDirections(directionPair);
 
             rotation.rotate(ingressDir, egressHoleDirectionList, tunnel.transform); // the type of rotation is set in Awake eg CornerRotation, StraightRotation
@@ -45,10 +45,9 @@ namespace Tunnel
             GameObject tunnelCopy = GameObject.Instantiate(thisObj, tunnelParent);
             Straight copiedTunnel = tunnelCopy.GetComponent<Straight>();
             copiedTunnel.setIngressPosition(tunnel.ingressPosition);
-            copiedTunnel.holeDirectionList = new List<Direction>(tunnel.holeDirectionList); // copy the elements so modifying a sliced segment wont affect the other slice
+            copiedTunnel.replaceHoleDirections(new List<Direction>(tunnel.holeDirectionList)); // copy the elements so modifying a sliced segment wont affect the other slice
             copiedTunnel.cellPositionList = new List<Vector3Int>(tunnel.cellPositionList);
             copiedTunnel.growthDirection = tunnel.growthDirection;
-            copiedTunnel.setIsSliced(); // tunnel should not be closed off with a deadend
             return copiedTunnel;
         }
     }

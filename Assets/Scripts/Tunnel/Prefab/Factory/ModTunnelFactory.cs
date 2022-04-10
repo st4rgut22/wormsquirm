@@ -149,7 +149,7 @@ namespace Tunnel
          */
         public override Tunnel getTunnel()
         {
-            List<Direction>holeDirections = collidedTunnel.holeDirectionList;
+            List<Direction>holeDirections = new List<Direction>(collidedTunnel.holeDirectionList);
             print("get junction with hole directions " + holeDirections);
             string junctionId = getTunnelId(Type.JUNCTION, junctionCount);            
 

@@ -72,6 +72,8 @@ namespace Tunnel
                 TunnelMap.addCell(newCell, this); // update the cells in the map
                 newCell = Dir.Vector.getNextCellFromDirection(newCell, growthDirection);
             }
+            addCellToList(newEndCell);
+            TunnelMap.addCell(newEndCell, this);
         }
 
         /**
@@ -85,6 +87,10 @@ namespace Tunnel
 
         public override void setHoleDirections(DirectionPair dirPair)
         {
+            if (gameObject.name == "Straight 1")
+            {
+                print(" KDESWJFl;iksdejl;");
+            }
             growthDirection = dirPair.curDir;
             Direction oppositeGrowthDirection = Dir.Base.getOppositeDirection(growthDirection);
             holeDirectionList = new List<Direction>() { growthDirection, oppositeGrowthDirection };
@@ -101,7 +107,9 @@ namespace Tunnel
         }
 
         /**
-         * Whether the straight tunnel is a prexisting tunnel that is sliced
+         * When a straight tunnel is slice the last recorded length should be adjusted
+         * 
+         * @sliceLen    new length of tunnel
          */
         public void setIsSliced()
         {
@@ -119,19 +127,29 @@ namespace Tunnel
             {
                 DigEvent(DeadEndInstance.transform.position, growthDirection);
                 setTunnelScale(position); // set tunnel scale using worm's position
-                
-                float length = getLength(); // get length of tunnel
+
+
                 Vector3 deadEndPosition = getExit(growthDirection);
                 DeadEndInstance.transform.position = deadEndPosition;
 
                 Vector3 unitVectorInDir = Dir.CellDirection.getUnitVectorFromDirection(growthDirection);
-                int curBlockLen = (int)length;
 
-                bool isBlockMultiple = TunnelMap.isDistanceMultiple(length);
+                //GridLayout gridLayout = transform.parent.GetComponentInParent<GridLayout>();
+                //Vector3Int cellPosition = gridLayout.WorldToCell(position);
+                float length = getLength();
+                int curBlockLen = (int)length;
+                //bool isBlockMultiple = TunnelMap.isDistanceMultiple(length);
+                if (isSliced)
+                {
+                    lastBlockLen = curBlockLen;
+                    isSliced = false;
+                }
                 bool isNewBlock = curBlockLen >= 1 && curBlockLen > lastBlockLen;
 
-                if (isBlockMultiple && isNewBlock)
+
+                if (isNewBlock) //if (isBlockMultiple && (isNewBlock || isSliced))
                 {
+                    isSliced = false;
                     lastBlockLen = curBlockLen;
                     setCenter(length, growthDirection); // adjust the center to the new block
 
@@ -140,16 +158,16 @@ namespace Tunnel
 
                     bool isCollision = TunnelMap.getTunnelFromDict(curCell) != null;
 
-                    if (!isTunnelCreatedByPlayer) // only emit ai block interval event if worm is created by an AI worm
+                    if (!isTunnelCreatedByPlayer) // only emit ai block interval event if tunnel is created by an AI worm
                     {
-                        AIBlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this);
+                        AIBlockIntervalEvent(true, curCell, lastCellPosition, this);
                     }
                     if (!isTurning && !isCollision) // if turn will be made or there is a collision, the cell should not be added to the tunnell's list of cells
                     {
                         addCellToList(curCell);
                     }
                     bool isTunnelSame = !isTurning && !isCollision;
-                    BlockIntervalEvent(isBlockMultiple, curCell, lastCellPosition, this, isTunnelSame, isTurning, isCollision);
+                    BlockIntervalEvent(true, curCell, lastCellPosition, this, isTunnelSame, isTurning, isCollision);
                 }
                 else // notify listeners that there is not a block multple
                 {

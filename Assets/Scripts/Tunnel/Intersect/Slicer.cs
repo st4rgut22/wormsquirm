@@ -20,7 +20,7 @@ namespace Intersect
          * @ingressDirection direction of the hit tunnel
          * @contactPosition the position where the tunnel has been hit
          */
-        public void sliceTunnel(Tunnel.Straight collidedTunnel, Direction ingressDirection, Vector3 contactPosition)
+        public void onSliceTunnel(Tunnel.Straight collidedTunnel, Direction ingressDirection, Vector3 contactPosition)
         {
             Tunnel.Straight duplicateTunnel = collidedTunnel.copy(Tunnel.Type.instance.TunnelNetwork);
 
@@ -46,7 +46,9 @@ namespace Intersect
             }
             else
             {
+                //int sliceLen = (int) Vector3.Distance(startSlicePosition, endSlicePosition);
                 tunnel.setIngressPosition(startSlicePosition);
+                tunnel.setIsSliced();
                 tunnel.updateCellPositionList(startSlicePosition.castToVector3Int(), endSlicePosition.castToVector3Int()); // updates cell position list and the new egress position
                 trimTunnel(tunnel, startSlicePosition, endSlicePosition);
             }

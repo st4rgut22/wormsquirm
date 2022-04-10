@@ -56,6 +56,10 @@ namespace Worm
                 float ringAxisPosition = Dir.Vector.getAxisPositionFromDirection(passWaypointDirection, ring.position);
 
                 isWaypointReached = isNegativeDir ? ringAxisPosition <= waypointAxisPosition : ringAxisPosition >= waypointAxisPosition;
+                if (wormBase.wormId == "AI 0")
+                {
+                    print("ring axis position is " + ringAxisPosition + " waypoint axis position is " + waypointAxisPosition);
+                }
                 if (isWaypointReached)
                 {
                     if (!wormBase.isStraight && !directionPair.isStraight()) // apply torque if not going in a straight direction to exit waypoint
