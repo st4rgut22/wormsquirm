@@ -87,6 +87,7 @@ namespace Worm
                 if (isTunnelCreated)
                 {
                     Tunnel.Tunnel curTunnel = Tunnel.TunnelMap.getCurrentTunnel(ring.position); // use ring.position to check upcoming cell
+
                     curCell = curTunnel.getLastCellPosition(); // use the last added cell of the tunnel as position because blocks are added ahead of worm cell
                     print("getting the current cell using the current tunnel for worm " + gameObject.name + " which is " + curTunnel.name + " at loc " + curCell);
                 }

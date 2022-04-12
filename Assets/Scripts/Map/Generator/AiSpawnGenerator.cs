@@ -34,9 +34,12 @@ namespace Map
         // initialize positions of a couple worms, the rest are rand generated
         private void initWormPositions()
         {
-            initPositionDict[getAIWormId(0)] = new Vector3Int(0, 0, 0);
-            initPositionDict[getAIWormId(1)] = new Vector3Int(-10, -10, 0);
-            //initPositionDict[getAIWormId(2)] = new Vector3Int(7, 7, 7);
+            // DEBUG FIXED PATH MODE
+            //initPositionDict[getAIWormId(0)] = new Vector3Int(0, 0, 0);
+            //initPositionDict[getAIWormId(1)] = new Vector3Int(-3, -3, 3);
+
+            // CHASE MODE
+            initPositionDict[getAIWormId(0)] = new Vector3Int(7, 7, 7);
         }
 
         public override void onStartGame(GameMode gameMode)

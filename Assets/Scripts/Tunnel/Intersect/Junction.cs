@@ -24,6 +24,7 @@ namespace Tunnel
             {
                 holeDirectionList.Add(newHoleDirection);
             }
+            setWallDirections();
         }
 
         public void OnDisable()

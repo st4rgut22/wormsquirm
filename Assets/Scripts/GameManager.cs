@@ -17,7 +17,8 @@ public class GameManager : GenericSingletonClass<GameManager>
     private new void Awake()
     {
         base.Awake();
-        gameMode = GameMode.DebugFixedPath;
+        // gameMode = GameMode.DebugFixedPath;
+        gameMode = GameMode.Chase;
     }
 
     private void OnEnable()

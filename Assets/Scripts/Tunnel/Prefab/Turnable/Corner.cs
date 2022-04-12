@@ -16,6 +16,7 @@ namespace Tunnel
         {
             Direction oppDir = Dir.Base.getOppositeDirection(dirPair.prevDir); // new hole faces opposite the ingress direction
             holeDirectionList = new List<Direction>() { oppDir, dirPair.curDir };
+            setWallDirections();
         }
     }
 }

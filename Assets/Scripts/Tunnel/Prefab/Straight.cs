@@ -94,6 +94,7 @@ namespace Tunnel
             growthDirection = dirPair.curDir;
             Direction oppositeGrowthDirection = Dir.Base.getOppositeDirection(growthDirection);
             holeDirectionList = new List<Direction>() { growthDirection, oppositeGrowthDirection };
+            setWallDirections();
         }
 
         /** 

@@ -50,6 +50,11 @@ namespace Tunnel
             SIXWAY
         }
 
+        public static bool isTagTunnel(string tag)
+        {
+            return tag == STRAIGHT || tag == CORNER || tag == JUNCTION; 
+        }
+
         public static bool isTypeCorner(Name name)
         {
             return name == Name.CORNER;

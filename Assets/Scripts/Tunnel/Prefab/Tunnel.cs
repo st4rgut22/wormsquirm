@@ -29,6 +29,7 @@ namespace Tunnel
 
         public Vector3 ingressPosition { get; set; }
         public List<Direction> holeDirectionList;
+        public List<Direction> wallDirectionList;
 
         public Vector3 center { get; private set; }
         public List<Vector3Int> cellPositionList; // a list of coordinates the tunnel traverses
@@ -40,9 +41,9 @@ namespace Tunnel
 
         protected bool isCollision;
 
-        public abstract void setHoleDirections(DirectionPair dirPair);
-
         public int holeCount;
+
+        public abstract void setHoleDirections(DirectionPair dirPair);
 
         protected void Awake()
         {
@@ -51,6 +52,21 @@ namespace Tunnel
             wormPosition = Vector3.zero;
             isTurning = false;
             isCollision = false;
+        }
+
+        /**
+         * Set the sides of the tunnel with walls (eg non-hole sides)
+         */
+        protected void setWallDirections()
+        {
+            wallDirectionList = new List<Direction>();
+            Dir.Base.directionList.ForEach((Direction direction) =>
+            {
+                if (!holeDirectionList.Contains(direction))
+                {
+                    wallDirectionList.Add(direction);
+                }
+            });
         }
 
         public void setIngressPosition(Vector3 ingressPosition)
@@ -68,11 +84,8 @@ namespace Tunnel
 
         public void replaceHoleDirections(List<Direction> holeDirections)
         {
-            if (gameObject.name == "Straight 1")
-            {
-                print("sldkjf");
-            }
             holeDirectionList = holeDirections;
+            setWallDirections();
         }
 
         /**

@@ -129,5 +129,14 @@ namespace Dir
                     throw new System.Exception("Not a valid direction " + direction);
             }
         }
+
+        /**
+         * Return true if direction 2 is in the clockwise direction of direction 1
+         */
+        public static bool isDirectionClockwise(Direction direction1, Direction direction2)
+        {
+            return (direction1 == Direction.Up && direction2 == Direction.Left) || (direction1 == Direction.Left && direction2 == Direction.Down) || (direction1 == Direction.Down && direction2 == Direction.Right) || (direction1 == Direction.Right && direction2 == Direction.Up) ||
+                (direction1 == Direction.Up && direction2 == Direction.Forward) || (direction1 == Direction.Forward && direction2 == Direction.Down) || (direction1 == Direction.Down && direction2 == Direction.Back) || (direction1 == Direction.Back && direction2 == Direction.Up);
+        }
     }
 }

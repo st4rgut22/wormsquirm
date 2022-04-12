@@ -42,20 +42,6 @@ namespace Map
         }
 
         /**
-         * Update the position of obstacle if not done so in onBlockInterval listener (coming out of turns, etc)
-         * 
-         * @currentCellPosition     the cell the worm is currently in
-         * @nextCellPosition        the cell the worm wil lbe in in next
-         * @isDeleteCurCell         whether the old cell should be deleted
-         */
-        public static void onUpdateObstacle(Vector3Int curCellPos, Vector3Int nextCellPos, bool isDeleteCurCell)
-        {
-            print("update to " + nextCellPos);
-            Obstacle obstacle = getObstacle(curCellPos, WormObstacleDict); // get obstacle from the last tunnel position
-            updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, curCellPos, nextCellPos, isDeleteCurCell); // update obstacle's position to next cell position
-        }
-
-        /**
          * Direection change should trigger worm obstacle to update to a turning cell (or out of a turning cell)
          */
         public static void onChangeDirection(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId, Tunnel.CellMove cellMove, bool isCreatingTunnel)
