@@ -25,9 +25,8 @@ namespace Map
             initWormPositions();
         }
 
-        private new void OnEnable()
+        private void OnEnable()
         {
-            base.OnEnable();
             SpawnAIWormEvent += FindObjectOfType<Worm.Factory.WormAIFactory>().onSpawn;
         }
 

@@ -24,9 +24,8 @@ namespace Map
             humanSpawnCount = 0;
         }
 
-        private new void OnEnable()
+        private void OnEnable()
         {
-            base.OnEnable();
             SpawnPlayerWormEvent += FindObjectOfType<Worm.Factory.WormPlayerFactory>().onSpawn;
         }
 

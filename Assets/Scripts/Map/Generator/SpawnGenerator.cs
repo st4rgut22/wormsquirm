@@ -5,8 +5,8 @@ namespace Map
 {
     public abstract class SpawnGenerator : ObstacleGenerator
     {
-        public delegate void ChangeDirection(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId, Tunnel.CellMove cellMove, bool isCreatingTunnel);
-        public event ChangeDirection ChangeDirectionEvent;
+        public delegate void UpdateObstacle(string wormId, Vector3Int updateCellPos);
+        public static event UpdateObstacle UpdateObstacleEvent;
 
         public delegate void RemoveWorm(string wormId);
         public static event RemoveWorm RemoveWormEvent;
@@ -37,8 +37,10 @@ namespace Map
             wormObstacleList = new List<Obstacle>();            
         }
 
-        protected void OnEnable()
+        private static void updateObstacleInternal(Obstacle obstacle, Dictionary<Vector3Int, Obstacle> WormObstacleDict, Dictionary<Obstacle, Vector3Int> SwappedWormObstacleDict, Vector3Int oldPosition, Vector3Int nextPosition, bool isDeleteCurCell)
         {
+            updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, oldPosition, nextPosition, isDeleteCurCell);
+            UpdateObstacleEvent(obstacle.obstacleId, nextPosition);
         }
 
         /**
@@ -49,7 +51,7 @@ namespace Map
             if (!cellMove.isInit)
             {
                 Obstacle obstacle = getObstacle(cellMove.lastCellPosition, WormObstacleDict); // get obstacle from the last tunnel position
-                updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, cellMove.lastCellPosition, cellMove.cell, false); // update obstacle's position to next cell position
+                updateObstacleInternal(obstacle, WormObstacleDict, SwappedWormObstacleDict, cellMove.lastCellPosition, cellMove.cell, false); // update obstacle's position to next cell position
             }
         }
 
@@ -61,7 +63,7 @@ namespace Map
         if (!cellMove.isInit && dirPair.isStraight()) // let onChangeDirection handle turns
             {
                 Obstacle obstacle = getObstacle(cellMove.lastCellPosition, WormObstacleDict); // get obstacle from the last tunnel position
-                updateObstacle(obstacle, WormObstacleDict, SwappedWormObstacleDict, cellMove.lastCellPosition, cellMove.cell, false); // update obstacle's position to next cell position
+                updateObstacleInternal(obstacle, WormObstacleDict, SwappedWormObstacleDict, cellMove.lastCellPosition, cellMove.cell, false); // update obstacle's position to next cell position
             }
         }
 
@@ -94,7 +96,7 @@ namespace Map
                 // when a new cell has been reached, update the map with the worm's new cell position only if new cell belongs to a straight tunnel
                 if (isBlockMultiple && isTunnelSame) 
                 {
-                    updateObstacle(WormObstacle, WormObstacleDict, SwappedWormObstacleDict, lastBlockPositionInt, blockPosition, false);
+                    updateObstacleInternal(WormObstacle, WormObstacleDict, SwappedWormObstacleDict, lastBlockPositionInt, blockPosition, false);
                     print("in onBlockInterval update lastblockpos " + lastBlockPositionInt + " to " + blockPosition);
                 }
                 GameObject WormGO = WormObstacle.obstacleObject;
