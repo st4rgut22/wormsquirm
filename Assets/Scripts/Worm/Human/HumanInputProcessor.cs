@@ -2,6 +2,9 @@ namespace Worm
 {
     public class HumanInputProcessor : InputProcessor
     {
+        public delegate void SetDirection(Direction direction);
+        public event SetDirection SetDirectionEvent;
+
         public delegate void InputTorque(DirectionPair dirPair, float torqueMagnitude);
         public event InputTorque InputTorqueEvent;
 
@@ -17,7 +20,8 @@ namespace Worm
         {
             base.OnEnable();
             DecisionEvent += GetComponent<Controller>().onDecision;
-            InputTorqueEvent += GetComponent<Force>().onInputTorque;            
+            InputTorqueEvent += GetComponent<Force>().onInputTorque;
+            SetDirectionEvent += FindObjectOfType<Map.Cubemap>().onSetDirection;
         }
 
         /**
@@ -26,6 +30,16 @@ namespace Worm
         public override void onTorque(DirectionPair dirPair, Waypoint waypoint)
         {
             lastTorqueEventDirection = Direction.None;
+        }
+
+        /**
+         * Send new direction to rotate the cubemap
+         */
+        public override void onDecisionProcessing(bool isDecisionProcessing, Waypoint waypoint)
+        {
+            base.onDecisionProcessing(isDecisionProcessing, waypoint);
+            SetDirectionEvent(waypoint.dirPair.curDir);
+
         }
 
         // / set the flag for input torque event (and not from waypoints). Indicates that we should change direction
@@ -90,6 +104,10 @@ namespace Worm
             if (FindObjectOfType<Force>())
             {
                 InputTorqueEvent -= GetComponent<Force>().onInputTorque;
+            }
+            if (FindObjectOfType<Map.Cubemap>())
+            {
+                SetDirectionEvent -= FindObjectOfType<Map.Cubemap>().onSetDirection;
             }
         }
     }

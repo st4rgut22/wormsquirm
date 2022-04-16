@@ -18,6 +18,12 @@ namespace Worm
             prevInputKey = pressedKey = null;
         }
 
+        private new void OnEnable()
+        {
+            base.OnEnable();
+            InitDecisionEvent += FindObjectOfType<Map.Cubemap>().onSetInitDirection;
+        }
+
         /**
          * Listener for decision made event resulting from human input. Set the previous direction after a decision has been made because
          * some player input does not result in a turn decision (just wiggling)
@@ -69,6 +75,15 @@ namespace Worm
                 {
                     RaiseInitDecisionEvent(localDirection);
                 }
+            }
+        }
+
+        private new void OnDisable()
+        {
+            base.OnDisable();
+            if (GetComponent<InputProcessor>())
+            {
+                PlayerInputEvent -= GetComponent<InputProcessor>().onPlayerInput;
             }
         }
     }

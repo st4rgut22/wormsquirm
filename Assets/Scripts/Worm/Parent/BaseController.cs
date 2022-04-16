@@ -23,10 +23,8 @@ namespace Worm
             base.OnEnable();
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
             InitDecisionEvent += GetComponent<Turn>().onInitDecision;
-            if (GetComponent<InputProcessor>())
-            {
-                PlayerInputEvent += GetComponent<InputProcessor>().onPlayerInput;
-            }
+            print(gameObject.name);
+            PlayerInputEvent += GetComponent<InputProcessor>().onPlayerInput;
         }
 
         /**
@@ -77,6 +75,11 @@ namespace Worm
             {
                 PlayerInputEvent -= GetComponent<InputProcessor>().onPlayerInput;
             }
+            if (FindObjectOfType<Map.Cubemap>())
+            {
+                InitDecisionEvent -= FindObjectOfType<Map.Cubemap>().onSetInitDirection;
+            }
+
             InitDecisionEvent -= GetComponent<Turn>().onInitDecision;
         }
     }

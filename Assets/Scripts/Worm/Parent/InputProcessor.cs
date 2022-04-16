@@ -77,7 +77,7 @@ namespace Worm
         /**
          * If worm is following waypoints, prevent decision making, and when finished signal readiness for more decision-making
          */
-        public void onDecisionProcessing(bool isDecisionProcessing, Waypoint waypoint)
+        public virtual void onDecisionProcessing(bool isDecisionProcessing, Waypoint waypoint)
         {
             this.isDecisionProcessing = isDecisionProcessing;
             if (!isDecisionProcessing) // set new direction of worm once worm is available to make new turns
