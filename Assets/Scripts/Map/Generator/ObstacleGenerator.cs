@@ -12,8 +12,9 @@ namespace Map
         public static Dictionary<Obstacle, Vector3Int> swappedObstacleDict;
         // a dictionary of <obstacle id, initial obstacle position> pairs
 
-        protected static Dictionary<string, Vector3Int> initPositionDict; 
-        
+        protected static Dictionary<string, Vector3Int> initPositionDict;
+
+        protected List<Obstacle> obstacleList;
         protected string obstacleType;
 
         // TODO: Add abstract methods for initializeObstacleList()
@@ -84,6 +85,18 @@ namespace Map
             int randZ = getRandomPosition();
             Vector3Int randCell = new Vector3Int(randX, randY, randZ);
             return randCell;            
+        }
+
+        /**
+         * Set the obstacle position at the center of the cell
+         */
+        protected virtual void positionObstacles()
+        {
+            for (int i=0; i < obstacleList.Count; i++)
+            {
+                Obstacle obstacle = obstacleList[i];
+                obstacle.obstacleObject.transform.position = obstacle.obstacleCell.getCellCenter();
+            }
         }
 
         /**
@@ -185,7 +198,7 @@ namespace Map
          * @obstacleList                    the list of gameobjects of a specific obstacle type
          * @obstacleType                    the name of the obstacle
          */
-        protected static void initializeObstacleDict(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swappedSpecificObstacleDict, List<Obstacle>obstacleList)
+        protected void initializeObstacleDict(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swappedSpecificObstacleDict, List<Obstacle>obstacleList)
         {
             for (int i=0;i<obstacleList.Count;i++)
             {
@@ -211,6 +224,7 @@ namespace Map
                 addEntryToObstacleDict(obstaclePosition, obstacle, obstacleDict, swappedObstacleDict);
                 addEntryToObstacleDict(obstaclePosition, obstacle, specificObstacleDict, swappedSpecificObstacleDict);
             }
+            this.obstacleList = obstacleList;
         }
 
         /**

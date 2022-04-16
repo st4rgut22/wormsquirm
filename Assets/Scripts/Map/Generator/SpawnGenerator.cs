@@ -116,7 +116,7 @@ namespace Map
          * @worm        the type fo worm that has been created
          * @wormGO      the gameobject of the spawned worm
          */
-        public static void onInitWorm(Worm.Worm worm, Astar wormAstar, string wormId)
+        public void onInitWorm(Worm.Worm worm, Astar wormAstar, string wormId)
         {
             Obstacle wormObstacle = new Obstacle(worm.gameObject, worm.wormType, wormId);
             List<Obstacle>singleWormObstacleList = new List<Obstacle>() { wormObstacle };

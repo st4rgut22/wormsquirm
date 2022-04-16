@@ -4,6 +4,8 @@ using UnityEngine;
 
 public static class VectorExtension
 {
+    const float HALF_CELL = 0.5f;
+
     public static Vector3Int castToVector3Int(this Vector3 thisObj)
     {
         Vector3Int castedVector = new Vector3Int((int)thisObj.x, (int)thisObj.y, (int)thisObj.z);
@@ -21,5 +23,10 @@ public static class VectorExtension
         int curCellAxisPos = (int)Dir.Vector.getAxisPositionFromDirection(direction, curCellPos);
         int absDist = Mathf.Abs(destCellAxisPos - curCellAxisPos);
         return absDist;
+    }
+
+    public static Vector3 getCellCenter(this Vector3Int cellPos)
+    {
+        return new Vector3(cellPos.x + HALF_CELL, cellPos.y + HALF_CELL, cellPos.z + HALF_CELL);
     }
 }

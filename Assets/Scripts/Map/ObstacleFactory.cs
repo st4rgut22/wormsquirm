@@ -14,13 +14,13 @@ namespace Map
         private Transform WormPrefabNetwork;
 
         [SerializeField]
-        private GameObject RockObstaclePrefab;
-
-        [SerializeField]
         private Transform RewardObstacleNetwork;
 
         [SerializeField]
         private GameObject GoalPrefab;
+
+        [SerializeField]
+        private Transform RockObstacleParent;
 
         /**
          * Get the obstacle using the obstacle's type
@@ -31,7 +31,7 @@ namespace Map
             switch (obstacleType)
             {
                 case ObstacleType.Rock:
-                    obstacle = RockObstaclePrefab.instantiate(RockObstacleNetwork, obstacleType, obstacleId);
+                    obstacle = RockObstacleParent.instantiateRandom(RockObstacleNetwork, obstacleType, obstacleId);
                     break;
                 case ObstacleType.Goal:
                     obstacle = GoalPrefab.instantiate(RewardObstacleNetwork, obstacleType, obstacleId);
