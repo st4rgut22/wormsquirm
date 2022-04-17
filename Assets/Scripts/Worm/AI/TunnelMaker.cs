@@ -6,7 +6,7 @@ namespace Worm
 {
     public class TunnelMaker : BaseController
     {
-        public delegate void RespawnAi(Vector3Int currentCell);
+        public delegate void RespawnAi(string wormId);
         public event RespawnAi RespawnAiEvent;
 
         List<Checkpoint> checkpointList;
@@ -202,8 +202,7 @@ namespace Worm
             switch (wormBase.WormDescription.wormType)
             {
                 case ObstacleType.AIWorm: // while testing the AI worm will initially reset when reaching its destination
-                    Vector3Int curCell = WormTunnelBroker.getCurrentCell(clit.position);
-                    RespawnAiEvent(curCell);
+                    RespawnAiEvent(wormBase.wormId);
                     break;
                 default:
                     throw new System.Exception("The AI of type " + wormBase.WormDescription.wormType + " has not been implemented yet");

@@ -104,13 +104,14 @@ namespace Map
          */
         protected static void destroyObstacle(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int currentPosition, List<Obstacle> specificObstacleList)
         {
-            Obstacle obstacle = obstacleDict[currentPosition];
+            Obstacle obstacle = specificObstacleDict[currentPosition];
+            Vector3Int obstaclePos = swapSpecificObstacleDict[obstacle];
             specificObstacleList.Remove(obstacle);
             print("destroy obstacle " + obstacle.obstacleId + " at cell " + currentPosition);
             GameObject obstacleGO = obstacle.obstacleObject;
-            obstacleDict.Remove(currentPosition);
+            obstacleDict.Remove(obstaclePos);
             swappedObstacleDict.Remove(obstacle);
-            specificObstacleDict.Remove(currentPosition);
+            specificObstacleDict.Remove(obstaclePos);
             swapSpecificObstacleDict.Remove(obstacle);
             Destroy(obstacleGO);
         }
@@ -126,7 +127,7 @@ namespace Map
                 Obstacle Obstacle = obstacleDict[currentPosition];
                 if (Obstacle != specificObstacleDict[currentPosition])
                 {
-                    throw new System.Exception("Obstacle " + Obstacle.obstacleType + " at " + currentPosition + ", does not match specific obstacle dict entry: " + specificObstacleDict[currentPosition].obstacleType);
+                    print("WARNING! Obstacle " + Obstacle.obstacleType + " at " + currentPosition + ", does not match specific obstacle dict entry: " + specificObstacleDict[currentPosition].obstacleType);
                 }
                 return Obstacle;
             }
@@ -147,16 +148,15 @@ namespace Map
          */
         protected static Obstacle updateObstacle(Obstacle ObstacleToUpdate, Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int oldPosition, Vector3Int nextPosition, bool isDeleteCurCell)
         {
-            if (obstacleDict.ContainsKey(nextPosition))
+            if (obstacleDict.ContainsKey(nextPosition)) // if an obstacle exists in the cell worm is about to enter
             {
-                Obstacle obstacle = obstacleDict[nextPosition];
-                if (obstacle != null) // if an obstacle exists in the cell worm is about to enter
-                {
-                    throw new System.Exception("Next position at " + nextPosition + " is occupied by " + obstacleDict[nextPosition].obstacleType + " but " + ObstacleToUpdate.obstacleType + " is trying to move to it. Collide event should have been fired and dealt with");
-                }
+                print("WARNING!!! Next position at " + nextPosition + " is occupied by " + obstacleDict[nextPosition].obstacleType + " but " + ObstacleToUpdate.obstacleType + " is trying to move to it. Collide event should have been fired and dealt with");
+            }
+            else
+            {
+                obstacleDict[nextPosition] = ObstacleToUpdate; // only update the global obstacle dictionary if the cell to be occupied is empty
             }
             print("update obstacle dict with " + ObstacleToUpdate.obstacleId + " at next position " + nextPosition);
-            obstacleDict[nextPosition] = ObstacleToUpdate;
             specificObstacleDict[nextPosition] = ObstacleToUpdate;
             obstacleDict[oldPosition] = null; // remove reference for the previous key (aka cell position)
             specificObstacleDict[oldPosition] = null;
@@ -176,19 +176,9 @@ namespace Map
             return ObstacleToUpdate;
         }
 
-        /**
-         * Tests placement of worms
-         */
-        private static Vector3Int getTestCellLocationForAIChaseWorm(Obstacle obstacle)
+        protected string getObstacleId(string obstacleType, int obstacleCount)
         {
-            if (obstacle.obstacleId == "Player")
-            {
-                return new Vector3Int(8, -5, 6);
-            }
-            else
-            {
-                return new Vector3Int(-4, 1, -3);
-            }
+            return obstacleType + " " + obstacleCount.ToString();
         }
 
         /**

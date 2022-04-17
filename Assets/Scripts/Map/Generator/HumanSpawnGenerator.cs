@@ -24,7 +24,12 @@ namespace Map
             humanSpawnCount = 0;
         }
 
-        private void OnEnable()
+        private void Start()
+        {
+            initPositionDict[HUMAN_WORM_ID] = new Vector3Int(7, 0, 7);
+        }
+
+        private new void OnEnable()
         {
             SpawnPlayerWormEvent += FindObjectOfType<Worm.Factory.WormPlayerFactory>().onSpawn;
         }
@@ -40,11 +45,10 @@ namespace Map
         /**
          * Player is destroyed and spawned again
          */
-        public void onRespawnHuman(Vector3Int currentCell)
+        public void onRespawnHuman(string wormId)
         {
-            Obstacle WormObstacle = WormObstacleDict[currentCell];
-            onRemoveWorm(currentCell); // wait for removal confirmation before spawning again
-            onHumanSpawn(WormObstacle.obstacleId);
+            onRemoveWorm(wormId); // wait for removal confirmation before spawning again
+            onHumanSpawn(wormId);
         }
 
         public void onHumanSpawn(string id)
@@ -54,7 +58,6 @@ namespace Map
 
         private new void OnDisable()
         {
-            base.OnDisable();
             SpawnPlayerWormEvent -= FindObjectOfType<Worm.Factory.WormPlayerFactory>().onSpawn;
         }
     }

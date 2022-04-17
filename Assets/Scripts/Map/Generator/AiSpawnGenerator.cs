@@ -25,7 +25,7 @@ namespace Map
             initWormPositions();
         }
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SpawnAIWormEvent += FindObjectOfType<Worm.Factory.WormAIFactory>().onSpawn;
         }
@@ -38,7 +38,7 @@ namespace Map
             //initPositionDict[getAIWormId(1)] = new Vector3Int(-3, -3, 3);
 
             // CHASE MODE
-            initPositionDict[getAIWormId(0)] = new Vector3Int(7, 7, 7);
+            initPositionDict[getObstacleId(AI_WORM_ID, 0)] = new Vector3Int(7, 7, 7);
         }
 
         public override void onStartGame(GameMode gameMode)
@@ -65,21 +65,15 @@ namespace Map
         /**
          * Player is destroyed and spawned again
          */
-        public void onRespawnAi(Vector3Int currentCell)
+        public void onRespawnAi(string wormId)
         {
-            Obstacle WormObstacle = WormObstacleDict[currentCell];
-            onRemoveWorm(currentCell); // wait for removal confirmation before spawning again
-            onAiSpawn(WormObstacle.obstacleId);
+            onRemoveWorm(wormId); // wait for removal confirmation before spawning again
+            onAiSpawn(wormId);
         }
 
         public void onAiSpawn(string obstacleId)
         {
             SpawnAIWormEvent(obstacleId, chaseWormId);
-        }
-
-        private string getAIWormId(int count)
-        {
-            return AI_WORM_ID + " " + count.ToString();
         }
 
         /**
@@ -92,14 +86,13 @@ namespace Map
         {
             for (int i = aiSpawnCount; i < aiSpawnCount + count; i++)
             {
-                string id = getAIWormId(i);
+                string id = getObstacleId(AI_WORM_ID, i);
                 SpawnAIWormEvent(id, chaseWormId);
             }
         }
 
         private new void OnDisable()
         {
-            base.OnDisable();
             SpawnAIWormEvent -= FindObjectOfType<Worm.Factory.WormAIFactory>().onSpawn;
         }
     }

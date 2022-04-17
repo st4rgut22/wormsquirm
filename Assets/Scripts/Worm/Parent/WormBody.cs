@@ -7,7 +7,7 @@ namespace Worm
         public delegate void ChangeDirection(DirectionPair directionPair, Tunnel.Tunnel tunnel, string wormId, Tunnel.CellMove cellMove, bool isCreatingTunnel);
         public event ChangeDirection ChangeDirectionEvent;
 
-        public delegate void RemoveSelf(Vector3Int currentCell);
+        public delegate void RemoveSelf(string wormId);
         public event RemoveSelf RemoveSelfEvent;
 
         public delegate void SpawnAi(string wormId);
@@ -63,9 +63,8 @@ namespace Worm
          */
         protected void RaiseRemoveSelfEvent()
         {
-            Vector3Int currentCell = WormTunnelBroker.getCurrentCell(clit.position);
             RemoveSelfEvent += Map.SpawnGenerator.onRemoveWorm;
-            RemoveSelfEvent(currentCell);
+            RemoveSelfEvent(wormBase.wormId);
             RemoveSelfEvent -= Map.SpawnGenerator.onRemoveWorm;
         }
 

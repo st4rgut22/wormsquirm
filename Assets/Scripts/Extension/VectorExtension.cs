@@ -27,6 +27,6 @@ public static class VectorExtension
 
     public static Vector3 getCellCenter(this Vector3Int cellPos)
     {
-        return new Vector3(cellPos.x + HALF_CELL, cellPos.y + HALF_CELL, cellPos.z + HALF_CELL);
+        return new Vector3(cellPos.x, cellPos.y + HALF_CELL, cellPos.z);
     }
 }

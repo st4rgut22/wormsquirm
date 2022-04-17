@@ -50,6 +50,17 @@ namespace Worm
         }
 
         /**
+         * If removed worm is worm being chased, then set targetObstacle to null
+         */
+        public void onRemoveWorm(string removedWormId)
+        {
+            if (removedWormId == targetObstacle.obstacleId)
+            {
+                targetObstacle = null;
+            }
+        }
+
+        /**
          * Command all AI to chase a obstacle
          * 
          * @obstacleId      the id of the obstacle being chased (eg another worm)
@@ -64,7 +75,7 @@ namespace Worm
                 yield return null;
             }
 
-            while (true) // TODO: add end condition here
+            while (targetObstacle != null)
             {
                 Vector3Int lockOnCell = Map.ObstacleGenerator.swappedObstacleDict[targetObstacle];
                 print("lock on cell is " + lockOnCell);

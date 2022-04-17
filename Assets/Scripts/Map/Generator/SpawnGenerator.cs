@@ -94,15 +94,18 @@ namespace Map
             if (WormObstacle != null)
             {
                 // when a new cell has been reached, update the map with the worm's new cell position only if new cell belongs to a straight tunnel
-                if (isBlockMultiple && isTunnelSame) 
+                if (isBlockMultiple) 
                 {
-                    updateObstacleInternal(WormObstacle, WormObstacleDict, SwappedWormObstacleDict, lastBlockPositionInt, blockPosition, false);
-                    print("in onBlockInterval update lastblockpos " + lastBlockPositionInt + " to " + blockPosition);
+                    if (isTunnelSame)
+                    {
+                        updateObstacleInternal(WormObstacle, WormObstacleDict, SwappedWormObstacleDict, lastBlockPositionInt, blockPosition, false);
+                        print("in onBlockInterval update lastblockpos " + lastBlockPositionInt + " to " + blockPosition);
+                    }
+                    GameObject WormGO = WormObstacle.obstacleObject;
+                    SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
+                    SpawnBlockIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
+                    SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
                 }
-                GameObject WormGO = WormObstacle.obstacleObject;
-                SpawnBlockIntervalEvent += WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
-                SpawnBlockIntervalEvent(isBlockMultiple, blockPosition, lastBlockPositionInt, tunnel);
-                SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
             }
             else
             {
@@ -147,8 +150,8 @@ namespace Map
         {
             foreach (KeyValuePair<Vector3Int, Obstacle> WormObstacleEntry in WormObstacleDict)
             {
-                Vector3Int wormCell = WormObstacleEntry.Key;
-                onRemoveWorm(wormCell);
+                string wormId = WormObstacleEntry.Value.obstacleId;
+                onRemoveWorm(wormId);
             }
         }
 
@@ -158,19 +161,18 @@ namespace Map
          * @currentCell     the cell the worm died in
          * @wormId          the id of the worm is not neeeded to index the dictionary, so null is passed in
          */
-        public static void onRemoveWorm(Vector3Int currentCell)
+        public static void onRemoveWorm(string wormId)
         {
-            string wormId = WormObstacleDict[currentCell].obstacleId;
+            // get current cell
+            Vector3Int currentCell = SwappedWormObstacleDict[new Obstacle(wormId)];
 
             RemoveWormEvent += Worm.WormManager.Instance.onRemoveWorm;
+            RemoveWormEvent += FindObjectOfType<Worm.AiPathFinder>().onRemoveWorm;
             RemoveWormEvent(wormId);
             RemoveWormEvent -= Worm.WormManager.Instance.onRemoveWorm;
+            RemoveWormEvent -= FindObjectOfType<Worm.AiPathFinder>().onRemoveWorm;
 
             destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, currentCell, wormObstacleList);
-        }
-
-        protected void OnDisable()
-        {
         }
     }
 

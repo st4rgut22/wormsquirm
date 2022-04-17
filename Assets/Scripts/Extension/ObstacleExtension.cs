@@ -28,8 +28,8 @@ namespace Map
             int totalObstacles = thisObstacleGO.childCount;
             int randIndex = Random.Range(0, totalObstacles - 1);
             GameObject obstaclePrefab = thisObstacleGO.GetChild(randIndex).gameObject;
-            obstaclePrefab.SetActive(true); // a prefab from a list will be inactive
             GameObject obstacleGO = GameObject.Instantiate(obstaclePrefab, obstacleNetwork);
+            obstacleGO.SetActive(true); // a prefab from a list will be inactive
             Obstacle obstacle = new Obstacle(obstacleGO, type, obstacleId);
             return obstacle;
         }

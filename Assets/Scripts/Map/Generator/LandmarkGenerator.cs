@@ -31,6 +31,8 @@ namespace Map
 
         private const float WALL_WIDTH = 1f;
 
+        private const string ROCK_ID = "Rock";
+
         private List<GameObject> WallList;
 
         private Quaternion X_ORIENTATION = Quaternion.Euler(0, 90, 0);
@@ -44,6 +46,11 @@ namespace Map
             WallList = new List<GameObject>();
             RockObstacleDict = new Dictionary<Vector3Int, Obstacle>();
             SwapRockObstacleDict = new Dictionary<Obstacle, Vector3Int>();
+        }
+
+        private void Start()
+        {
+            initPositionDict[getObstacleId(ROCK_ID, 0)] = new Vector3Int(7, 2, 7);
         }
 
         /**
@@ -118,7 +125,7 @@ namespace Map
 
             for (int i=0;i<rockObstacleCount;i++)
             {
-                string rockId = rockCount.ToString();
+                string rockId = getObstacleId(ROCK_ID, i);
                 Obstacle rockObstacle = ObstacleFactory.Instance.getObstacle(ObstacleType.Rock, rockId);
                 RockObstacleList.Add(rockObstacle);
                 rockCount += 1;
