@@ -22,6 +22,11 @@ public class InputKey
         this.isPositive = isPositive;
     }
 
+    public InputKey(KeyCode keyCode)
+    {
+        this.keyCode = keyCode;
+    }
+
     public bool isPressed()
     {
         return (Input.GetKeyDown(keyCode));

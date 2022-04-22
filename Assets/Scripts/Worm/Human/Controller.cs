@@ -64,7 +64,7 @@ namespace Worm
         {
             InputKeyPair inputKeyPair = InputManager.instance.getInputKeyPair();
 
-            if (inputKeyPair != null)
+            if (inputKeyPair != null) // movement input
             {
                 Direction localDirection = getDirection(inputKeyPair); // direction with respect to tunnel
 
@@ -76,6 +76,11 @@ namespace Worm
                     RaiseInitDecisionEvent(localDirection);
                 }
             }
+            else if (InputManager.instance.isEquipPressed())
+            {
+                RaiseEquipEvent();
+            }
+
         }
 
         private new void OnDisable()

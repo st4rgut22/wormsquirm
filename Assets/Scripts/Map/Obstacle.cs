@@ -4,6 +4,7 @@ public enum ObstacleType
 {
     Rock,
     Goal,
+    Reward,
     PlayerWorm,
     AIWorm,
     Unknown

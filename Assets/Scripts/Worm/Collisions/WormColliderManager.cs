@@ -6,6 +6,9 @@ namespace Worm
 {
     public class WormColliderManager : WormBody
     {
+        public delegate void ConsumeReward(Equipment.Block block, string wormId);
+        public event ConsumeReward ConsumeRewardEvent;
+
         [SerializeField]
         private Transform BoneParent;
 
@@ -17,6 +20,17 @@ namespace Worm
 
         const float explosionRadius = 50.0f;
         const float explosionPower = .01f;
+
+        const string WALL_TAG = "wall";
+        const string ROCK_TAG = "rock";
+        const string REWARD_TAG = "reward";
+
+        private new void OnEnable()
+        {
+            base.OnEnable();
+            ConsumeRewardEvent += GetComponent<WormInventory>().onAddToInventory;
+            ConsumeRewardEvent += FindObjectOfType<Map.SpawnGenerator>().onConsumeObstacle;
+        }
 
         private List<Rigidbody> spawnWormSegments()
         {
@@ -47,12 +61,27 @@ namespace Worm
             RaiseRemoveSelfEvent();
         }
 
-        public void onWormCollide(string collidedWithTag)
+        public void onWormCollide(GameObject otherGO)
         {
+            string collidedWithTag = otherGO.tag;
             print("Collided with " + collidedWithTag);
-            if (collidedWithTag == "wall" || collidedWithTag == "rock")
+            if (collidedWithTag == WALL_TAG || collidedWithTag == ROCK_TAG)
             {
                 die();
+            }
+            else if (collidedWithTag == REWARD_TAG)
+            {
+                ConsumeRewardEvent(otherGO.GetComponent<Equipment.Block>(), wormBase.wormId);
+            }
+        }
+
+        private new void OnDisable()
+        {
+            base.OnDisable();
+            if (GetComponent<WormInventory>())
+            {
+                ConsumeRewardEvent -= GetComponent<WormInventory>().onAddToInventory;
+                ConsumeRewardEvent -= FindObjectOfType<Map.SpawnGenerator>().onConsumeObstacle;
             }
         }
     }

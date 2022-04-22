@@ -20,11 +20,13 @@ namespace Map
         Vector3Int defaultGoal = Vector3Int.zero;
 
         private const string GOAL_ID = "Goal";
+        private const string REWARD_ID = "Reward";
 
         private new void Awake()
         {
             base.Awake();
             RewardObstacleDict = new Dictionary<Vector3Int, Obstacle>();
+            SwapRewardObstacleDict = new Dictionary<Obstacle, Vector3Int>();
         }  
 
         /**
@@ -36,8 +38,33 @@ namespace Map
         {
             if (gameMode == GameMode.Chase)
             {
-                List<Obstacle> RewardObstacleList = getObstacleList();
-                initializeObstacleDict(RewardObstacleDict, SwapRewardObstacleDict, RewardObstacleList);
+                Obstacle GoalObstacle = ObstacleFactory.Instance.getObstacle(ObstacleType.Goal, GOAL_ID);
+                initializeObstacle(RewardObstacleDict, SwapRewardObstacleDict, GoalObstacle);
+                positionObstacle(GoalObstacle);
+            }
+        }
+
+        public void onRemoveReward(Equipment.Block block, string collidedWithId)
+        {
+            string rewardId = block.getObstacleId();
+            destroyObstacle(RewardObstacleDict, SwapRewardObstacleDict, rewardId);
+        }
+
+        public void onBlockInterval(bool isBlockInterval, Vector3Int blockPositionInt, Vector3Int lastBlockPositionInt, Tunnel.Straight tunnel, bool isTunnelSame, bool isTurning, bool isCollide)
+        {
+            if (isBlockInterval && !isTurning)
+            {
+                totalObstacleCount += 1;
+                Direction dir = Dir.CellDirection.getDirectionFromCells(lastBlockPositionInt, blockPositionInt);
+
+                string rewardObstacleId = getObstacleId(REWARD_ID, totalObstacleCount);
+                Vector3Int rewardCell = Dir.Vector.getNextCellFromDirection(blockPositionInt, dir);
+
+                initPositionDict[rewardObstacleId] = rewardCell;
+                Obstacle rewardObstacle = ObstacleFactory.Instance.getObstacle(ObstacleType.Reward, rewardObstacleId);
+
+                initializeObstacle(RewardObstacleDict, SwapRewardObstacleDict, rewardObstacle);
+                positionObstacle(rewardObstacle);
             }
         }
 
@@ -52,18 +79,6 @@ namespace Map
             //InitObjectiveEvent += wormAstar.onInitObjective;
             //InitObjectiveEvent(goalCell);// TESTING
             //InitObjectiveEvent -= wormAstar.onInitObjective;
-        }
-
-        /**
-         * Initialize the goal and return a wrapper class containing the goal. 
-         * TODO: In addition to Goal, add other types of reward obstacles
-         */
-        protected override List<Obstacle> getObstacleList()
-        {
-            goalCell = getRandomEligibleCell();
-            Obstacle GoalObstacle = ObstacleFactory.Instance.getObstacle(ObstacleType.Goal, GOAL_ID);
-            List<Obstacle> ObstacleList = new List<Obstacle> { GoalObstacle };
-            return ObstacleList;
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Tunnel
 
             BlockIntervalEvent += Map.SpawnGenerator.onBlockInterval;
             BlockIntervalEvent += FindObjectOfType<TunnelMap>().onBlockInterval; // subscribe dig manager to the BlockSize event
-
+            BlockIntervalEvent += FindObjectOfType<Map.RewardGenerator>().onBlockInterval;
             DigEvent += DirtManager.Instance.onDig;
         }
 
@@ -259,6 +259,10 @@ namespace Tunnel
             if (!isStopped)
             {
                 BlockIntervalEvent -= FindObjectOfType<TunnelMap>().onBlockInterval;
+            }
+            if (FindObjectOfType<Map.RewardGenerator>())
+            {
+                BlockIntervalEvent -= FindObjectOfType<Map.RewardGenerator>().onBlockInterval;
             }
             if (FindObjectOfType<Map.SpawnGenerator>())
             {

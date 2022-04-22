@@ -22,6 +22,8 @@ namespace Map
         [SerializeField]
         protected string chaseWormId; // worm that is being chased
 
+        public const string WORM_TAG = "worm";
+
         /**
          * Listener is fired to start spawning worms when the game is started
          * 
@@ -35,6 +37,17 @@ namespace Map
             WormObstacleDict = new Dictionary<Vector3Int, Obstacle>();
             SwappedWormObstacleDict = new Dictionary<Obstacle, Vector3Int>(new ObstacleComparer());
             wormObstacleList = new List<Obstacle>();            
+        }
+
+        // call this method after reward is erased from the same cell worm now occupies
+        public void onConsumeObstacle(Equipment.Block block, string wormId)
+        {
+            Vector3Int wormCell = SwappedWormObstacleDict[new Obstacle(wormId)];
+            obstacleDict[wormCell] = WormObstacleDict[wormCell];
+            if (obstacleDict[wormCell] == null)
+            {
+                throw new System.Exception("no worm in cell " + wormCell);
+            }
         }
 
         private static void updateObstacleInternal(Obstacle obstacle, Dictionary<Vector3Int, Obstacle> WormObstacleDict, Dictionary<Obstacle, Vector3Int> SwappedWormObstacleDict, Vector3Int oldPosition, Vector3Int nextPosition, bool isDeleteCurCell)
@@ -89,12 +102,13 @@ namespace Map
          */
         public static void onBlockInterval(bool isBlockMultiple, Vector3Int blockPosition, Vector3Int lastBlockPositionInt, Tunnel.Tunnel tunnel, bool isTunnelSame, bool isTurn, bool isCollide)
         {
-            Obstacle WormObstacle = getObstacle(lastBlockPositionInt, WormObstacleDict);
 
-            if (WormObstacle != null)
+
+            if (isBlockMultiple)
             {
+                Obstacle WormObstacle = getObstacle(lastBlockPositionInt, WormObstacleDict);
                 // when a new cell has been reached, update the map with the worm's new cell position only if new cell belongs to a straight tunnel
-                if (isBlockMultiple) 
+                if (WormObstacle != null)
                 {
                     if (isTunnelSame)
                     {
@@ -107,10 +121,6 @@ namespace Map
                     SpawnBlockIntervalEvent -= WormGO.GetComponent<Worm.Turn>().onBlockInterval; // subscribe turn to the BlockSize event
                 }
             }
-            else
-            {
-                print("WARNING!!! no obstacle found at " + lastBlockPositionInt + " make sure it was destroyed!");
-            }
         }
 
         /**
@@ -122,9 +132,7 @@ namespace Map
         public void onInitWorm(Worm.Worm worm, Astar wormAstar, string wormId)
         {
             Obstacle wormObstacle = new Obstacle(worm.gameObject, worm.wormType, wormId);
-            List<Obstacle>singleWormObstacleList = new List<Obstacle>() { wormObstacle };
-            wormObstacleList.Add(wormObstacle);
-            initializeObstacleDict(WormObstacleDict, SwappedWormObstacleDict, singleWormObstacleList);
+            initializeObstacle(WormObstacleDict, SwappedWormObstacleDict, wormObstacle);
             initializeInitialCells(wormObstacle);
         }
 
@@ -136,11 +144,6 @@ namespace Map
         private static void initializeInitialCells(Obstacle obstacle)
         {
             obstacle.obstacleObject.GetComponent<Worm.WormBase>().setInitialCell(obstacle.obstacleCell);
-        }
-
-        protected override List<Obstacle> getObstacleList()
-        {
-            return wormObstacleList;
         }
 
         /**
@@ -161,18 +164,15 @@ namespace Map
          * @currentCell     the cell the worm died in
          * @wormId          the id of the worm is not neeeded to index the dictionary, so null is passed in
          */
-        public static void onRemoveWorm(string wormId)
+        public void onRemoveWorm(string wormId)
         {
-            // get current cell
-            Vector3Int currentCell = SwappedWormObstacleDict[new Obstacle(wormId)];
-
             RemoveWormEvent += Worm.WormManager.Instance.onRemoveWorm;
             RemoveWormEvent += FindObjectOfType<Worm.AiPathFinder>().onRemoveWorm;
             RemoveWormEvent(wormId);
             RemoveWormEvent -= Worm.WormManager.Instance.onRemoveWorm;
             RemoveWormEvent -= FindObjectOfType<Worm.AiPathFinder>().onRemoveWorm;
 
-            destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, currentCell, wormObstacleList);
+            destroyObstacle(WormObstacleDict, SwappedWormObstacleDict, wormId);
         }
     }
 

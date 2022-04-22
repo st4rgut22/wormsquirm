@@ -62,8 +62,8 @@ namespace Map
         {
             if (gameMode != GameMode.DebugFixedPath && isRockObstacleEnabled)    // TestFixedPath is the only situation it doesnt make sene to have obstacles
             {
-                List<Obstacle> RockObstacleList = getObstacleList();
-                initializeObstacleDict(RockObstacleDict, SwapRockObstacleDict, RockObstacleList);
+                List<Obstacle> RockObstacleList = getObstacleList(rockObstacleCount, ROCK_ID);
+                initializeObstacleList(RockObstacleDict, SwapRockObstacleDict, RockObstacleList);
                 positionObstacles(); // place obstacles in center of cells
             }
             createWalls();
@@ -114,23 +114,6 @@ namespace Map
             {
                 Destroy(wallGO);
             });
-        }
-
-        /**
-         * Get a list of rock obstacle objects
-         */
-        protected override List<Obstacle> getObstacleList()
-        {
-            List<Obstacle> RockObstacleList = new List<Obstacle>();
-
-            for (int i=0;i<rockObstacleCount;i++)
-            {
-                string rockId = getObstacleId(ROCK_ID, i);
-                Obstacle rockObstacle = ObstacleFactory.Instance.getObstacle(ObstacleType.Rock, rockId);
-                RockObstacleList.Add(rockObstacle);
-                rockCount += 1;
-            }
-            return RockObstacleList;
         }
     }
 

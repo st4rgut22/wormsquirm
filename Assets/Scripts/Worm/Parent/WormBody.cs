@@ -63,9 +63,9 @@ namespace Worm
          */
         protected void RaiseRemoveSelfEvent()
         {
-            RemoveSelfEvent += Map.SpawnGenerator.onRemoveWorm;
+            RemoveSelfEvent += FindObjectOfType<Map.SpawnGenerator>().onRemoveWorm;
             RemoveSelfEvent(wormBase.wormId);
-            RemoveSelfEvent -= Map.SpawnGenerator.onRemoveWorm;
+            RemoveSelfEvent -= FindObjectOfType<Map.SpawnGenerator>().onRemoveWorm;
         }
 
         /**

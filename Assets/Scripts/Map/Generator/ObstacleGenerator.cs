@@ -12,7 +12,9 @@ namespace Map
         public static Dictionary<Obstacle, Vector3Int> swappedObstacleDict;
         // a dictionary of <obstacle id, initial obstacle position> pairs
 
-        protected static Dictionary<string, Vector3Int> initPositionDict;
+        protected int totalObstacleCount;
+
+        protected Dictionary<string, Vector3Int> initPositionDict;
 
         protected List<Obstacle> obstacleList;
         protected string obstacleType;
@@ -24,12 +26,26 @@ namespace Map
 
         protected void Awake()
         {
+            totalObstacleCount = 0;
+            obstacleList = new List<Obstacle>();
             obstacleDict = new Dictionary<Vector3Int, Obstacle>();
             swappedObstacleDict = new Dictionary<Obstacle, Vector3Int>(new ObstacleComparer());
             initPositionDict = new Dictionary<string, Vector3Int>();
         }
 
-        protected abstract List<Obstacle> getObstacleList();
+        protected virtual List<Obstacle> getObstacleList(int obstacleCount, string obstacleType)
+        {
+            List<Obstacle> ObstacleList = new List<Obstacle>();
+
+            for (int i = 0; i < obstacleCount; i++)
+            {
+                string obstacleId = getObstacleId(obstacleType, i);
+                Obstacle obstacle = ObstacleFactory.Instance.getObstacle(ObstacleType.Rock, obstacleId);
+                ObstacleList.Add(obstacle);
+                totalObstacleCount += 1;
+            }
+            return ObstacleList;
+        }
 
 
         protected class ObstacleComparer : IEqualityComparer<Obstacle>
@@ -90,26 +106,33 @@ namespace Map
         /**
          * Set the obstacle position at the center of the cell
          */
-        protected virtual void positionObstacles()
+        protected void positionObstacles()
         {
             for (int i=0; i < obstacleList.Count; i++)
             {
-                Obstacle obstacle = obstacleList[i];
-                obstacle.obstacleObject.transform.position = obstacle.obstacleCell.getCellCenter();
+                positionObstacle(obstacleList[i]);
             }
+        }
+
+        protected virtual void positionObstacle(Obstacle obstacle)
+        {
+            obstacle.obstacleObject.transform.position = obstacle.obstacleCell.getCellCenter();
+
         }
 
         /**
          * Destroy obstacle at a position and remove references to it in the map
          */
-        protected static void destroyObstacle(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, Vector3Int currentPosition, List<Obstacle> specificObstacleList)
+        protected void destroyObstacle(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swapSpecificObstacleDict, string obstacleId)
         {
+            Vector3Int currentPosition = swappedObstacleDict[new Obstacle(obstacleId)];
             Obstacle obstacle = specificObstacleDict[currentPosition];
             Vector3Int obstaclePos = swapSpecificObstacleDict[obstacle];
-            specificObstacleList.Remove(obstacle);
+            obstacleList.Remove(obstacle);
             print("destroy obstacle " + obstacle.obstacleId + " at cell " + currentPosition);
             GameObject obstacleGO = obstacle.obstacleObject;
-            obstacleDict.Remove(obstaclePos);
+
+            obstacleDict[obstaclePos] = null;
             swappedObstacleDict.Remove(obstacle);
             specificObstacleDict.Remove(obstaclePos);
             swapSpecificObstacleDict.Remove(obstacle);
@@ -188,35 +211,38 @@ namespace Map
          * @obstacleList                    the list of gameobjects of a specific obstacle type
          * @obstacleType                    the name of the obstacle
          */
-        protected void initializeObstacleDict(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swappedSpecificObstacleDict, List<Obstacle>obstacleList)
+        protected void initializeObstacleList(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swappedSpecificObstacleDict, List<Obstacle>obstacleList)
         {
             for (int i=0;i<obstacleList.Count;i++)
             {
-                Obstacle obstacle = obstacleList[i];
-
-                Vector3Int obstaclePosition;
-
-                if (!initPositionDict.ContainsKey(obstacle.obstacleId)) // if no predefined starting cel, use a random cell
-                {
-                    obstaclePosition = getRandomEligibleCell();
-                    //randObstaclePosition = getTestCellLocationForAIChaseWorm(obstacle); // TESTING
-                }
-                else // if not randomly placed use the pre-set cell
-                {
-                    if (obstacle.obstacleCell == null)
-                    {
-                        throw new System.Exception("obstacle cell for obstacle " + obstacle.obstacleId + " is not defined");
-                    }
-                    obstaclePosition = initPositionDict[obstacle.obstacleId];
-                }
-                obstacle.setObstacleCell(obstaclePosition);
-
-                addEntryToObstacleDict(obstaclePosition, obstacle, obstacleDict, swappedObstacleDict);
-                addEntryToObstacleDict(obstaclePosition, obstacle, specificObstacleDict, swappedSpecificObstacleDict);
+                initializeObstacle(specificObstacleDict, swappedSpecificObstacleDict, obstacleList[i]);
             }
-            this.obstacleList = obstacleList;
         }
 
+
+        protected void initializeObstacle(Dictionary<Vector3Int, Obstacle> specificObstacleDict, Dictionary<Obstacle, Vector3Int> swappedSpecificObstacleDict, Obstacle obstacle)
+        {
+            Vector3Int obstaclePosition;
+
+            if (!initPositionDict.ContainsKey(obstacle.obstacleId)) // if no predefined starting cel, use a random cell
+            {
+                obstaclePosition = getRandomEligibleCell();
+                //randObstaclePosition = getTestCellLocationForAIChaseWorm(obstacle); // TESTING
+            }
+            else // if not randomly placed use the pre-set cell
+            {
+                if (obstacle.obstacleCell == null)
+                {
+                    throw new System.Exception("obstacle cell for obstacle " + obstacle.obstacleId + " is not defined");
+                }
+                obstaclePosition = initPositionDict[obstacle.obstacleId];
+            }
+            obstacle.setObstacleCell(obstaclePosition);
+
+            addEntryToObstacleDict(obstaclePosition, obstacle, obstacleDict, swappedObstacleDict);
+            addEntryToObstacleDict(obstaclePosition, obstacle, specificObstacleDict, swappedSpecificObstacleDict);
+            obstacleList.Add(obstacle);
+        }
         /**
          * Add <CellPos, Obstacle> entry to dictionary and its swapped version to allow bidirection O(1) access between CellPos <-> Obstacle/
          * 
@@ -227,10 +253,7 @@ namespace Map
          */
         private static void addEntryToObstacleDict(Vector3Int obstacleCellPos, Obstacle obstacle, Dictionary<Vector3Int, Obstacle> obstacleDict, Dictionary<Obstacle, Vector3Int> swappedObstacleDict)
         {
-            if (obstacle.obstacleType == ObstacleType.AIWorm)
-            {
-                print("add entry to obstacle dict at cell " + obstacleCellPos + " for obstacle " + obstacle.obstacleId);
-            }            
+
             obstacleDict[obstacleCellPos] = obstacle;
             swappedObstacleDict[obstacle] = obstacleCellPos;
         }

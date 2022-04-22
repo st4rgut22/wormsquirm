@@ -26,7 +26,7 @@ namespace Map
 
         private void Start()
         {
-            initPositionDict[HUMAN_WORM_ID] = new Vector3Int(7, 0, 7);
+            initPositionDict[HUMAN_WORM_ID] = new Vector3Int(5, 0, 5);
         }
 
         private new void OnEnable()

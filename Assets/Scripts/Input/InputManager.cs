@@ -7,6 +7,8 @@ public class InputManager: MonoBehaviour
     public InputKeyPair inputKeyPairXZ { get; private set; }
     public InputKeyPair inputKeyPairZY { get; private set; }
 
+    public InputKey equipKey; // key that uses the equipped item
+
     public static InputManager instance;
 
     private void Awake()
@@ -20,6 +22,13 @@ public class InputManager: MonoBehaviour
         InputKey upKeyZY = new InputKey(KeyCode.A, Direction.Forward, false);
         InputKey downKeyZY = new InputKey(KeyCode.D, Direction.Back, true);
         inputKeyPairZY = new InputKeyPair(upKeyZY, downKeyZY); // A,D controls movement along ZY Plane
+
+        equipKey = new InputKey(KeyCode.Space);
+    }
+
+    public bool isEquipPressed()
+    {
+        return equipKey.isPressed();
     }
 
     public InputKeyPair getInputKeyPair()
