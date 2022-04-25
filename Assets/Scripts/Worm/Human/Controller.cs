@@ -76,11 +76,6 @@ namespace Worm
                     RaiseInitDecisionEvent(localDirection);
                 }
             }
-            else if (InputManager.instance.isEquipPressed())
-            {
-                RaiseEquipEvent();
-            }
-
         }
 
         private new void OnDisable()

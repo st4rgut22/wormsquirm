@@ -29,25 +29,42 @@ namespace Worm
             }
         }
 
-        public void useBuildingBlocks()
+        // return boolean indicating if enough ammunition to fire
+        private bool useBuildingBlocks()
         {
+            return true; // TESTING!!!
+            bool isAmmoSufficient = true;
             equippedItem.buildingBlocks.ForEach((Equipment.BuildingBlock buildingBlock) => {
-                if (BuildingBlockDict[buildingBlock.type] <= 0)
+                if (!BuildingBlockDict.ContainsKey(buildingBlock.type) || BuildingBlockDict[buildingBlock.type] <= 0)
                 {
-                    throw new System.Exception("No more building blocks of type " + buildingBlock.type + " but trying to use it");
+                    isAmmoSufficient = false;
                 }
-                BuildingBlockDict[buildingBlock.type] -= 1;
             });
+            if (isAmmoSufficient)
+            {
+                equippedItem.buildingBlocks.ForEach((Equipment.BuildingBlock buildingBlock) => {
+                    BuildingBlockDict[buildingBlock.type] -= 1;
+                });
+            }
+            return isAmmoSufficient;
+        }
+
+        public void onUseItem()
+        {
+            bool isAmmoEnough = useBuildingBlocks();
+            if (isAmmoEnough)
+            {
+                equippedItem.use();
+            }
         }
 
         /**
          * Received event to use the equipped item
          */
-        public void onEquip()
+        public void onEquip(Equipment.Item item)
         {
-            useBuildingBlocks();
-            equippedItem.use(head.position);
-
+            // show target, fire on input
+            equippedItem = item;
         }
     }
 }

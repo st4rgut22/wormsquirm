@@ -12,6 +12,12 @@ namespace Worm
         public delegate void AddTunnel(Tunnel.Tunnel tunnel, Tunnel.CellMove cellMove, DirectionPair directionPair, string wormId);
         public event AddTunnel AddTunnelEvent;
 
+        public delegate void Equip(Equipment.Item item);
+        public event Equip EquipEvent;
+
+        public delegate void UseItem();
+        public event UseItem UseItemEvent;
+
         public Dictionary<string, GameObject> WormDictionary; // <wormId, worm GO>
         public Dictionary<string, WormTunnelBroker> WormTunnelBrokerDict; // <wormId, WormTunnelBroker>
         public Dictionary<string, TunnelMaker> WormTunnelMakerDict; // <wormId, WormTunnelMaker> only stores AI references
@@ -43,6 +49,21 @@ namespace Worm
             EnterExistingTunnelEvent += wormTunnelBroker.onEnterExistingTunnel;
             EnterExistingTunnelEvent();
             EnterExistingTunnelEvent -= wormTunnelBroker.onEnterExistingTunnel;
+        }
+
+        public void onUseItem(string wormId)
+        {
+            UseItemEvent += WormDictionary[wormId].GetComponent<WormInventory>().onUseItem;
+            UseItemEvent();
+            UseItemEvent -= WormDictionary[wormId].GetComponent<WormInventory>().onUseItem;
+        }
+
+        public void onEquip(string wormId, Equipment.ItemType itemType)
+        {
+            Equipment.Item item = Equipment.EquipmentFactory.Instance.createItem(itemType);
+            EquipEvent += WormDictionary[wormId].GetComponent<WormInventory>().onEquip;
+            EquipEvent(item);
+            EquipEvent -= WormDictionary[wormId].GetComponent<WormInventory>().onEquip;
         }
 
         public string getChaseWormId()

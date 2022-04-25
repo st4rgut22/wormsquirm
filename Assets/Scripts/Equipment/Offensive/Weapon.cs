@@ -7,11 +7,18 @@ public enum Impact
     Explosion,
     None
 }
+
 namespace Equipment
 {
     public abstract class Weapon : Item
     {
-        protected GameObject ProjectilePrefab;
+        [SerializeField]
+        protected GameObject projectileGO;
+
+        protected GameObject projectilePrefab;
+        protected Rigidbody projectileRigidbody;
+
+        ItemType weaponType;
 
         protected float speed;
 
@@ -23,8 +30,10 @@ namespace Equipment
 
         protected abstract void shoot();
 
-        public override void use(Vector3 position)
+        public override void use()
         {
+            projectilePrefab = Instantiate(projectileGO, itemGO.transform);
+            projectileRigidbody = projectilePrefab.GetComponent<Rigidbody>();
             shoot();
         }
     }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Equipment
 {
-    public class Spike : Weapon
+    public class BonePellet : Weapon
     {
         private void Awake()
         {
@@ -18,12 +18,11 @@ namespace Equipment
             buildingBlocks.Add(new BuildingBlock(BuildingBlockType.Wood, 1));
         }
 
+        // create a bullet, fire the bullet
         protected override void shoot()
         {
-            // create a bullet, fire the bullet
-            GameObject spikeBullet = Instantiate(ProjectilePrefab);
+            projectileRigidbody.AddForce(transform.forward * speed);
 
-            throw new System.NotImplementedException();
         }
     }
 }

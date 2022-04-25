@@ -16,7 +16,7 @@ namespace Map
 
         private int humanSpawnCount; // used to id human controlled worms TODO: multiplayer will have multiple human-controlled worms
 
-        private const string HUMAN_WORM_ID = "Player";
+        public const string HUMAN_WORM_ID = "Player";
 
         private new void Awake()
         {

@@ -4,9 +4,6 @@ namespace Worm
 {
     public class BaseController : WormBody
     {
-        public delegate void Equip();
-        public event Equip EquipEvent;
-
         public delegate void InitDecision(Direction direction, string wormId, Vector3Int mappedInitialCell, Vector3Int initialCell);
         public event InitDecision InitDecisionEvent;
 
@@ -24,7 +21,6 @@ namespace Worm
         protected new void OnEnable()
         {
             base.OnEnable();
-            EquipEvent += GetComponent<WormInventory>().onEquip;
             InitDecisionEvent += Tunnel.CollisionManager.Instance.onInitDecision;
             InitDecisionEvent += GetComponent<Turn>().onInitDecision;
             print(gameObject.name);
@@ -68,14 +64,6 @@ namespace Worm
             InitDecisionEvent(localDirection, wormId, wormBase.mappedInitialCell, wormBase.initialCell);
         }
 
-        /**
-         * Fired when the worm wants to shoot
-         */
-        protected void RaiseEquipEvent()
-        {
-            EquipEvent();
-        }
-
         protected new void OnDisable()
         {
             base.OnDisable();
@@ -86,10 +74,6 @@ namespace Worm
             if (GetComponent<InputProcessor>())
             {
                 PlayerInputEvent -= GetComponent<InputProcessor>().onPlayerInput;
-            }
-            if (GetComponent<WormInventory>())
-            {
-                EquipEvent -= GetComponent<WormInventory>().onEquip;
             }
             if (FindObjectOfType<Map.Cubemap>())
             {
